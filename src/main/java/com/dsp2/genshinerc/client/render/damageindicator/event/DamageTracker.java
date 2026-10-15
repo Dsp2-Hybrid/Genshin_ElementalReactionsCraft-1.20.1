@@ -79,7 +79,7 @@ public class DamageTracker {
 
     private static String formatDamage(DamageInfo i) {
         String s = trim(Math.abs(i.amount));
-        if (i.isHeal()) return "+" + s;
+        if (i.isHeal()) return "+" + s + (i.fullHeal ? "!" : "");
         if (i.kill) return s + "!";
         return s;
     }

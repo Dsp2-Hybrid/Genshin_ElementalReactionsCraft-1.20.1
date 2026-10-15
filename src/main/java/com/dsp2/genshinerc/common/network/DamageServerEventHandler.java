@@ -34,18 +34,21 @@ public class DamageServerEventHandler {
         boolean kill = (e.getHealth() - original) <= 0;
 
         if (absorbed > 0) {
-            NetworkHandler.sendDamage(e, "physical", amount, false, kill, absorbed, null, null, false, false);
+            NetworkHandler.sendDamage(e, "physical", amount, false, kill, false, absorbed, null, null, false, false);
         } else {
-            NetworkHandler.sendDamage(e, "physical", amount, false, kill, 0f, null, null, false, false);
+            NetworkHandler.sendDamage(e, "physical", amount, false, kill, false, 0f, null, null, false, false);
         }
     }
 
     @SubscribeEvent
     public static void onLivingHeal(LivingHealEvent event) {
         if (event.getEntity().level().isClientSide()) return;
+        LivingEntity e = event.getEntity();
         float a = event.getAmount();
         if (a <= 0) return;
-        NetworkHandler.sendDamage(event.getEntity(), "physical", -a, false, false, 0f, null, null, false, false);
+        float after = Math.min(e.getHealth() + a, e.getMaxHealth());
+        boolean fullHeal = after >= e.getMaxHealth() - 0.001f;
+        NetworkHandler.sendDamage(e, "physical", -a, false, false, fullHeal, 0f, null, null, false, false);
     }
 
     @SubscribeEvent
@@ -59,7 +62,7 @@ public class DamageServerEventHandler {
         float diff = current - last;
         LAST_ABSORPTION.put(sp.getUUID(), current);
         if (diff > 0.001f) {
-            NetworkHandler.sendDamage(sp, "physical", diff, false, false, 0f, null, null, true, false);
+            NetworkHandler.sendDamage(sp, "physical", diff, false, false, false, 0f, null, null, true, false);
         }
     }
 
@@ -71,7 +74,7 @@ public class DamageServerEventHandler {
     @SubscribeEvent
     public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
-        NetworkHandler.syncConfigTo(sp, new ConfigSyncPacket(
+        NetworkHandler.syncConfigTo(sp, new DamageIndicatorConfigSyncPacket(
                 com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig.get()));
     }
 }

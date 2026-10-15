@@ -19,7 +19,6 @@
   "genshinerc.damageindicator.config.draw_shadow": "Draw Shadow",
   "genshinerc.damageindicator.config.draw_shadow.desc": "Whether numbers have shadow",
   "genshinerc.damageindicator.config.shadow_color": "Shadow Color",
-  "genshinerc.damageindicator.config.shadow_color.desc": "Color of number shadow",
   "genshinerc.damageindicator.config.max_distance": "Max Render Distance",
   "genshinerc.damageindicator.config.max_distance.desc": "Server-side broadcast range. Players beyond this distance do not receive damage numbers. Synced from server.",
   "genshinerc.damageindicator.config.life_time": "Particle Lifetime (ticks)",
@@ -33,7 +32,6 @@
   "genshinerc.damageindicator.config.random_velocity_xz_amount": "XZ Random Amount",
   "genshinerc.damageindicator.config.random_velocity_xz_amount.desc": "Maximum horizontal random velocity. Precision 0.01",
   "genshinerc.damageindicator.config.offset_y": "Y Offset",
-  "genshinerc.damageindicator.config.offset_y.desc": "Height offset above the entity top. Precision 0.01",
   "genshinerc.damageindicator.config.normal_size": "Normal Size",
   "genshinerc.damageindicator.config.normal_size.desc": "Normal damage number size. Precision 0.01",
   "genshinerc.damageindicator.config.crit_size": "Crit Size",
@@ -104,7 +102,6 @@
   "genshinerc.damageindicator.damage_type.geo": "Geo",
   "genshinerc.damageindicator.damage_type.overload": "Overload",
   "genshinerc.damageindicator.config.size_y_factor_k": "Size Y Factor K",
-  "genshinerc.damageindicator.config.size_y_factor_k.desc": "Larger particles spawn higher on Y to avoid covering the entity head. Precision 0.01",
   "genshinerc.damageindicator.config.height_y_factor": "Entity Height Y Factor",
   "genshinerc.damageindicator.config.height_y_factor.desc": "Taller entity spawns higher. Precision 0.01",
   "genshinerc.damageindicator.config.birth_size_random_percent": "Birth Size Random Percent",
@@ -122,5 +119,8 @@
   "genshinerc.damageindicator.config.birth_fade_easing": "Birth Fade Easing",
   "genshinerc.damageindicator.config.birth_fade_easing.desc": "Easing curve for birth fade",
   "genshinerc.damageindicator.config.kill_extra_ticks": "Kill Final Hit Extra Ticks",
-  "genshinerc.damageindicator.config.kill_extra_ticks.desc": "Extra lifetime ticks for the killing blow number. Added on top of base lifetime"
+  "genshinerc.damageindicator.config.kill_extra_ticks.desc": "Extra lifetime ticks for the killing blow number. Added on top of base lifetime",
+  "genshinerc.damageindicator.config.shadow_color.desc": "Color of number shadow. This is a grayscale texture multiplied with the original color",
+  "genshinerc.damageindicator.config.size_y_factor_k.desc": "The larger the particle, the higher it spawns. This value increases that effect. Precision 0.01",
+  "genshinerc.damageindicator.config.offset_y.desc": "Height offset above the entity top, range -2.00 ~ 2.00, precision 0.01"
 }

@@ -17,7 +17,7 @@ public class DamageIndicatorConfig {
 
     @SerialEntry public boolean enabled = true;
     @SerialEntry public boolean drawShadow = true;
-    @SerialEntry public String shadowColor = "#000000";
+    @SerialEntry public String shadowColor = "#929292";
 
     @SerialEntry public int maxDistance = 35;
     @SerialEntry public int lifeTime = 16;
@@ -25,9 +25,9 @@ public class DamageIndicatorConfig {
     @SerialEntry public double gravityStrength = -0.15;
     @SerialEntry public boolean randomVelocityXZ = true;
     @SerialEntry public double randomVelocityXZAmount = 1.20;
-    @SerialEntry public double offsetY = 0.30;
-    @SerialEntry public double sizeYFactorK = 0.10;
-    @SerialEntry public double heightYFactor = 0.50;
+    @SerialEntry public double offsetY = 0.00;
+    @SerialEntry public double sizeYFactorK = 0.35;
+    @SerialEntry public double heightYFactor = 0.15;
 
     @SerialEntry public double normalSize = 1.50;
     @SerialEntry public double critSize = 2.50;
@@ -40,25 +40,25 @@ public class DamageIndicatorConfig {
     @SerialEntry public String colorHydro    = "#00CCFF";
     @SerialEntry public String colorAnemo    = "#66FFCC";
     @SerialEntry public String colorElectro  = "#CC66FF";
-    @SerialEntry public String colorDendro   = "#66CC33";
-    @SerialEntry public String colorCryo     = "#99FFFF";
-    @SerialEntry public String colorGeo      = "#FFCC33";
-    @SerialEntry public String colorOverload = "#FF3333";
+    @SerialEntry public String colorDendro   = "#55A601";
+    @SerialEntry public String colorCryo     = "#B4FFFE";
+    @SerialEntry public String colorGeo      = "#EFC01B";
+    @SerialEntry public String colorOverload = "#FD375A";
 
     @SerialEntry public boolean lifeShrinkEnabled = true;
     @SerialEntry public int lifeShrinkStartTick = 4;
-    @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_IN_OUT;
+    @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_OUT;
 
     @SerialEntry public boolean lifeFadeEnabled = true;
     @SerialEntry public int lifeFadeStartTick = 6;
-    @SerialEntry public EasingWrapper lifeFadeEasing = EasingWrapper.EASE_IN_OUT;
+    @SerialEntry public EasingWrapper lifeFadeEasing = EasingWrapper.EASE_OUT;
 
     @SerialEntry public boolean birthScaleEnabled = true;
     @SerialEntry public int birthScaleDuration = 4;
-    @SerialEntry public EasingWrapper birthScaleEasing = EasingWrapper.EASE_OUT;
+    @SerialEntry public EasingWrapper birthScaleEasing = EasingWrapper.EASE_IN;
     @SerialEntry public boolean birthFadeEnabled = true;
     @SerialEntry public int birthFadeDuration = 4;
-    @SerialEntry public EasingWrapper birthFadeEasing = EasingWrapper.EASE_OUT;
+    @SerialEntry public EasingWrapper birthFadeEasing = EasingWrapper.EASE_IN;
 
     @SerialEntry public boolean killFlashEnabled = true;
     @SerialEntry public int killFlashInterval = 2;
@@ -121,16 +121,16 @@ public class DamageIndicatorConfig {
 
                 .option(boolOpt(lock, "enabled", true, () -> c.enabled, v -> c.enabled = v))
                 .option(boolOpt(lock, "draw_shadow", true, () -> c.drawShadow, v -> c.drawShadow = v))
-                .option(colorOpt(lock, "shadow_color", new Color(0), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
+                .option(colorOpt(lock, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(intOpt(lock, "max_distance", 35, () -> c.maxDistance, v -> c.maxDistance = v, 1, 128))
                 .option(intOpt(lock, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(lock, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
                 .option(dblOpt(lock, "gravity_strength", -0.15, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
                 .option(boolOpt(lock, "random_velocity_xz", true, () -> c.randomVelocityXZ, v -> c.randomVelocityXZ = v))
                 .option(dblOpt(lock, "random_velocity_xz_amount", 1.20, () -> c.randomVelocityXZAmount, v -> c.randomVelocityXZAmount = v, 0.00, 2.00))
-                .option(dblOpt(lock, "offset_y", 0.30, () -> c.offsetY, v -> c.offsetY = v, 0.00, 1.00))
-                .option(dblOpt(lock, "size_y_factor_k", 0.10, () -> c.sizeYFactorK, v -> c.sizeYFactorK = v, 0.00, 1.00))
-                .option(dblOpt(lock, "height_y_factor", 0.50, () -> c.heightYFactor, v -> c.heightYFactor = v, 0.00, 2.00))
+                .option(dblOpt(lock, "offset_y", 0.00, () -> c.offsetY, v -> c.offsetY = v, -2.00, 2.00))
+                .option(dblOpt(lock, "size_y_factor_k", 0.35, () -> c.sizeYFactorK, v -> c.sizeYFactorK = v, 0.00, 1.00))
+                .option(dblOpt(lock, "height_y_factor", 0.15, () -> c.heightYFactor, v -> c.heightYFactor = v, 0.00, 2.00))
                 .option(dblOpt(lock, "normal_size", 1.50, () -> c.normalSize, v -> c.normalSize = v, 0.50, 3.00))
                 .option(dblOpt(lock, "crit_size", 2.50, () -> c.critSize, v -> c.critSize = v, 0.50, 5.00))
                 .option(dblOpt(lock, "kill_size", 3.00, () -> c.killSize, v -> c.killSize = v, 0.50, 5.00))
@@ -142,24 +142,24 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(lock, "color_hydro", new Color(0x00CCFF), () -> toAwt(c.colorHydro), v -> c.colorHydro = fromAwt(v)))
                 .option(colorOpt(lock, "color_anemo", new Color(0x66FFCC), () -> toAwt(c.colorAnemo), v -> c.colorAnemo = fromAwt(v)))
                 .option(colorOpt(lock, "color_electro", new Color(0xCC66FF), () -> toAwt(c.colorElectro), v -> c.colorElectro = fromAwt(v)))
-                .option(colorOpt(lock, "color_dendro", new Color(0x66CC33), () -> toAwt(c.colorDendro), v -> c.colorDendro = fromAwt(v)))
-                .option(colorOpt(lock, "color_cryo", new Color(0x99FFFF), () -> toAwt(c.colorCryo), v -> c.colorCryo = fromAwt(v)))
-                .option(colorOpt(lock, "color_geo", new Color(0xFFCC33), () -> toAwt(c.colorGeo), v -> c.colorGeo = fromAwt(v)))
-                .option(colorOpt(lock, "color_overload", new Color(0xFF3333), () -> toAwt(c.colorOverload), v -> c.colorOverload = fromAwt(v)))
+                .option(colorOpt(lock, "color_dendro", new Color(0x55A601), () -> toAwt(c.colorDendro), v -> c.colorDendro = fromAwt(v)))
+                .option(colorOpt(lock, "color_cryo", new Color(0xB4FFFE), () -> toAwt(c.colorCryo), v -> c.colorCryo = fromAwt(v)))
+                .option(colorOpt(lock, "color_geo", new Color(0xEFC01B), () -> toAwt(c.colorGeo), v -> c.colorGeo = fromAwt(v)))
+                .option(colorOpt(lock, "color_overload", new Color(0xFD375A), () -> toAwt(c.colorOverload), v -> c.colorOverload = fromAwt(v)))
 
                 .option(boolOpt(lock, "life_shrink_enabled", true, () -> c.lifeShrinkEnabled, v -> c.lifeShrinkEnabled = v))
                 .option(intOpt(lock, "life_shrink_start_tick", 4, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
-                .option(easingOpt(lock, "life_shrink_easing", EasingWrapper.EASE_IN_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))
+                .option(easingOpt(lock, "life_shrink_easing", EasingWrapper.EASE_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))
                 .option(boolOpt(lock, "life_fade_enabled", true, () -> c.lifeFadeEnabled, v -> c.lifeFadeEnabled = v))
                 .option(intOpt(lock, "life_fade_start_tick", 6, () -> c.lifeFadeStartTick, v -> c.lifeFadeStartTick = v, 1, 30))
-                .option(easingOpt(lock, "life_fade_easing", EasingWrapper.EASE_IN_OUT, () -> c.lifeFadeEasing, v -> c.lifeFadeEasing = v))
+                .option(easingOpt(lock, "life_fade_easing", EasingWrapper.EASE_OUT, () -> c.lifeFadeEasing, v -> c.lifeFadeEasing = v))
 
                 .option(boolOpt(lock, "birth_scale_enabled", true, () -> c.birthScaleEnabled, v -> c.birthScaleEnabled = v))
                 .option(intOpt(lock, "birth_scale_duration", 4, () -> c.birthScaleDuration, v -> c.birthScaleDuration = v, 1, 20))
-                .option(easingOpt(lock, "birth_scale_easing", EasingWrapper.EASE_OUT, () -> c.birthScaleEasing, v -> c.birthScaleEasing = v))
+                .option(easingOpt(lock, "birth_scale_easing", EasingWrapper.EASE_IN, () -> c.birthScaleEasing, v -> c.birthScaleEasing = v))
                 .option(boolOpt(lock, "birth_fade_enabled", true, () -> c.birthFadeEnabled, v -> c.birthFadeEnabled = v))
                 .option(intOpt(lock, "birth_fade_duration", 4, () -> c.birthFadeDuration, v -> c.birthFadeDuration = v, 1, 20))
-                .option(easingOpt(lock, "birth_fade_easing", EasingWrapper.EASE_OUT, () -> c.birthFadeEasing, v -> c.birthFadeEasing = v))
+                .option(easingOpt(lock, "birth_fade_easing", EasingWrapper.EASE_IN, () -> c.birthFadeEasing, v -> c.birthFadeEasing = v))
 
                 .option(boolOpt(lock, "kill_flash_enabled", true, () -> c.killFlashEnabled, v -> c.killFlashEnabled = v))
                 .option(intOpt(lock, "kill_flash_interval", 2, () -> c.killFlashInterval, v -> c.killFlashInterval = v, 1, 10))

@@ -18,14 +18,14 @@ public class NetworkHandler {
     public static void register() {
         int id = 0;
         CHANNEL.registerMessage(id++, DamagePacket.class, DamagePacket::encode, DamagePacket::decode, DamagePacket::handle);
-        CHANNEL.registerMessage(id++, ConfigSyncPacket.class, ConfigSyncPacket::encode, ConfigSyncPacket::decode, ConfigSyncPacket::handle);
+        CHANNEL.registerMessage(id++, DamageIndicatorConfigSyncPacket.class, DamageIndicatorConfigSyncPacket::encode, DamageIndicatorConfigSyncPacket::decode, DamageIndicatorConfigSyncPacket::handle);
     }
 
-    public static void sendDamage(LivingEntity e, String k, float a, boolean c, boolean kl,
+    public static void sendDamage(LivingEntity e, String k, float a, boolean c, boolean kl, boolean fh,
                                   float ab, String oc, Float os, boolean absorbDelta, boolean secondary) {
         if (e.level().isClientSide()) return;
         if (e.getServer() == null) return;
-        DamagePacket p = new DamagePacket(e.getId(), k, a, c, kl, ab, oc, os, absorbDelta, secondary);
+        DamagePacket p = new DamagePacket(e.getId(), k, a, c, kl, fh, ab, oc, os, absorbDelta, secondary);
         double r = currentRange;
         double rSq = r * r;
         for (ServerPlayer sp : e.getServer().getPlayerList().getPlayers()) {
@@ -35,7 +35,7 @@ public class NetworkHandler {
         }
     }
 
-    public static void syncConfigTo(ServerPlayer player, ConfigSyncPacket packet) {
+    public static void syncConfigTo(ServerPlayer player, DamageIndicatorConfigSyncPacket packet) {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
         currentRange = packet.maxDistance;
     }
