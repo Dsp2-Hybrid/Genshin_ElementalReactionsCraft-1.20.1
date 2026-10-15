@@ -19,17 +19,17 @@ public class DamageIndicatorConfig {
     @SerialEntry public boolean drawShadow = true;
     @SerialEntry public String shadowColor = "#000000";
 
-    @SerialEntry public double maxDistance = 35.00;
+    @SerialEntry public int maxDistance = 35;
     @SerialEntry public int lifeTime = 16;
-    @SerialEntry public float velocityMultiplier = 0.30f;
-    @SerialEntry public float gravityStrength = -0.20f;
+    @SerialEntry public double velocityMultiplier = 0.30;
+    @SerialEntry public double gravityStrength = -0.20;
     @SerialEntry public boolean randomVelocityXZ = true;
-    @SerialEntry public float randomVelocityXZAmount = 0.80f;
-    @SerialEntry public float offsetY = 0.30f;
+    @SerialEntry public double randomVelocityXZAmount = 0.80;
+    @SerialEntry public double offsetY = 0.30;
 
-    @SerialEntry public float normalSize = 1.50f;
-    @SerialEntry public float critSize = 2.50f;
-    @SerialEntry public float killSize = 3.00f;
+    @SerialEntry public double normalSize = 1.50;
+    @SerialEntry public double critSize = 2.50;
+    @SerialEntry public double killSize = 3.00;
     @SerialEntry public String absorbColor = "#FFEE00";
 
     @SerialEntry public String colorPhysical = "#FFFFFF";
@@ -104,29 +104,25 @@ public class DamageIndicatorConfig {
         DamageIndicatorConfig c = get();
         boolean lock = isMultiplayerClient();
 
-        OptionGroup general = OptionGroup.createBuilder()
-                .name(t("genshinerc.damageindicator.group.general"))
-                .description(OptionDescription.of(td("genshinerc.damageindicator.group.general")))
+        OptionGroup group = OptionGroup.createBuilder()
+                .name(t("genshinerc.damageindicator.group.indicator"))
+                .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
+
                 .option(boolOpt(lock, "enabled", true, () -> c.enabled, v -> c.enabled = v))
                 .option(boolOpt(lock, "draw_shadow", true, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(lock, "shadow_color", new Color(0), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
-                .option(dblOpt(lock, "max_distance", 35.00, () -> c.maxDistance, v -> c.maxDistance = v, 17.50, 52.50))
+                .option(intOpt(lock, "max_distance", 35, () -> c.maxDistance, v -> c.maxDistance = v, 1, 128))
                 .option(intOpt(lock, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
-                .option(fltOpt(lock, "velocity_multiplier", 0.30f, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00f, 1.00f))
-                .option(fltOpt(lock, "gravity_strength", -0.20f, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00f, 1.00f))
+                .option(dblOpt(lock, "velocity_multiplier", 0.30, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
+                .option(dblOpt(lock, "gravity_strength", -0.20, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
                 .option(boolOpt(lock, "random_velocity_xz", true, () -> c.randomVelocityXZ, v -> c.randomVelocityXZ = v))
-                .option(fltOpt(lock, "random_velocity_xz_amount", 0.80f, () -> c.randomVelocityXZAmount, v -> c.randomVelocityXZAmount = v, 0.00f, 2.00f))
-                .option(fltOpt(lock, "offset_y", 0.30f, () -> c.offsetY, v -> c.offsetY = v, 0.00f, 1.00f))
-                .option(fltOpt(lock, "normal_size", 1.50f, () -> c.normalSize, v -> c.normalSize = v, 0.50f, 3.00f))
-                .option(fltOpt(lock, "crit_size", 2.50f, () -> c.critSize, v -> c.critSize = v, 0.50f, 5.00f))
-                .option(fltOpt(lock, "kill_size", 3.00f, () -> c.killSize, v -> c.killSize = v, 0.50f, 5.00f))
+                .option(dblOpt(lock, "random_velocity_xz_amount", 0.80, () -> c.randomVelocityXZAmount, v -> c.randomVelocityXZAmount = v, 0.00, 2.00))
+                .option(dblOpt(lock, "offset_y", 0.30, () -> c.offsetY, v -> c.offsetY = v, 0.00, 1.00))
+                .option(dblOpt(lock, "normal_size", 1.50, () -> c.normalSize, v -> c.normalSize = v, 0.50, 3.00))
+                .option(dblOpt(lock, "crit_size", 2.50, () -> c.critSize, v -> c.critSize = v, 0.50, 5.00))
+                .option(dblOpt(lock, "kill_size", 3.00, () -> c.killSize, v -> c.killSize = v, 0.50, 5.00))
                 .option(colorOpt(lock, "absorb_color", new Color(0xFFEE00), () -> toAwt(c.absorbColor), v -> c.absorbColor = fromAwt(v)))
-                .option(boolOpt(lock, "debug", false, () -> c.debug, v -> c.debug = v))
-                .build();
 
-        OptionGroup colors = OptionGroup.createBuilder()
-                .name(t("genshinerc.damageindicator.group.colors"))
-                .description(OptionDescription.of(td("genshinerc.damageindicator.group.colors")))
                 .option(colorOpt(lock, "color_physical", new Color(0xFFFFFF), () -> toAwt(c.colorPhysical), v -> c.colorPhysical = fromAwt(v)))
                 .option(colorOpt(lock, "color_pyro", new Color(0xFF6600), () -> toAwt(c.colorPyro), v -> c.colorPyro = fromAwt(v)))
                 .option(colorOpt(lock, "color_hydro", new Color(0x00CCFF), () -> toAwt(c.colorHydro), v -> c.colorHydro = fromAwt(v)))
@@ -136,32 +132,28 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(lock, "color_cryo", new Color(0x99FFFF), () -> toAwt(c.colorCryo), v -> c.colorCryo = fromAwt(v)))
                 .option(colorOpt(lock, "color_geo", new Color(0xFFCC33), () -> toAwt(c.colorGeo), v -> c.colorGeo = fromAwt(v)))
                 .option(colorOpt(lock, "color_overload", new Color(0xFF3333), () -> toAwt(c.colorOverload), v -> c.colorOverload = fromAwt(v)))
-                .build();
 
-        OptionGroup life = OptionGroup.createBuilder()
-                .name(t("genshinerc.damageindicator.group.life_anim"))
-                .description(OptionDescription.of(td("genshinerc.damageindicator.group.life_anim")))
                 .option(boolOpt(lock, "life_shrink_enabled", true, () -> c.lifeShrinkEnabled, v -> c.lifeShrinkEnabled = v))
                 .option(intOpt(lock, "life_shrink_start_tick", 5, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
                 .option(easingOpt(lock, "life_shrink_easing", EasingWrapper.EASE_IN_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))
+
                 .option(boolOpt(lock, "life_fade_enabled", true, () -> c.lifeFadeEnabled, v -> c.lifeFadeEnabled = v))
                 .option(intOpt(lock, "life_fade_start_tick", 3, () -> c.lifeFadeStartTick, v -> c.lifeFadeStartTick = v, 1, 30))
                 .option(easingOpt(lock, "life_fade_easing", EasingWrapper.EASE_IN_OUT, () -> c.lifeFadeEasing, v -> c.lifeFadeEasing = v))
-                .build();
 
-        OptionGroup kill = OptionGroup.createBuilder()
-                .name(t("genshinerc.damageindicator.group.kill_anim"))
-                .description(OptionDescription.of(td("genshinerc.damageindicator.group.kill_anim")))
                 .option(boolOpt(lock, "kill_flash_enabled", true, () -> c.killFlashEnabled, v -> c.killFlashEnabled = v))
                 .option(intOpt(lock, "kill_flash_interval", 2, () -> c.killFlashInterval, v -> c.killFlashInterval = v, 1, 10))
                 .option(intOpt(lock, "kill_flash_ticks", 12, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
+
+                .option(boolOpt(lock, "debug", false, () -> c.debug, v -> c.debug = v))
                 .build();
 
         return YetAnotherConfigLib.createBuilder()
                 .title(t("genshinerc.damageindicator.title"))
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
-                        .group(general).group(colors).group(life).group(kill).build())
+                        .group(group)
+                        .build())
                 .save(DamageIndicatorConfig::save)
                 .build()
                 .generateScreen(null);
@@ -175,30 +167,21 @@ public class DamageIndicatorConfig {
         if (lock) b.available(false);
         return b.build();
     }
-    private static Option<Double> dblOpt(boolean lock, String key, double def, java.util.function.Supplier<Double> g, java.util.function.Consumer<Double> s, double min, double max) {
-        Option.Builder<Double> b = Option.<Double>createBuilder()
-                .name(lock ? tsrv(P(key)) : t(P(key)))
-                .description(OptionDescription.of(td(P(key))))
-                .binding(def, g, s)
-                .controller(opt -> DoubleSliderControllerBuilder.create(opt).range(min, max).step(0.01));
-        if (lock) b.available(false);
-        return b.build();
-    }
-    private static Option<Float> fltOpt(boolean lock, String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max) {
-        Option.Builder<Float> b = Option.<Float>createBuilder()
-                .name(lock ? tsrv(P(key)) : t(P(key)))
-                .description(OptionDescription.of(td(P(key))))
-                .binding(def, g, s)
-                .controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(0.01f));
-        if (lock) b.available(false);
-        return b.build();
-    }
     private static Option<Integer> intOpt(boolean lock, String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max) {
         Option.Builder<Integer> b = Option.<Integer>createBuilder()
                 .name(lock ? tsrv(P(key)) : t(P(key)))
                 .description(OptionDescription.of(td(P(key))))
                 .binding(def, g, s)
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(1));
+        if (lock) b.available(false);
+        return b.build();
+    }
+    private static Option<Double> dblOpt(boolean lock, String key, double def, java.util.function.Supplier<Double> g, java.util.function.Consumer<Double> s, double min, double max) {
+        Option.Builder<Double> b = Option.<Double>createBuilder()
+                .name(lock ? tsrv(P(key)) : t(P(key)))
+                .description(OptionDescription.of(td(P(key))))
+                .binding(def, g, s)
+                .controller(opt -> DoubleSliderControllerBuilder.create(opt).range(min, max).step(0.01));
         if (lock) b.available(false);
         return b.build();
     }

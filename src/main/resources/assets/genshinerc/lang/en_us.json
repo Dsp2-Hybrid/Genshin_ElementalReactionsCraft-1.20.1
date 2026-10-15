@@ -83,6 +83,8 @@
   "genshinerc.damageindicator.config.kill_flash_interval.desc": "Color switches every N ticks",
   "genshinerc.damageindicator.config.kill_flash_ticks": "Flash Duration (ticks)",
   "genshinerc.damageindicator.config.kill_flash_ticks.desc": "Total ticks of alternating flash",
+  "genshinerc.damageindicator.group.indicator": "Damage Indicator",
+  "genshinerc.damageindicator.group.indicator.desc": "All damage indicator related options",
 
   "genshinerc.damageindicator.easing.linear": "Linear",
   "genshinerc.damageindicator.easing.ease_in": "Ease In",

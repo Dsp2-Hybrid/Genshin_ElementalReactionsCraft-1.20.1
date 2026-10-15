@@ -9,11 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class ConfigSyncPacket {
-    public final double maxDistance;
+    public final int maxDistance;
     public final int lifeTime;
-    public final float velocityMultiplier, gravityStrength, randomVelocityXZAmount, offsetY;
+    public final double velocityMultiplier, gravityStrength, randomVelocityXZAmount, offsetY;
     public final boolean randomVelocityXZ;
-    public final float normalSize, critSize, killSize;
+    public final double normalSize, critSize, killSize;
     public final String absorbColor, shadowColor;
     public final String colorPhysical, colorPyro, colorHydro, colorAnemo, colorElectro, colorDendro, colorCryo, colorGeo, colorOverload;
     public final boolean lifeShrinkEnabled, lifeFadeEnabled, killFlashEnabled;
@@ -54,16 +54,16 @@ public class ConfigSyncPacket {
     }
 
     public ConfigSyncPacket(FriendlyByteBuf b) {
-        this.maxDistance = b.readDouble();
+        this.maxDistance = b.readVarInt();
         this.lifeTime = b.readVarInt();
-        this.velocityMultiplier = b.readFloat();
-        this.gravityStrength = b.readFloat();
+        this.velocityMultiplier = b.readDouble();
+        this.gravityStrength = b.readDouble();
         this.randomVelocityXZ = b.readBoolean();
-        this.randomVelocityXZAmount = b.readFloat();
-        this.offsetY = b.readFloat();
-        this.normalSize = b.readFloat();
-        this.critSize = b.readFloat();
-        this.killSize = b.readFloat();
+        this.randomVelocityXZAmount = b.readDouble();
+        this.offsetY = b.readDouble();
+        this.normalSize = b.readDouble();
+        this.critSize = b.readDouble();
+        this.killSize = b.readDouble();
         this.absorbColor = b.readUtf();
         this.shadowColor = b.readUtf();
         this.colorPhysical = b.readUtf(); this.colorPyro = b.readUtf(); this.colorHydro = b.readUtf();
@@ -81,16 +81,16 @@ public class ConfigSyncPacket {
     }
 
     public static void encode(ConfigSyncPacket p, FriendlyByteBuf b) {
-        b.writeDouble(p.maxDistance);
+        b.writeVarInt(p.maxDistance);
         b.writeVarInt(p.lifeTime);
-        b.writeFloat(p.velocityMultiplier);
-        b.writeFloat(p.gravityStrength);
+        b.writeDouble(p.velocityMultiplier);
+        b.writeDouble(p.gravityStrength);
         b.writeBoolean(p.randomVelocityXZ);
-        b.writeFloat(p.randomVelocityXZAmount);
-        b.writeFloat(p.offsetY);
-        b.writeFloat(p.normalSize);
-        b.writeFloat(p.critSize);
-        b.writeFloat(p.killSize);
+        b.writeDouble(p.randomVelocityXZAmount);
+        b.writeDouble(p.offsetY);
+        b.writeDouble(p.normalSize);
+        b.writeDouble(p.critSize);
+        b.writeDouble(p.killSize);
         b.writeUtf(p.absorbColor);
         b.writeUtf(p.shadowColor);
         b.writeUtf(p.colorPhysical); b.writeUtf(p.colorPyro); b.writeUtf(p.colorHydro);

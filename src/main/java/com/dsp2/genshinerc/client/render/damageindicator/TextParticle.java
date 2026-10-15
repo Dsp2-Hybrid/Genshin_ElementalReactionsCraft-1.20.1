@@ -19,8 +19,8 @@ public class TextParticle {
     private final CustomColor color;
     private final float scale;
     private final boolean drawShadow;
-    private final float gravity;
-    private final float velocityMult;
+    private final double gravity;
+    private final double velocityMult;
     private final boolean isKill;
     private final DamageIndicatorConfig cfg;
     private final CustomColor altColor;
@@ -28,7 +28,7 @@ public class TextParticle {
     private final EasingType fadeEasing;
 
     public TextParticle(double x, double y, double z, double vx, double vy, double vz,
-                        Component text, CustomColor color, float velocityMult, float gravity,
+                        Component text, CustomColor color, double velocityMult, double gravity,
                         int maxAge, float scale, boolean drawShadow, boolean isKill,
                         DamageIndicatorConfig cfg) {
         this.x = x; this.y = y; this.z = z;

@@ -83,6 +83,8 @@
   "genshinerc.damageindicator.config.kill_flash_interval.desc": "每隔几个 Tick 切换一次颜色",
   "genshinerc.damageindicator.config.kill_flash_ticks": "闪烁持续 (Tick)",
   "genshinerc.damageindicator.config.kill_flash_ticks.desc": "颜色交替闪烁的总 Tick 数",
+  "genshinerc.damageindicator.group.indicator": "伤害指示器",
+  "genshinerc.damageindicator.group.indicator.desc": "所有伤害指示器相关配置",
 
   "genshinerc.damageindicator.easing.linear": "正常差值",
   "genshinerc.damageindicator.easing.ease_in": "缓入",

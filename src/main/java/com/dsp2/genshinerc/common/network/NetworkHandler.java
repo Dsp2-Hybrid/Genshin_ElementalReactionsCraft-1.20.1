@@ -13,7 +13,7 @@ public class NetworkHandler {
             ResourceLocation.fromNamespaceAndPath("genshinerc", "damage_indicator"),
             () -> P, P::equals, P::equals);
 
-    public static volatile double currentRange = 35.0;
+    public static volatile int currentRange = 35;
 
     public static void register() {
         int id = 0;
