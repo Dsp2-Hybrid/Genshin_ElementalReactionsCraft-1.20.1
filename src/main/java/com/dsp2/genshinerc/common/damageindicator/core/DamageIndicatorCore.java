@@ -9,6 +9,7 @@ public class DamageIndicatorCore {
         NetworkHandler.register();
         if (FMLEnvironment.dist.isClient()) {
             DamageIndicatorConfig.load();
+            NetworkHandler.currentRange = DamageIndicatorConfig.get().maxDistance;
         }
     }
 }

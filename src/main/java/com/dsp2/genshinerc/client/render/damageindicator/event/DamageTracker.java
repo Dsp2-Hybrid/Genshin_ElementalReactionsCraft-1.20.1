@@ -1,10 +1,10 @@
 package com.dsp2.genshinerc.client.render.damageindicator.event;
 
+import com.dsp2.genshinerc.client.render.damageindicator.TextParticle;
 import com.dsp2.genshinerc.client.render.damageindicator.api.CustomColor;
 import com.dsp2.genshinerc.client.render.damageindicator.api.DamageColorProvider;
 import com.dsp2.genshinerc.client.render.damageindicator.api.DamageSizeProvider;
 import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
-import com.dsp2.genshinerc.client.render.damageindicator.TextParticle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -34,41 +34,52 @@ public class DamageTracker {
                 ? CustomColor.fromHexString(info.overrideColor)
                 : colorProvider.getColor(info);
 
-        Vector3d pos = new Vector3d(info.entity.getX(),
+        Vector3d basePos = new Vector3d(info.entity.getX(),
                 info.entity.getY() + info.entity.getBbHeight() + cfg.offsetY,
                 info.entity.getZ());
 
-        Vector3d vel = new Vector3d(cfg.randomVelocityXZ ? cfg.randomVelocityXZAmount : 0, cfg.velocityY, 0);
+        Vector3d velBase = new Vector3d(0, 0, 0);
         if (cfg.randomVelocityXZ) {
-            vel.x = (Math.random() - 0.5) * 2 * cfg.randomVelocityXZAmount;
-            vel.z = (Math.random() - 0.5) * 2 * cfg.randomVelocityXZAmount;
+            velBase.x = (Math.random() - 0.5) * 2 * cfg.randomVelocityXZAmount;
+            velBase.z = (Math.random() - 0.5) * 2 * cfg.randomVelocityXZAmount;
         }
 
         if (info.hasAbsorb()) {
+            double offX = 0.35;
+            Vector3d p1 = new Vector3d(basePos.x - offX, basePos.y, basePos.z);
+            Vector3d p2 = new Vector3d(basePos.x + offX, basePos.y, basePos.z);
             String absorbText = "-" + trim(info.absorbed);
-            addOne(pos, vel, absorbText, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false);
+            addOne(p1, velBase, absorbText, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false, false);
             if (info.amount > 0.001f) {
-                String realText = "-" + trim(info.amount);
-                addOne(pos, vel, realText, color, scale, cfg, false);
+                String realText = trim(info.amount);
+                addOne(p2, velBase, realText, color, scale, cfg, false, true);
             }
+        } else if (info.absorbDelta) {
+            String text = (info.amount >= 0 ? "+" : "") + trim(Math.abs(info.amount));
+            addOne(basePos, velBase, text, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false, false);
         } else {
-            addOne(pos, vel, formatDamage(info), color, scale, cfg, info.kill);
+            addOne(basePos, velBase, formatDamage(info), color, scale, cfg, info.kill, false);
         }
     }
 
     private static void addOne(Vector3d pos, Vector3d vel, String text, CustomColor color,
-                               float scale, DamageIndicatorConfig cfg, boolean kill) {
+                               float scale, DamageIndicatorConfig cfg, boolean kill, boolean secondary) {
+        Vector3d velCopy = new Vector3d(vel);
+        if (secondary) {
+            velCopy.x += (Math.random() - 0.5) * 0.2;
+            velCopy.z += (Math.random() - 0.5) * 0.2;
+        }
         PARTICLES.add(new TextParticle(
-                pos.x, pos.y, pos.z, vel.x, vel.y, vel.z,
+                pos.x, pos.y, pos.z, velCopy.x, velCopy.y, velCopy.z,
                 Component.literal(text), color, cfg.velocityMultiplier, cfg.gravityStrength,
-                (int) cfg.lifeTime, scale, cfg.drawShadow, kill, cfg));
+                cfg.lifeTime, scale, cfg.drawShadow, kill, cfg));
     }
 
     private static String formatDamage(DamageInfo i) {
         String s = trim(Math.abs(i.amount));
         if (i.isHeal()) return "+" + s;
-        if (i.kill) return "-" + s + "!";
-        return "-" + s;
+        if (i.kill) return s + "!";
+        return s;
     }
     private static String trim(float v) {
         String s = String.format("%.1f", v);
@@ -76,7 +87,6 @@ public class DamageTracker {
     }
 
     public static void tickAll() { PARTICLES.removeIf(TextParticle::tick); }
-
     public static void renderAll(PoseStack ps, MultiBufferSource buf, Camera cam, float pt) {
         for (TextParticle p : PARTICLES) p.render(ps, buf, cam, pt);
     }

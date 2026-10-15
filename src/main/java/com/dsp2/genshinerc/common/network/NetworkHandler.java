@@ -13,8 +13,7 @@ public class NetworkHandler {
             ResourceLocation.fromNamespaceAndPath("genshinerc", "damage_indicator"),
             () -> P, P::equals, P::equals);
 
-    private static final double BROADCAST_RANGE = 35.0;
-    private static final double BROADCAST_RANGE_SQ = BROADCAST_RANGE * BROADCAST_RANGE;
+    public static volatile double currentRange = 35.0;
 
     public static void register() {
         int id = 0;
@@ -26,8 +25,10 @@ public class NetworkHandler {
         if (e.level().isClientSide()) return;
         if (e.getServer() == null) return;
         DamagePacket p = new DamagePacket(e.getId(), k, a, c, kl, ab, oc, os);
+        double r = currentRange;
+        double rSq = r * r;
         for (ServerPlayer sp : e.getServer().getPlayerList().getPlayers()) {
-            if (sp.distanceToSqr(e) <= BROADCAST_RANGE_SQ) {
+            if (sp.distanceToSqr(e) <= rSq) {
                 CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), p);
             }
         }
@@ -35,5 +36,6 @@ public class NetworkHandler {
 
     public static void syncConfigTo(ServerPlayer player, ConfigSyncPacket packet) {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
+        currentRange = packet.maxDistance;
     }
 }

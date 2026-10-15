@@ -36,6 +36,7 @@ public class DamagePacket {
         b.writeBoolean(p.overrideSize != null);
         if (p.overrideSize != null) b.writeFloat(p.overrideSize);
     }
+
     public static DamagePacket decode(FriendlyByteBuf b) {
         int id = b.readVarInt();
         String k = b.readUtf();
@@ -46,6 +47,7 @@ public class DamagePacket {
         Float os = b.readBoolean() ? b.readFloat() : null;
         return new DamagePacket(id, k, a, c, kl, ab, oc, os);
     }
+
     public static void handle(DamagePacket p, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() ->
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->

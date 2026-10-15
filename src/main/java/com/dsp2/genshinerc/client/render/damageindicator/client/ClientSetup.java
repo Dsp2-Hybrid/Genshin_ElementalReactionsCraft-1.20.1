@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.damageindicator;
+package com.dsp2.genshinerc.client.render.damageindicator.client;
 
 import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
 import net.minecraftforge.api.distmarker.Dist;

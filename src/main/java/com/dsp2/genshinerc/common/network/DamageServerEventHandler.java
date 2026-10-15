@@ -1,6 +1,5 @@
 package com.dsp2.genshinerc.common.network;
 
-import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;
@@ -16,7 +15,6 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = "genshinerc", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class DamageServerEventHandler {
-
     private static final Map<UUID, Float> LAST_ABSORPTION = new HashMap<>();
 
     @SubscribeEvent
@@ -34,12 +32,11 @@ public class DamageServerEventHandler {
             if (amount < 0) amount = 0;
         }
         boolean kill = (e.getHealth() - original) <= 0;
-        boolean crit = event.getSource().getDirectEntity() instanceof net.minecraft.world.entity.player.Player;
 
         if (absorbed > 0) {
             NetworkHandler.sendDamage(e, "physical", amount, false, kill, absorbed, null, null);
         } else {
-            NetworkHandler.sendDamage(e, "physical", amount, crit, kill, 0f, null, null);
+            NetworkHandler.sendDamage(e, "physical", amount, false, kill, 0f, null, null);
         }
     }
 
@@ -62,7 +59,7 @@ public class DamageServerEventHandler {
         float diff = current - last;
         LAST_ABSORPTION.put(sp.getUUID(), current);
         if (diff > 0.001f) {
-            NetworkHandler.sendDamage(sp, "physical", -diff, false, false, 0f, null, null);
+            NetworkHandler.sendDamage(sp, "physical", diff, false, false, 0f, null, null);
         }
     }
 
@@ -74,9 +71,8 @@ public class DamageServerEventHandler {
     @SubscribeEvent
     public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
-        DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
-        if (cfg != null) {
-            NetworkHandler.syncConfigTo(sp, new ConfigSyncPacket(cfg));
-        }
+        // ConfigSyncPacket 使用服务端同一份 DamageIndicatorConfig 数据（单人共享 / 服务端权威）
+        NetworkHandler.syncConfigTo(sp, new ConfigSyncPacket(
+                com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig.get()));
     }
 }
