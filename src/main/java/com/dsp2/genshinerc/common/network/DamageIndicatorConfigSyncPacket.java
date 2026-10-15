@@ -88,7 +88,12 @@ public class DamageIndicatorConfigSyncPacket {
     public static DamageIndicatorConfigSyncPacket decode(FriendlyByteBuf b) { return new DamageIndicatorConfigSyncPacket(b); }
 
     public static void handle(DamageIndicatorConfigSyncPacket p, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+        NetworkEvent.Context context = ctx.get();
+        if (context.getSender() != null) {
+            context.setPacketHandled(true);
+            return;
+        }
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
             DamageIndicatorConfig c = DamageIndicatorConfig.get();
             c.maxDistance = p.maxDistance; c.lifeTime = p.lifeTime;
             c.velocityMultiplier = p.velocityMultiplier; c.gravityStrength = p.gravityStrength;
@@ -111,6 +116,6 @@ public class DamageIndicatorConfigSyncPacket {
             c.killFlashEnabled = p.killFlashEnabled; c.killFlashInterval = p.killFlashInterval;
             c.killFlashTicks = p.killFlashTicks; c.killExtraTicks = p.killExtraTicks;
         }));
-        ctx.get().setPacketHandled(true);
+        context.setPacketHandled(true);
     }
 }

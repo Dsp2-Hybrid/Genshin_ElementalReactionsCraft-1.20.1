@@ -16,7 +16,7 @@ import java.awt.Color;
 public class DamageIndicatorConfig {
 
     @SerialEntry public boolean enabled = true;
-    @SerialEntry public boolean drawShadow = true;
+    @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
 
     @SerialEntry public int maxDistance = 35;
@@ -120,7 +120,7 @@ public class DamageIndicatorConfig {
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
 
                 .option(boolOpt(lock, "enabled", true, () -> c.enabled, v -> c.enabled = v))
-                .option(boolOpt(lock, "draw_shadow", true, () -> c.drawShadow, v -> c.drawShadow = v))
+                .option(boolOpt(lock, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(lock, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(intOpt(lock, "max_distance", 35, () -> c.maxDistance, v -> c.maxDistance = v, 1, 128))
                 .option(intOpt(lock, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
