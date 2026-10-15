@@ -1,25 +1,24 @@
 package com.dsp2.genshinerc.client.render.damageindicator.event;
 
-import com.dsp2.genshinerc.client.render.damageindicator.api.DamageColorPreset;
 import net.minecraft.world.entity.LivingEntity;
 
 public class DamageInfo {
     public final LivingEntity entity;
+    public final String typeKey;
     public final float amount;
     public final boolean crit;
-    public final DamageColorPreset preset;
+    public final boolean kill;
+    public final float absorbed;
+    public final String overrideColor;
+    public final Float overrideSize;
 
-    public DamageInfo(LivingEntity entity, float amount) {
-        this(entity, amount, false, DamageColorPreset.WHITE);
+    public DamageInfo(LivingEntity e, String t, float a, boolean c, boolean k, float ab, String oc, Float os) {
+        this.entity = e; this.typeKey = t; this.amount = a;
+        this.crit = c; this.kill = k; this.absorbed = ab;
+        this.overrideColor = oc; this.overrideSize = os;
     }
-
-    public DamageInfo(LivingEntity entity, float amount, boolean crit, DamageColorPreset preset) {
-        this.entity = entity;
-        this.amount = amount;
-        this.crit = crit;
-        this.preset = preset;
-    }
-
-    public boolean isCrit() { return crit; }
     public boolean isHeal() { return amount < 0; }
+    public boolean hasAbsorb() { return absorbed > 0.001f; }
+    public boolean hasOverrideColor() { return overrideColor != null; }
+    public boolean hasOverrideSize() { return overrideSize != null; }
 }

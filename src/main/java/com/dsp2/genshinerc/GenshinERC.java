@@ -13,5 +13,6 @@ public class GenshinERC {
         IEventBus modEventBus = context.getModEventBus();
 
         DamageIndicatorCore.init();
+
     }
 }

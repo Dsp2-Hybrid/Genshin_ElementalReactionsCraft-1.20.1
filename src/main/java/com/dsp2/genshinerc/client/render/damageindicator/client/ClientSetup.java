@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.damageindicator.client;
+package com.dsp2.genshinerc.client.render.damageindicator;
 
 import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
 import net.minecraftforge.api.distmarker.Dist;
@@ -10,15 +10,11 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientSetup {
-
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent e) {
         ModLoadingContext.get().registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (mc, parent) -> DamageIndicatorConfig.createScreen()
-                )
-        );
-        System.out.println("[DI] Config screen factory registered");
+                        (mc, parent) -> DamageIndicatorConfig.createScreen()));
     }
 }

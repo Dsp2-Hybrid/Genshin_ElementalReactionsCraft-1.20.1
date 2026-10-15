@@ -1,10 +1,14 @@
 package com.dsp2.genshinerc.client.render.damageindicator.event;
 
-import com.dsp2.genshinerc.client.render.damageindicator.TextParticle;
+import com.dsp2.genshinerc.client.render.damageindicator.api.CustomColor;
 import com.dsp2.genshinerc.client.render.damageindicator.api.DamageColorProvider;
 import com.dsp2.genshinerc.client.render.damageindicator.api.DamageSizeProvider;
 import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
+import com.dsp2.genshinerc.client.render.damageindicator.TextParticle;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import org.joml.Vector3d;
 
@@ -13,74 +17,67 @@ import java.util.List;
 
 public class DamageTracker {
     private static final List<TextParticle> PARTICLES = new ArrayList<>();
-    private static DamageColorProvider colorProvider = DamageColorProvider.CONFIG_DEFAULT;
+    private static DamageColorProvider colorProvider = DamageColorProvider.DEFAULT;
     private static DamageSizeProvider sizeProvider = DamageSizeProvider.DEFAULT;
 
     public static void setColorProvider(DamageColorProvider p) { colorProvider = p; }
     public static void setSizeProvider(DamageSizeProvider p) { sizeProvider = p; }
-    public static DamageColorProvider getColorProvider() { return colorProvider; }
-    public static DamageSizeProvider getSizeProvider() { return sizeProvider; }
 
-    public static void reportDamage(DamageInfo info) {
-        System.out.println("[DI] reportDamage called: amount=" + info.amount + " crit=" + info.crit
-                + " entity=" + (info.entity != null ? info.entity.getName().getString() : "null"));
-
+    public static void addParticle(DamageInfo info) {
         DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
-        if (cfg == null) { System.out.println("[DI] cfg is NULL"); return; }
-        if (!cfg.enabled) { System.out.println("[DI] disabled in config"); return; }
-        if (info.entity == null) { System.out.println("[DI] entity null"); return; }
-
+        if (!cfg.enabled || info.entity == null) return;
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) { System.out.println("[DI] mc.player null"); return; }
-        if (info.entity == mc.player && !cfg.showSelfDamage) { System.out.println("[DI] self damage hidden"); return; }
-        if (mc.player.distanceTo(info.entity) > cfg.maxDistance) {
-            System.out.println("[DI] too far: " + mc.player.distanceTo(info.entity) + " > " + cfg.maxDistance);
-            return;
-        }
+        if (mc.player == null) return;
 
-        float scale = sizeProvider.getSize(info);
-        var color = colorProvider.getColor(info);
-        String text = formatText(info, cfg);
+        float scale = info.hasOverrideSize() ? info.overrideSize : sizeProvider.getSize(info);
+        CustomColor color = info.hasOverrideColor()
+                ? CustomColor.fromHexString(info.overrideColor)
+                : colorProvider.getColor(info);
 
-        var pos = info.entity.position().add(cfg.offsetX, info.entity.getBbHeight() + cfg.offsetY, cfg.offsetZ);
-        var vel = new Vector3d(cfg.velocityX, cfg.velocityY, cfg.velocityZ);
+        Vector3d pos = new Vector3d(info.entity.getX(),
+                info.entity.getY() + info.entity.getBbHeight() + cfg.offsetY,
+                info.entity.getZ());
 
+        Vector3d vel = new Vector3d(cfg.randomVelocityXZ ? cfg.randomVelocityXZAmount : 0, cfg.velocityY, 0);
         if (cfg.randomVelocityXZ) {
-            vel.x = Math.random() * cfg.velocityX;
-            vel.z = Math.random() * cfg.velocityZ;
+            vel.x = (Math.random() - 0.5) * 2 * cfg.randomVelocityXZAmount;
+            vel.z = (Math.random() - 0.5) * 2 * cfg.randomVelocityXZAmount;
         }
 
-        PARTICLES.add(new TextParticle(pos.x, pos.y, pos.z, vel.x, vel.y, vel.z,
-                Component.literal(text), color, cfg.velocityMultiplier, cfg.gravityStrength,
-                cfg.lifeTime, scale, cfg.drawShadow));
-
-        System.out.println("[DI] particle added: " + text + " at " + pos);
-    }
-
-    private static String formatText(DamageInfo info, DamageIndicatorConfig cfg) {
-        float dmg = info.amount;
-        if (cfg.showPercentageText) {
-            float pct = Math.abs(dmg) / info.entity.getMaxHealth() * 100f;
-            String s = String.format("%.1f", pct);
-            if (s.endsWith(".0")) s = s.substring(0, s.length() - 2);
-            return (dmg > 0 ? "" : "+") + s + "%";
+        if (info.hasAbsorb()) {
+            String absorbText = "-" + trim(info.absorbed);
+            addOne(pos, vel, absorbText, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false);
+            if (info.amount > 0.001f) {
+                String realText = "-" + trim(info.amount);
+                addOne(pos, vel, realText, color, scale, cfg, false);
+            }
         } else {
-            String s = String.format("%.1f", Math.abs(dmg));
-            if (s.endsWith(".0")) s = s.substring(0, s.length() - 2);
-            return (dmg > 0 ? "" : "+") + s;
+            addOne(pos, vel, formatDamage(info), color, scale, cfg, info.kill);
         }
     }
 
-    public static void tickAll() {
-        PARTICLES.removeIf(TextParticle::tick);
+    private static void addOne(Vector3d pos, Vector3d vel, String text, CustomColor color,
+                               float scale, DamageIndicatorConfig cfg, boolean kill) {
+        PARTICLES.add(new TextParticle(
+                pos.x, pos.y, pos.z, vel.x, vel.y, vel.z,
+                Component.literal(text), color, cfg.velocityMultiplier, cfg.gravityStrength,
+                (int) cfg.lifeTime, scale, cfg.drawShadow, kill, cfg));
     }
 
-    public static void renderAll(com.mojang.blaze3d.vertex.PoseStack poseStack,
-                                 net.minecraft.client.renderer.MultiBufferSource buffer,
-                                 net.minecraft.client.Camera camera, float partialTick) {
-        if (!PARTICLES.isEmpty()) {
-            System.out.println("[DI] rendering " + PARTICLES.size() + " particles");
-        }
-        for (TextParticle p : PARTICLES) p.render(poseStack, buffer, camera, partialTick);
+    private static String formatDamage(DamageInfo i) {
+        String s = trim(Math.abs(i.amount));
+        if (i.isHeal()) return "+" + s;
+        if (i.kill) return "-" + s + "!";
+        return "-" + s;
+    }
+    private static String trim(float v) {
+        String s = String.format("%.1f", v);
+        return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
+    }
+
+    public static void tickAll() { PARTICLES.removeIf(TextParticle::tick); }
+
+    public static void renderAll(PoseStack ps, MultiBufferSource buf, Camera cam, float pt) {
+        for (TextParticle p : PARTICLES) p.render(ps, buf, cam, pt);
     }
 }

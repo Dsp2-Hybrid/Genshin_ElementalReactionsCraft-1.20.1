@@ -12,13 +12,9 @@ import org.lwjgl.glfw.GLFW;
 public class KeyBindings {
     public static final KeyMapping OPEN_CONFIG = new KeyMapping(
             "key.genshinerc.damageindicator.config",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_H,
-            "category.genshinerc.damageindicator"
-    );
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_H,
+            "category.genshinerc.damageindicator");
 
     @SubscribeEvent
-    public static void register(RegisterKeyMappingsEvent e) {
-        e.register(OPEN_CONFIG);
-    }
+    public static void register(RegisterKeyMappingsEvent e) { e.register(OPEN_CONFIG); }
 }

@@ -1,12 +1,9 @@
 {
-  "required": true,
+  "required": false,
   "minVersion": "0.8",
   "package": "com.dsp2.genshinerc.mixin",
   "compatibilityLevel": "JAVA_17",
-  "refmap": "genshinerc.refmap.json",
-  "mixins": [
-    "damageindicator.LivingEntityTickMixin"
-  ],
+  "mixins": [],
   "client": [
     "patch.gui.render.EntityRenderDispatcherMixin"
   ],

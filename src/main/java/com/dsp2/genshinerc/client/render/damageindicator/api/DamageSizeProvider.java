@@ -6,11 +6,9 @@ import com.dsp2.genshinerc.client.render.damageindicator.event.DamageInfo;
 @FunctionalInterface
 public interface DamageSizeProvider {
     float getSize(DamageInfo info);
-
     DamageSizeProvider DEFAULT = info -> {
-        DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
-        return info.isCrit() ? cfg.critSize : cfg.normalSize;
+        DamageIndicatorConfig c = DamageIndicatorConfig.get();
+        if (info.kill) return c.killSize;
+        return info.crit ? c.critSize : c.normalSize;
     };
-
-    DamageSizeProvider ALWAYS_NORMAL = info -> DamageIndicatorConfig.get().normalSize;
 }
