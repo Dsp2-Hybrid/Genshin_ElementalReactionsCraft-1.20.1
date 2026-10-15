@@ -10,6 +10,7 @@ authors="dsp2"
 description='''GenshinERC is an EpicFight-based expansion that brings Genshin-style elemental reactions, custom weapon movesets, and challenging elemental mobs into Minecraft. Master reactions, chain combos, and conquer bosses with fluid, animation-driven combat.'''
 logoFile="logo.png"
 
+
 [[dependencies.genshinerc]]
 modId="forge"
 mandatory=true
@@ -28,7 +29,7 @@ side="BOTH"
 [[dependencies.genshinerc]]
 modId="epic_fight_avalon"
 mandatory=true
-versionRange="[20.12.6.5,)"
+versionRange="[20.12.6.4,)"
 ordering="NONE"
 side="BOTH"
 
@@ -46,7 +47,6 @@ versionRange="[20.9.7,)"
 ordering="NONE"
 side="BOTH"
 
-
 [[dependencies.genshinerc]]
 modId="aaa_particles"
 mandatory=true
@@ -55,7 +55,7 @@ ordering="NONE"
 side="BOTH"
 
 [[dependencies.genshinerc]]
-modId="yacl"
+modId="yet_another_config_lib_v3"
 mandatory=true
 versionRange="[3.6.6,)"
 ordering="NONE"
@@ -64,6 +64,6 @@ side="BOTH"
 [[dependencies.genshinerc]]
 modId="patchouli"
 mandatory=true
-versionRange="[85,)"
+versionRange="[1.20.1-85,)"
 ordering="NONE"
 side="BOTH"

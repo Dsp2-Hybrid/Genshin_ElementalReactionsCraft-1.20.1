@@ -4,6 +4,7 @@ plugins {
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'org.spongepowered.mixin' version '0.7.+'
 }
 
 version = mod_version
@@ -62,6 +63,10 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven {
+        name = "SpongePowered"
+        url = "https://repo.spongepowered.org/repository/maven-public/"
+    }
+    maven {
         name = "Modrinth"
         url = "https://api.modrinth.com/maven"
         content {
@@ -80,32 +85,24 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Epic Fight 本体 (20.14.17)
     implementation fg.deobf("maven.modrinth:vu3NZ5Ma:KEBfkBat")
-
-    // 无坚不摧 (Invincible Lib 20.14.8.2)
     implementation fg.deobf("maven.modrinth:cdaWrTra:dDWp05UU")
-
-    // 坚不可摧 (Indestructible 20.9.7-fix4)
     implementation fg.deobf("curse.maven:epic-fight-indestructible-915201:6915161")
-
-    // 前置库
     implementation fg.deobf("maven.modrinth:architectury-api:9.2.14+forge")
-
-    // AAA 粒子 (2.2.3)
     implementation fg.deobf("maven.modrinth:En8uHTOK:9cBh3Vh8")
-
-    // YetAnotherConfigLib (YACL 3.6.6)
     implementation fg.deobf("curse.maven:yacl-667299:6336646")
-
-    // 帕秋莉手册 (Patchouli 1.20.1-85)
     implementation fg.deobf("maven.modrinth:nU0bVIaL:94dtOLgZ")
-
-    // Epic Fight - Avalon (20.12.6.5)
     implementation fg.deobf("curse.maven:epic-fight-avalon-1268823:7619938")
-
-    // EpicFight Nightfall (3.4.1)
     implementation fg.deobf("curse.maven:epicfight-nightfall-1307848:8693642")
+
+    // 👇 新增：Mixin 注解处理器
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+// 👇 新增：Mixin 扩展块
+mixin {
+    add sourceSets.main, "genshinerc.refmap.json"
+    config "genshinerc.mixins.json"
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -132,7 +129,8 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'MixinConfigs'            : 'genshinerc.mixins.json'
         ])
     }
 
