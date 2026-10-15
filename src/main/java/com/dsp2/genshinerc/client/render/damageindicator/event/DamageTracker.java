@@ -34,9 +34,11 @@ public class DamageTracker {
                 ? CustomColor.fromHexString(info.overrideColor)
                 : colorProvider.getColor(info);
 
-        Vector3d basePos = new Vector3d(info.entity.getX(),
-                info.entity.getY() + info.entity.getBbHeight() + cfg.offsetY,
-                info.entity.getZ());
+        double sizeOffset = (scale - (float) cfg.normalSize) * cfg.sizeYFactorK;
+        double heightOffset = info.entity.getBbHeight() * cfg.heightYFactor;
+        double yBase = info.entity.getY() + info.entity.getBbHeight() + cfg.offsetY + sizeOffset + heightOffset;
+
+        Vector3d basePos = new Vector3d(info.entity.getX(), yBase, info.entity.getZ());
 
         Vector3d velBase = new Vector3d(0, 0, 0);
         if (cfg.randomVelocityXZ) {

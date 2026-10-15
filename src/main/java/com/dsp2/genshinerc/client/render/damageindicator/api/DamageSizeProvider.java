@@ -8,7 +8,7 @@ public interface DamageSizeProvider {
     float getSize(DamageInfo info);
     DamageSizeProvider DEFAULT = info -> {
         DamageIndicatorConfig c = DamageIndicatorConfig.get();
-        if (info.kill) return c.killSize;
-        return info.crit ? c.critSize : c.normalSize;
+        if (info.kill) return (float) c.killSize;
+        return info.crit ? (float) c.critSize : (float) c.normalSize;
     };
 }

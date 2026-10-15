@@ -17,7 +17,7 @@ public class TextParticle {
     private final int maxAge;
     private final Component text;
     private final CustomColor color;
-    private final float scale;
+    private final float baseScale;
     private final boolean drawShadow;
     private final double gravity;
     private final double velocityMult;
@@ -26,22 +26,30 @@ public class TextParticle {
     private final CustomColor altColor;
     private final EasingType shrinkEasing;
     private final EasingType fadeEasing;
+    private final EasingType birthScaleEasing;
+    private final EasingType birthFadeEasing;
 
     public TextParticle(double x, double y, double z, double vx, double vy, double vz,
                         Component text, CustomColor color, double velocityMult, double gravity,
-                        int maxAge, float scale, boolean drawShadow, boolean isKill,
+                        int maxAgeBase, float scale, boolean drawShadow, boolean isKill,
                         DamageIndicatorConfig cfg) {
         this.x = x; this.y = y; this.z = z;
         this.px = x; this.py = y; this.pz = z;
         this.vx = vx; this.vy = vy; this.vz = vz;
         this.text = text; this.color = color;
         this.velocityMult = velocityMult; this.gravity = gravity;
-        this.maxAge = maxAge; this.scale = scale;
+        this.maxAge = isKill ? maxAgeBase + cfg.killExtraTicks : maxAgeBase;
         this.drawShadow = drawShadow; this.isKill = isKill; this.cfg = cfg;
+
+        double randFactor = 1.0 + (Math.random() * 2 - 1) * cfg.birthSizeRandomPercent;
+        this.baseScale = (float) (scale * randFactor);
+
         boolean isWhite = color.getR() > 0.99f && color.getG() > 0.99f && color.getB() > 0.99f;
         this.altColor = isWhite ? CustomColor.hex(0x000000) : CustomColor.hex(0xFFFFFF);
         this.shrinkEasing = EasingType.fromName(cfg.lifeShrinkEasing.name());
         this.fadeEasing = EasingType.fromName(cfg.lifeFadeEasing.name());
+        this.birthScaleEasing = EasingType.fromName(cfg.birthScaleEasing.name());
+        this.birthFadeEasing = EasingType.fromName(cfg.birthFadeEasing.name());
     }
 
     public boolean tick() {
@@ -52,8 +60,25 @@ public class TextParticle {
         return ++age >= maxAge;
     }
 
+    private boolean skipBirthScale() {
+        if (!cfg.lifeShrinkEnabled) return false;
+        int shrinkStart = Math.max(0, maxAge - cfg.lifeShrinkStartTick);
+        return shrinkStart < cfg.birthScaleDuration;
+    }
+    private boolean skipBirthFade() {
+        if (!cfg.lifeFadeEnabled) return false;
+        int fadeStart = Math.max(0, maxAge - cfg.lifeFadeStartTick);
+        return fadeStart < cfg.birthFadeDuration;
+    }
+
     private float currentScale() {
-        float s = scale;
+        float s = baseScale;
+
+        if (cfg.birthScaleEnabled && !skipBirthScale() && age < cfg.birthScaleDuration) {
+            float t = age / (float) cfg.birthScaleDuration;
+            s *= birthScaleEasing.apply(t);
+        }
+
         if (cfg.lifeShrinkEnabled) {
             int start = Math.max(0, maxAge - cfg.lifeShrinkStartTick);
             if (age >= start) {
@@ -65,14 +90,21 @@ public class TextParticle {
     }
 
     private float currentAlpha() {
+        float a = 1f;
+
+        if (cfg.birthFadeEnabled && !skipBirthFade() && age < cfg.birthFadeDuration) {
+            float t = age / (float) cfg.birthFadeDuration;
+            a *= birthFadeEasing.apply(t);
+        }
+
         if (cfg.lifeFadeEnabled) {
             int start = Math.max(0, maxAge - cfg.lifeFadeStartTick);
             if (age >= start) {
                 float t = (age - start) / (float) Math.max(1, maxAge - start);
-                return 1f - fadeEasing.apply(t);
+                a *= (1f - fadeEasing.apply(t));
             }
         }
-        return 1f;
+        return Math.max(0f, a);
     }
 
     private CustomColor currentColor() {

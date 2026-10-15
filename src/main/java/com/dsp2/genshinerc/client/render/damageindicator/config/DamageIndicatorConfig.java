@@ -21,15 +21,18 @@ public class DamageIndicatorConfig {
 
     @SerialEntry public int maxDistance = 35;
     @SerialEntry public int lifeTime = 16;
-    @SerialEntry public double velocityMultiplier = 0.30;
-    @SerialEntry public double gravityStrength = -0.20;
+    @SerialEntry public double velocityMultiplier = 0.20;
+    @SerialEntry public double gravityStrength = -0.15;
     @SerialEntry public boolean randomVelocityXZ = true;
-    @SerialEntry public double randomVelocityXZAmount = 0.80;
+    @SerialEntry public double randomVelocityXZAmount = 1.20;
     @SerialEntry public double offsetY = 0.30;
+    @SerialEntry public double sizeYFactorK = 0.10;
+    @SerialEntry public double heightYFactor = 0.50;
 
     @SerialEntry public double normalSize = 1.50;
     @SerialEntry public double critSize = 2.50;
     @SerialEntry public double killSize = 3.00;
+    @SerialEntry public double birthSizeRandomPercent = 0.15;
     @SerialEntry public String absorbColor = "#FFEE00";
 
     @SerialEntry public String colorPhysical = "#FFFFFF";
@@ -43,16 +46,24 @@ public class DamageIndicatorConfig {
     @SerialEntry public String colorOverload = "#FF3333";
 
     @SerialEntry public boolean lifeShrinkEnabled = true;
-    @SerialEntry public int lifeShrinkStartTick = 5;
+    @SerialEntry public int lifeShrinkStartTick = 4;
     @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_IN_OUT;
 
     @SerialEntry public boolean lifeFadeEnabled = true;
-    @SerialEntry public int lifeFadeStartTick = 3;
+    @SerialEntry public int lifeFadeStartTick = 6;
     @SerialEntry public EasingWrapper lifeFadeEasing = EasingWrapper.EASE_IN_OUT;
+
+    @SerialEntry public boolean birthScaleEnabled = true;
+    @SerialEntry public int birthScaleDuration = 4;
+    @SerialEntry public EasingWrapper birthScaleEasing = EasingWrapper.EASE_OUT;
+    @SerialEntry public boolean birthFadeEnabled = true;
+    @SerialEntry public int birthFadeDuration = 4;
+    @SerialEntry public EasingWrapper birthFadeEasing = EasingWrapper.EASE_OUT;
 
     @SerialEntry public boolean killFlashEnabled = true;
     @SerialEntry public int killFlashInterval = 2;
-    @SerialEntry public int killFlashTicks = 12;
+    @SerialEntry public int killFlashTicks = 8;
+    @SerialEntry public int killExtraTicks = 4;
 
     @SerialEntry public boolean debug = false;
 
@@ -113,14 +124,17 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(lock, "shadow_color", new Color(0), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(intOpt(lock, "max_distance", 35, () -> c.maxDistance, v -> c.maxDistance = v, 1, 128))
                 .option(intOpt(lock, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
-                .option(dblOpt(lock, "velocity_multiplier", 0.30, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
-                .option(dblOpt(lock, "gravity_strength", -0.20, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
+                .option(dblOpt(lock, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
+                .option(dblOpt(lock, "gravity_strength", -0.15, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
                 .option(boolOpt(lock, "random_velocity_xz", true, () -> c.randomVelocityXZ, v -> c.randomVelocityXZ = v))
-                .option(dblOpt(lock, "random_velocity_xz_amount", 0.80, () -> c.randomVelocityXZAmount, v -> c.randomVelocityXZAmount = v, 0.00, 2.00))
+                .option(dblOpt(lock, "random_velocity_xz_amount", 1.20, () -> c.randomVelocityXZAmount, v -> c.randomVelocityXZAmount = v, 0.00, 2.00))
                 .option(dblOpt(lock, "offset_y", 0.30, () -> c.offsetY, v -> c.offsetY = v, 0.00, 1.00))
+                .option(dblOpt(lock, "size_y_factor_k", 0.10, () -> c.sizeYFactorK, v -> c.sizeYFactorK = v, 0.00, 1.00))
+                .option(dblOpt(lock, "height_y_factor", 0.50, () -> c.heightYFactor, v -> c.heightYFactor = v, 0.00, 2.00))
                 .option(dblOpt(lock, "normal_size", 1.50, () -> c.normalSize, v -> c.normalSize = v, 0.50, 3.00))
                 .option(dblOpt(lock, "crit_size", 2.50, () -> c.critSize, v -> c.critSize = v, 0.50, 5.00))
                 .option(dblOpt(lock, "kill_size", 3.00, () -> c.killSize, v -> c.killSize = v, 0.50, 5.00))
+                .option(dblOpt(lock, "birth_size_random_percent", 0.15, () -> c.birthSizeRandomPercent, v -> c.birthSizeRandomPercent = v, 0.00, 0.45))
                 .option(colorOpt(lock, "absorb_color", new Color(0xFFEE00), () -> toAwt(c.absorbColor), v -> c.absorbColor = fromAwt(v)))
 
                 .option(colorOpt(lock, "color_physical", new Color(0xFFFFFF), () -> toAwt(c.colorPhysical), v -> c.colorPhysical = fromAwt(v)))
@@ -134,16 +148,23 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(lock, "color_overload", new Color(0xFF3333), () -> toAwt(c.colorOverload), v -> c.colorOverload = fromAwt(v)))
 
                 .option(boolOpt(lock, "life_shrink_enabled", true, () -> c.lifeShrinkEnabled, v -> c.lifeShrinkEnabled = v))
-                .option(intOpt(lock, "life_shrink_start_tick", 5, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
+                .option(intOpt(lock, "life_shrink_start_tick", 4, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
                 .option(easingOpt(lock, "life_shrink_easing", EasingWrapper.EASE_IN_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))
-
                 .option(boolOpt(lock, "life_fade_enabled", true, () -> c.lifeFadeEnabled, v -> c.lifeFadeEnabled = v))
-                .option(intOpt(lock, "life_fade_start_tick", 3, () -> c.lifeFadeStartTick, v -> c.lifeFadeStartTick = v, 1, 30))
+                .option(intOpt(lock, "life_fade_start_tick", 6, () -> c.lifeFadeStartTick, v -> c.lifeFadeStartTick = v, 1, 30))
                 .option(easingOpt(lock, "life_fade_easing", EasingWrapper.EASE_IN_OUT, () -> c.lifeFadeEasing, v -> c.lifeFadeEasing = v))
+
+                .option(boolOpt(lock, "birth_scale_enabled", true, () -> c.birthScaleEnabled, v -> c.birthScaleEnabled = v))
+                .option(intOpt(lock, "birth_scale_duration", 4, () -> c.birthScaleDuration, v -> c.birthScaleDuration = v, 1, 20))
+                .option(easingOpt(lock, "birth_scale_easing", EasingWrapper.EASE_OUT, () -> c.birthScaleEasing, v -> c.birthScaleEasing = v))
+                .option(boolOpt(lock, "birth_fade_enabled", true, () -> c.birthFadeEnabled, v -> c.birthFadeEnabled = v))
+                .option(intOpt(lock, "birth_fade_duration", 4, () -> c.birthFadeDuration, v -> c.birthFadeDuration = v, 1, 20))
+                .option(easingOpt(lock, "birth_fade_easing", EasingWrapper.EASE_OUT, () -> c.birthFadeEasing, v -> c.birthFadeEasing = v))
 
                 .option(boolOpt(lock, "kill_flash_enabled", true, () -> c.killFlashEnabled, v -> c.killFlashEnabled = v))
                 .option(intOpt(lock, "kill_flash_interval", 2, () -> c.killFlashInterval, v -> c.killFlashInterval = v, 1, 10))
-                .option(intOpt(lock, "kill_flash_ticks", 12, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
+                .option(intOpt(lock, "kill_flash_ticks", 8, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
+                .option(intOpt(lock, "kill_extra_ticks", 4, () -> c.killExtraTicks, v -> c.killExtraTicks = v, 0, 20))
 
                 .option(boolOpt(lock, "debug", false, () -> c.debug, v -> c.debug = v))
                 .build();
@@ -152,52 +173,41 @@ public class DamageIndicatorConfig {
                 .title(t("genshinerc.damageindicator.title"))
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
-                        .group(group)
-                        .build())
+                        .group(group).build())
                 .save(DamageIndicatorConfig::save)
                 .build()
                 .generateScreen(null);
     }
 
     private static Option<Boolean> boolOpt(boolean lock, String key, boolean def, java.util.function.Supplier<Boolean> g, java.util.function.Consumer<Boolean> s) {
-        Option.Builder<Boolean> b = Option.<Boolean>createBuilder()
-                .name(lock ? tsrv(P(key)) : t(P(key)))
-                .description(OptionDescription.of(td(P(key))))
-                .binding(def, g, s).controller(TickBoxControllerBuilder::create);
+        Option.Builder<Boolean> b = Option.<Boolean>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
+                .description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(TickBoxControllerBuilder::create);
         if (lock) b.available(false);
         return b.build();
     }
     private static Option<Integer> intOpt(boolean lock, String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max) {
-        Option.Builder<Integer> b = Option.<Integer>createBuilder()
-                .name(lock ? tsrv(P(key)) : t(P(key)))
-                .description(OptionDescription.of(td(P(key))))
-                .binding(def, g, s)
+        Option.Builder<Integer> b = Option.<Integer>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
+                .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(1));
         if (lock) b.available(false);
         return b.build();
     }
     private static Option<Double> dblOpt(boolean lock, String key, double def, java.util.function.Supplier<Double> g, java.util.function.Consumer<Double> s, double min, double max) {
-        Option.Builder<Double> b = Option.<Double>createBuilder()
-                .name(lock ? tsrv(P(key)) : t(P(key)))
-                .description(OptionDescription.of(td(P(key))))
-                .binding(def, g, s)
+        Option.Builder<Double> b = Option.<Double>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
+                .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> DoubleSliderControllerBuilder.create(opt).range(min, max).step(0.01));
         if (lock) b.available(false);
         return b.build();
     }
     private static Option<Color> colorOpt(boolean lock, String key, Color def, java.util.function.Supplier<Color> g, java.util.function.Consumer<Color> s) {
-        Option.Builder<Color> b = Option.<Color>createBuilder()
-                .name(lock ? tsrv(P(key)) : t(P(key)))
-                .description(OptionDescription.of(td(P(key))))
-                .binding(def, g, s).controller(ColorControllerBuilder::create);
+        Option.Builder<Color> b = Option.<Color>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
+                .description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(ColorControllerBuilder::create);
         if (lock) b.available(false);
         return b.build();
     }
     private static Option<EasingWrapper> easingOpt(boolean lock, String key, EasingWrapper def, java.util.function.Supplier<EasingWrapper> g, java.util.function.Consumer<EasingWrapper> s) {
-        Option.Builder<EasingWrapper> b = Option.<EasingWrapper>createBuilder()
-                .name(lock ? tsrv(P(key)) : t(P(key)))
-                .description(OptionDescription.of(td(P(key))))
-                .binding(def, g, s)
+        Option.Builder<EasingWrapper> b = Option.<EasingWrapper>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
+                .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> EnumControllerBuilder.create(opt).enumClass(EasingWrapper.class)
                         .formatValue(e -> Component.translatable("genshinerc.damageindicator.easing." + e.name().toLowerCase())));
         if (lock) b.available(false);

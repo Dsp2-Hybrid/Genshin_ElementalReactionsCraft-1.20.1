@@ -7,8 +7,10 @@ import com.dsp2.genshinerc.client.render.damageindicator.event.DamageInfo;
 public interface DamageColorProvider {
     CustomColor getColor(DamageInfo info);
     DamageColorProvider DEFAULT = info -> {
-        if (info.isHeal()) return CustomColor.fromHexString(DamageIndicatorConfig.get().absorbColor);
+        DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
+        if (info.absorbDelta) return CustomColor.fromHexString(cfg.absorbColor);
+        if (info.isHeal()) return CustomColor.hex(0x32C832);
         DamageType t = DamageTypeRegistry.get(info.typeKey);
-        return CustomColor.fromHexString(DamageIndicatorConfig.get().colorFor(t.getKey()));
+        return CustomColor.fromHexString(cfg.colorFor(t.getKey()));
     };
 }

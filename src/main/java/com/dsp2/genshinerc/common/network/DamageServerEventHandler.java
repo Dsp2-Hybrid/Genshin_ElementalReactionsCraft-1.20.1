@@ -34,9 +34,9 @@ public class DamageServerEventHandler {
         boolean kill = (e.getHealth() - original) <= 0;
 
         if (absorbed > 0) {
-            NetworkHandler.sendDamage(e, "physical", amount, false, kill, absorbed, null, null);
+            NetworkHandler.sendDamage(e, "physical", amount, false, kill, absorbed, null, null, false, false);
         } else {
-            NetworkHandler.sendDamage(e, "physical", amount, false, kill, 0f, null, null);
+            NetworkHandler.sendDamage(e, "physical", amount, false, kill, 0f, null, null, false, false);
         }
     }
 
@@ -45,7 +45,7 @@ public class DamageServerEventHandler {
         if (event.getEntity().level().isClientSide()) return;
         float a = event.getAmount();
         if (a <= 0) return;
-        NetworkHandler.sendDamage(event.getEntity(), "physical", -a, false, false, 0f, null, null);
+        NetworkHandler.sendDamage(event.getEntity(), "physical", -a, false, false, 0f, null, null, false, false);
     }
 
     @SubscribeEvent
@@ -59,7 +59,7 @@ public class DamageServerEventHandler {
         float diff = current - last;
         LAST_ABSORPTION.put(sp.getUUID(), current);
         if (diff > 0.001f) {
-            NetworkHandler.sendDamage(sp, "physical", diff, false, false, 0f, null, null);
+            NetworkHandler.sendDamage(sp, "physical", diff, false, false, 0f, null, null, true, false);
         }
     }
 
@@ -71,7 +71,6 @@ public class DamageServerEventHandler {
     @SubscribeEvent
     public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
-        // ConfigSyncPacket 使用服务端同一份 DamageIndicatorConfig 数据（单人共享 / 服务端权威）
         NetworkHandler.syncConfigTo(sp, new ConfigSyncPacket(
                 com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig.get()));
     }

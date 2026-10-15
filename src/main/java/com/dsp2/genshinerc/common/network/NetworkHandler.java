@@ -21,10 +21,11 @@ public class NetworkHandler {
         CHANNEL.registerMessage(id++, ConfigSyncPacket.class, ConfigSyncPacket::encode, ConfigSyncPacket::decode, ConfigSyncPacket::handle);
     }
 
-    public static void sendDamage(LivingEntity e, String k, float a, boolean c, boolean kl, float ab, String oc, Float os) {
+    public static void sendDamage(LivingEntity e, String k, float a, boolean c, boolean kl,
+                                  float ab, String oc, Float os, boolean absorbDelta, boolean secondary) {
         if (e.level().isClientSide()) return;
         if (e.getServer() == null) return;
-        DamagePacket p = new DamagePacket(e.getId(), k, a, c, kl, ab, oc, os);
+        DamagePacket p = new DamagePacket(e.getId(), k, a, c, kl, ab, oc, os, absorbDelta, secondary);
         double r = currentRange;
         double rSq = r * r;
         for (ServerPlayer sp : e.getServer().getPlayerList().getPlayers()) {
