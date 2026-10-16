@@ -14,7 +14,7 @@ public class ConfigScreenOpeningHandler {
         if (!(event.getNewScreen() instanceof ConfigSelectScreen)) return;
         if (!(event.getCurrentScreen() instanceof YACLScreen)) return;
 
-        String action = YACLActionTracker.consume();
+        String action = DamageIndicatorConfigYaclActionTracker.consume();
 
         if ("cancel".equals(action) && ConfigSelectScreen.lastModListParent != null) {
             event.setNewScreen(ConfigSelectScreen.lastModListParent);
