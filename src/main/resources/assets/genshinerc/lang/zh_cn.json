@@ -103,7 +103,7 @@
   "genshinerc.damageindicator.config.shadow_offset_x.desc": "阴影相对文字的水平偏移，范围 -3 ~ 3，精度 0.01",
   "genshinerc.damageindicator.config.shadow_offset_y": "阴影 Y 偏移",
   "genshinerc.damageindicator.config.shadow_offset_y.desc": "阴影相对文字的垂直偏移，范围 -3 ~ 3，精度 0.01",
-  "genshinerc.damageindicator.config.shadow_color.desc": "阴影颜色。输入什么颜色就是什么颜色，不乘文字色",
+  "genshinerc.damageindicator.config.shadow_color.desc": "阴影颜色,颜色亮度通道控制加深深度",
 
   "genshinerc.damageindicator.easing.linear": "线性",
   "genshinerc.damageindicator.easing.ease_in": "缓入",

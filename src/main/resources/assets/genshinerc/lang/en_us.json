@@ -49,7 +49,7 @@
   "genshinerc.damageindicator.config.shadow_offset_x.desc": "Horizontal shadow offset, range -3 ~ 3, precision 0.01",
   "genshinerc.damageindicator.config.shadow_offset_y": "Shadow Y Offset",
   "genshinerc.damageindicator.config.shadow_offset_y.desc": "Vertical shadow offset, range -3 ~ 3, precision 0.01",
-  "genshinerc.damageindicator.config.shadow_color.desc": "Shadow color. Uses the exact color you input, not multiplied with text color",
+  "genshinerc.damageindicator.config.shadow_color.desc": "Shadow color. Multiplied with text color,Only luminance channel.",
 
   "genshinerc.damageindicator.config.color_physical": "Physical Color",
   "genshinerc.damageindicator.config.color_physical.desc": "Physical damage number color",

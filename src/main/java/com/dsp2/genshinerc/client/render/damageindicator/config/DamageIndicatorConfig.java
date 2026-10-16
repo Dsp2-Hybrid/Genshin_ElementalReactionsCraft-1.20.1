@@ -20,9 +20,9 @@ public class DamageIndicatorConfig {
 
     @SerialEntry public boolean drawShadow = true;
     @SerialEntry public String shadowColor = "#929292";
-    @SerialEntry public double shadowAlpha = 0.75;
-    @SerialEntry public double shadowOffsetX = 1.00;
-    @SerialEntry public double shadowOffsetY = 1.00;
+    @SerialEntry public double shadowAlpha = 0.55;
+    @SerialEntry public double shadowOffsetX = 0.60;
+    @SerialEntry public double shadowOffsetY = 0.80;
 
     @SerialEntry public int lifeTime = 16;
     @SerialEntry public double velocityMultiplier = 0.20;
@@ -131,7 +131,7 @@ public class DamageIndicatorConfig {
                         .group(group).build())
                 .save(() -> {
                     DamageIndicatorConfig.save();
-                    ConfigSelectScreen.fromSave = true;
+                    ConfigSelectScreen.pendingReturnToModList = true;
                 })
                 .build()
                 .generateScreen(escParent);
@@ -144,9 +144,9 @@ public class DamageIndicatorConfig {
 
                 .option(boolOpt(false, "draw_shadow", true, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
-                .option(dblOpt(false, "shadow_alpha", 0.75, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
-                .option(dblOpt(false, "shadow_offset_x", 1.00, () -> c.shadowOffsetX, v -> c.shadowOffsetX = v, -3.00, 3.00))
-                .option(dblOpt(false, "shadow_offset_y", 1.00, () -> c.shadowOffsetY, v -> c.shadowOffsetY = v, -3.00, 3.00))
+                .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
+                .option(dblOpt(false, "shadow_offset_x", 0.60, () -> c.shadowOffsetX, v -> c.shadowOffsetX = v, -3.00, 3.00))
+                .option(dblOpt(false, "shadow_offset_y", 0.80, () -> c.shadowOffsetY, v -> c.shadowOffsetY = v, -3.00, 3.00))
 
                 .option(intOpt(false, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(false, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
@@ -201,7 +201,7 @@ public class DamageIndicatorConfig {
                         .group(group).build())
                 .save(() -> {
                     DamageIndicatorConfig.save();
-                    ConfigSelectScreen.fromSave = true;
+                    ConfigSelectScreen.pendingReturnToModList = true;
                 })
                 .build()
                 .generateScreen(escParent);

@@ -19,7 +19,7 @@ public class TextParticle {
     private final CustomColor color;
     private final float baseScale;
     private final boolean drawShadow;
-    private final int shadowRgb;
+    private final float shadowLuma;
     private final float shadowAlpha;
     private final float shadowOffsetX;
     private final float shadowOffsetY;
@@ -51,7 +51,10 @@ public class TextParticle {
         int hex;
         try { hex = Integer.parseInt(cfg.shadowColor.replace("#", "").trim(), 16); }
         catch (Exception e) { hex = 0x929292; }
-        this.shadowRgb = hex & 0xFFFFFF;
+        int sr = (hex >> 16) & 0xFF;
+        int sg = (hex >> 8) & 0xFF;
+        int sb = hex & 0xFF;
+        this.shadowLuma = Math.max(0f, Math.min(1f, (sr + sg + sb) / (3f * 255f)));
         this.shadowAlpha = (float) Math.max(0.0, Math.min(1.0, cfg.shadowAlpha));
         this.shadowOffsetX = (float) cfg.shadowOffsetX;
         this.shadowOffsetY = (float) cfg.shadowOffsetY;
@@ -143,10 +146,10 @@ public class TextParticle {
 
         if (drawShadow && shadowAlpha > 0.001f) {
             int sa = (int) (a * shadowAlpha);
-            int sr = (shadowRgb >> 16) & 0xFF;
-            int sg = (shadowRgb >> 8) & 0xFF;
-            int sb = shadowRgb & 0xFF;
-            int shadowArgb = (sa << 24) | (sr << 16) | (sg << 8) | sb;
+            int sR = (int) (r * shadowLuma);
+            int sG = (int) (g * shadowLuma);
+            int sB = (int) (b * shadowLuma);
+            int shadowArgb = (sa << 24) | (sR << 16) | (sG << 8) | sB;
             font.drawInBatch(text, textX + shadowOffsetX, shadowOffsetY, shadowArgb, false,
                     ps.last().pose(), buf, Font.DisplayMode.NORMAL, 0, 15728880);
         }

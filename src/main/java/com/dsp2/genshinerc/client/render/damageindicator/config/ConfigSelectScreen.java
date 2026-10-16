@@ -5,25 +5,26 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 public class ConfigSelectScreen extends Screen {
 
     private final Screen modListParent;
-    public static volatile boolean fromSave = false;
+
+    public static volatile boolean pendingReturnToModList = false;
+    public static volatile Screen lastModListParent = null;
 
     public ConfigSelectScreen(Screen parent) {
         super(Component.translatable("genshinerc.config.select"));
         this.modListParent = parent;
+        lastModListParent = parent;
     }
 
     @Override
     protected void init() {
-        if (fromSave) {
-            fromSave = false;
-            Minecraft.getInstance().setScreen(modListParent);
-            return;
-        }
-
         int cx = this.width / 2;
         int cy = this.height / 2;
 
@@ -50,5 +51,19 @@ public class ConfigSelectScreen extends Screen {
     @Override
     public void onClose() {
         this.minecraft.setScreen(modListParent);
+    }
+
+    @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+    public static class TickHandler {
+        @SubscribeEvent
+        public static void onClientTick(TickEvent.ClientTickEvent e) {
+            if (e.phase != TickEvent.Phase.END) return;
+            if (!pendingReturnToModList) return;
+            pendingReturnToModList = false;
+            Minecraft mc = Minecraft.getInstance();
+            if (lastModListParent != null) {
+                mc.setScreen(lastModListParent);
+            }
+        }
     }
 }
