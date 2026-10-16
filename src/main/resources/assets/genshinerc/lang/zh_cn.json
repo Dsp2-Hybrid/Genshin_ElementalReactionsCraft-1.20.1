@@ -44,7 +44,7 @@
   "genshinerc.damageindicator.config.debug": "调试模式",
   "genshinerc.damageindicator.config.debug.desc": "打印伤害调试信息",
   "genshinerc.damageindicator.config.z_offset": "Z 通道偏移",
-  "genshinerc.damageindicator.config.z_offset.desc": "防止多个面片渲染时的 Z 冲突闪烁，负值往相机方向推，范围 -0.50 ~ 0.50，精度 0.01",
+  "genshinerc.damageindicator.config.z_offset.desc": "防止多个面片渲染时的 Z 冲突闪烁，负值往相机方向推，范围 -0.15 ~ 0.15，精度 0.01",
   "genshinerc.damageindicator.config.particle_min_spacing": "粒子最小间距",
   "genshinerc.damageindicator.config.particle_min_spacing.desc": "同一实体连续生成伤害数字时，新粒子与上一个保持的最小距离。防止遮挡，范围 0.00 ~ 2.00，精度 0.01",
 
@@ -66,6 +66,8 @@
   "genshinerc.damageindicator.config.color_geo.desc": "岩元素伤害数字颜色",
   "genshinerc.damageindicator.config.color_overload": "超载颜色",
   "genshinerc.damageindicator.config.color_overload.desc": "超载伤害数字颜色",
+  "genshinerc.config.back_to_game_ui": "返回游戏 UI",
+  "genshinerc.config.back_to_game": "返回游戏",
 
   "genshinerc.damageindicator.config.life_shrink_enabled": "启用生命周期缩放",
   "genshinerc.damageindicator.config.life_shrink_enabled.desc": "生命后期逐渐缩小到 0",

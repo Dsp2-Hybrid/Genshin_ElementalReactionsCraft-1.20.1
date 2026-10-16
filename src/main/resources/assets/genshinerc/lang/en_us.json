@@ -51,7 +51,7 @@
   "genshinerc.damageindicator.config.shadow_offset_y.desc": "Vertical shadow offset, range -3 ~ 3, precision 0.01",
   "genshinerc.damageindicator.config.shadow_color.desc": "Shadow color. Multiplied with text color,Only luminance channel.",
   "genshinerc.damageindicator.config.z_offset": "Z Offset",
-  "genshinerc.damageindicator.config.z_offset.desc": "Prevents Z-fighting flicker between overlapping quads. Negative pushes toward camera. Range -0.50 ~ 0.50, precision 0.01",
+  "genshinerc.damageindicator.config.z_offset.desc": "Prevents Z-fighting flicker between overlapping quads. Negative pushes toward camera. Range -0.15 ~ 0.15, precision 0.01",
   "genshinerc.damageindicator.config.particle_min_spacing": "Particle Min Spacing",
   "genshinerc.damageindicator.config.particle_min_spacing.desc": "Minimum distance between consecutive damage numbers on the same entity. Prevents overlap. Range 0.00 ~ 2.00, precision 0.01",
 
@@ -73,6 +73,8 @@
   "genshinerc.damageindicator.config.color_geo.desc": "Geo damage number color",
   "genshinerc.damageindicator.config.color_overload": "Overload Color",
   "genshinerc.damageindicator.config.color_overload.desc": "Overload damage number color",
+  "genshinerc.config.back_to_game_ui": "Back to Game UI",
+  "genshinerc.config.back_to_game": "Back to Game",
 
   "genshinerc.damageindicator.config.life_shrink_enabled": "Enable Life Shrink",
   "genshinerc.damageindicator.config.life_shrink_enabled.desc": "Shrink to 0 at the end of lifetime",

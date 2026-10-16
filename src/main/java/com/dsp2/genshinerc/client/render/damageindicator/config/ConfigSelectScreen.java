@@ -1,14 +1,16 @@
 package com.dsp2.genshinerc.client.render.damageindicator.config;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 
 public class ConfigSelectScreen extends Screen {
 
     private final Screen modListParent;
-    public static volatile boolean escPressed = false;
     public static volatile Screen lastModListParent = null;
 
     public ConfigSelectScreen(Screen parent) {
@@ -17,8 +19,35 @@ public class ConfigSelectScreen extends Screen {
         lastModListParent = parent;
     }
 
+    private Screen gameUiParent() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level != null) {
+            return new PauseScreen(true);
+        }
+        return new TitleScreen();
+    }
+
+    private void returnToGame() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level != null) {
+            mc.setScreen(null);
+        } else {
+            mc.setScreen(new TitleScreen());
+        }
+    }
+
     @Override
     protected void init() {
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("genshinerc.config.back_to_game_ui"),
+                        b -> this.minecraft.setScreen(gameUiParent()))
+                .bounds(10, 10, 140, 20).build());
+
+        this.addRenderableWidget(Button.builder(
+                        Component.translatable("genshinerc.config.back_to_game"),
+                        b -> returnToGame())
+                .bounds(10, 32, 140, 20).build());
+
         int cx = this.width / 2;
         int cy = this.height / 2;
 

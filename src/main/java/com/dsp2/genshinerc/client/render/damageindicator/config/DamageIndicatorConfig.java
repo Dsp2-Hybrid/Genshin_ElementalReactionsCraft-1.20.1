@@ -24,7 +24,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public double shadowOffsetX = 0.60;
     @SerialEntry public double shadowOffsetY = 0.80;
 
-    @SerialEntry public double zOffset = -0.02;
+    @SerialEntry public double zOffset = -0.01;
     @SerialEntry public double particleMinSpacing = 0.30;
 
     @SerialEntry public int lifeTime = 16;
@@ -148,7 +148,7 @@ public class DamageIndicatorConfig {
                 .option(dblOpt(false, "shadow_offset_x", 0.60, () -> c.shadowOffsetX, v -> c.shadowOffsetX = v, -3.00, 3.00))
                 .option(dblOpt(false, "shadow_offset_y", 0.80, () -> c.shadowOffsetY, v -> c.shadowOffsetY = v, -3.00, 3.00))
 
-                .option(dblOpt(false, "z_offset", -0.02, () -> c.zOffset, v -> c.zOffset = v, -0.50, 0.50))
+                .option(dblOpt(false, "z_offset", -0.01, () -> c.zOffset, v -> c.zOffset = v, -0.15, 0.15))
                 .option(dblOpt(false, "particle_min_spacing", 0.30, () -> c.particleMinSpacing, v -> c.particleMinSpacing = v, 0.00, 2.00))
 
                 .option(intOpt(false, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
