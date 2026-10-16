@@ -6,7 +6,9 @@
   "mixins": [],
   "client": [
     "patch.gui.epicfight.EntityRenderDispatcherMixin",
-    "patch.gui.yacl.YACLScreenActionMixin"
+    "patch.gui.yacl.YACLScreenActionMixin",
+    "patch.gui.epicfight.fixguimodelbyep.MixinScreen",
+    "patch.gui.epicfight.fixguimodelbyep.MixinPatchedLivingEntityRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
