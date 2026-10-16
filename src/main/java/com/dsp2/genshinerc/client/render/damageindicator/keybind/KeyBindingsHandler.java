@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.client.render.damageindicator.keybind;
 
-import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
+import com.dsp2.genshinerc.client.render.damageindicator.config.ConfigSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
@@ -12,7 +12,8 @@ public class KeyBindingsHandler {
     @SubscribeEvent
     public static void onKeyInput(InputEvent.Key e) {
         if (KeyBindings.OPEN_CONFIG.consumeClick()) {
-            Minecraft.getInstance().setScreen(DamageIndicatorConfig.createScreen());
+            Minecraft mc = Minecraft.getInstance();
+            mc.setScreen(new ConfigSelectScreen(mc.screen));
         }
     }
 }

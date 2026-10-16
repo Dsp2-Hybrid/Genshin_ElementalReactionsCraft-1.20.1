@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.mixin.patch.gui.render;
+package com.dsp2.genshinerc.mixin.patch.gui.epicfight;
 
 import com.dsp2.genshinerc.patch.gui.render.GuiRenderHelper;
 import com.mojang.blaze3d.vertex.PoseStack;

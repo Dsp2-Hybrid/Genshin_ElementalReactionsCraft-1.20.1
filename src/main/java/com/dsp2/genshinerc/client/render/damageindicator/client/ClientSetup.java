@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.client.render.damageindicator.client;
 
-import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
+import com.dsp2.genshinerc.client.render.damageindicator.config.ConfigSelectScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,6 +15,7 @@ public class ClientSetup {
         ModLoadingContext.get().registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (mc, parent) -> DamageIndicatorConfig.createScreen()));
+                        (mc, parent) -> new ConfigSelectScreen(parent))
+        );
     }
 }
