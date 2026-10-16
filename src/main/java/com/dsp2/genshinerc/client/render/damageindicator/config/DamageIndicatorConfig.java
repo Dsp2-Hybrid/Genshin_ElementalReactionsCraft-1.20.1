@@ -18,7 +18,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public boolean enabled = true;
     @SerialEntry public int maxDistance = 35;
 
-    @SerialEntry public boolean drawShadow = true;
+    @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
     @SerialEntry public double shadowAlpha = 0.55;
     @SerialEntry public double shadowOffsetX = 0.60;
@@ -150,7 +150,7 @@ public class DamageIndicatorConfig {
                 .name(t("genshinerc.damageindicator.group.indicator"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
 
-                .option(boolOpt(false, "draw_shadow", true, () -> c.drawShadow, v -> c.drawShadow = v))
+                .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
                 .option(dblOpt(false, "shadow_offset_x", 0.60, () -> c.shadowOffsetX, v -> c.shadowOffsetX = v, -3.00, 3.00))
