@@ -9,24 +9,14 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ConfigScreenOpeningHandler {
 
-    private static volatile long escPressedTime = 0L;
-
-    @SubscribeEvent
-    public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        if (!(event.getScreen() instanceof YACLScreen)) return;
-        if (event.getKeyCode() != 256) return;
-        escPressedTime = System.currentTimeMillis();
-    }
-
     @SubscribeEvent
     public static void onScreenOpening(ScreenEvent.Opening event) {
         if (!(event.getNewScreen() instanceof ConfigSelectScreen)) return;
         if (!(event.getCurrentScreen() instanceof YACLScreen)) return;
 
-        boolean wasEsc = System.currentTimeMillis() - escPressedTime < 500;
-        escPressedTime = 0;
+        String action = YACLActionTracker.consume();
 
-        if (!wasEsc && ConfigSelectScreen.lastModListParent != null) {
+        if ("cancel".equals(action) && ConfigSelectScreen.lastModListParent != null) {
             event.setNewScreen(ConfigSelectScreen.lastModListParent);
         }
     }

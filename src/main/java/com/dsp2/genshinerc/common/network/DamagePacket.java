@@ -16,8 +16,7 @@ public class DamagePacket {
     public final float absorbed;
     public final String overrideColor;
     public final Float overrideSize;
-    public final boolean absorbDelta;
-    public final boolean secondary;
+    public final boolean absorbDelta, secondary;
 
     public DamagePacket(int entityId, String typeKey, float amount, boolean crit, boolean kill, boolean fullHeal,
                         float absorbed, String overrideColor, Float overrideSize,
@@ -58,11 +57,13 @@ public class DamagePacket {
     }
 
     public static void handle(DamagePacket p, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() ->
+        NetworkEvent.Context context = ctx.get();
+        if (context.getSender() != null) { context.setPacketHandled(true); return; }
+        context.enqueueWork(() ->
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
                         ClientPacketHandler.handleDamage(p.entityId, p.typeKey, p.amount,
                                 p.crit, p.kill, p.fullHeal, p.absorbed, p.overrideColor, p.overrideSize,
                                 p.absorbDelta, p.secondary)));
-        ctx.get().setPacketHandled(true);
+        context.setPacketHandled(true);
     }
 }

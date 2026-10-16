@@ -64,17 +64,17 @@ public class DamageTracker {
             double offX = 0.35;
             Vector3d p1 = new Vector3d(basePos.x - offX, basePos.y, basePos.z);
             Vector3d p2 = new Vector3d(basePos.x + offX, basePos.y, basePos.z);
-            String absorbText = "-" + trim(info.absorbed);
+            String absorbText = "-" + trim(info.absorbed, cfg.numberFormat);
             addOne(p1, velBase, absorbText, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false, false);
             if (info.amount > 0.001f) {
-                String realText = trim(info.amount);
+                String realText = trim(info.amount, cfg.numberFormat);
                 addOne(p2, velBase, realText, color, scale, cfg, false, true);
             }
         } else if (info.absorbDelta) {
-            String text = (info.amount >= 0 ? "+" : "") + trim(Math.abs(info.amount));
+            String text = (info.amount >= 0 ? "+" : "") + trim(Math.abs(info.amount), cfg.numberFormat);
             addOne(basePos, velBase, text, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false, false);
         } else {
-            addOne(basePos, velBase, formatDamage(info), color, scale, cfg, info.kill, false);
+            addOne(basePos, velBase, formatDamage(info, cfg.numberFormat), color, scale, cfg, info.kill, false);
         }
     }
 
@@ -91,15 +91,20 @@ public class DamageTracker {
                 cfg.lifeTime, scale, cfg.drawShadow, kill, cfg));
     }
 
-    private static String formatDamage(DamageInfo i) {
-        String s = trim(Math.abs(i.amount));
+    private static String formatDamage(DamageInfo i, int digits) {
+        String s = trim(Math.abs(i.amount), digits);
         if (i.isHeal()) return "+" + s + (i.fullHeal ? "!" : "");
         if (i.kill) return s + "!";
         return s;
     }
-    private static String trim(float v) {
-        String s = String.format("%.1f", v);
-        return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
+
+    private static String trim(float v, int digits) {
+        if (digits <= 0) return String.valueOf(Math.round(v));
+        if (digits == 1) {
+            String s = String.format("%.1f", v);
+            return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
+        }
+        return String.format("%.2f", v);
     }
 
     public static void tickAll() {

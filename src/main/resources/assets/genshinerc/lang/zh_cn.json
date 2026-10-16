@@ -68,6 +68,12 @@
   "genshinerc.damageindicator.config.color_overload.desc": "超载伤害数字颜色",
   "genshinerc.config.back_to_game_ui": "返回游戏 UI",
   "genshinerc.config.back_to_game": "返回游戏",
+  "genshinerc.config.back_to_list": "返回模组列表",
+  "genshinerc.damageindicator.config.number_format": "数字格式",
+  "genshinerc.damageindicator.config.number_format.desc": "伤害数字保留的小数位数",
+  "genshinerc.damageindicator.number_format.integer": "整数",
+  "genshinerc.damageindicator.number_format.one_decimal": "一位小数",
+  "genshinerc.damageindicator.number_format.two_decimals": "两位小数",
 
   "genshinerc.damageindicator.config.life_shrink_enabled": "启用生命周期缩放",
   "genshinerc.damageindicator.config.life_shrink_enabled.desc": "生命后期逐渐缩小到 0",

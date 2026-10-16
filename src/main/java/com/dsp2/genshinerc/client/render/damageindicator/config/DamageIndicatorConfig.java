@@ -26,6 +26,7 @@ public class DamageIndicatorConfig {
 
     @SerialEntry public double zOffset = -0.01;
     @SerialEntry public double particleMinSpacing = 0.30;
+    @SerialEntry public int numberFormat = 1;
 
     @SerialEntry public int lifeTime = 16;
     @SerialEntry public double velocityMultiplier = 0.20;
@@ -74,6 +75,13 @@ public class DamageIndicatorConfig {
         public static EasingWrapper fromString(String s) {
             if (s == null) return EASE_IN_OUT;
             try { return valueOf(s); } catch (Exception e) { return EASE_IN_OUT; }
+        }
+    }
+
+    public enum NumberFormat {
+        INTEGER, ONE_DECIMAL, TWO_DECIMALS;
+        public static NumberFormat fromInt(int i) {
+            return switch (i) { case 0 -> INTEGER; case 2 -> TWO_DECIMALS; default -> ONE_DECIMAL; };
         }
     }
 
@@ -150,6 +158,9 @@ public class DamageIndicatorConfig {
 
                 .option(dblOpt(false, "z_offset", -0.01, () -> c.zOffset, v -> c.zOffset = v, -0.15, 0.15))
                 .option(dblOpt(false, "particle_min_spacing", 0.30, () -> c.particleMinSpacing, v -> c.particleMinSpacing = v, 0.00, 2.00))
+                .option(enumOpt(false, "number_format", NumberFormat.ONE_DECIMAL,
+                        () -> NumberFormat.fromInt(c.numberFormat),
+                        v -> c.numberFormat = v.ordinal()))
 
                 .option(intOpt(false, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(false, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
@@ -238,6 +249,14 @@ public class DamageIndicatorConfig {
                 .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> EnumControllerBuilder.create(opt).enumClass(EasingWrapper.class)
                         .formatValue(e -> Component.translatable("genshinerc.damageindicator.easing." + e.name().toLowerCase())));
+        if (lock) b.available(false);
+        return b.build();
+    }
+    private static Option<NumberFormat> enumOpt(boolean lock, String key, NumberFormat def, java.util.function.Supplier<NumberFormat> g, java.util.function.Consumer<NumberFormat> s) {
+        Option.Builder<NumberFormat> b = Option.<NumberFormat>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
+                .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
+                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(NumberFormat.class)
+                        .formatValue(e -> Component.translatable("genshinerc.damageindicator.number_format." + e.name().toLowerCase())));
         if (lock) b.available(false);
         return b.build();
     }

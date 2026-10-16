@@ -75,6 +75,12 @@
   "genshinerc.damageindicator.config.color_overload.desc": "Overload damage number color",
   "genshinerc.config.back_to_game_ui": "Back to Game UI",
   "genshinerc.config.back_to_game": "Back to Game",
+  "genshinerc.config.back_to_list": "Back to Mod List",
+  "genshinerc.damageindicator.config.number_format": "Number Format",
+  "genshinerc.damageindicator.config.number_format.desc": "Decimal places shown on damage numbers",
+  "genshinerc.damageindicator.number_format.integer": "Integer",
+  "genshinerc.damageindicator.number_format.one_decimal": "One Decimal",
+  "genshinerc.damageindicator.number_format.two_decimals": "Two Decimals",
 
   "genshinerc.damageindicator.config.life_shrink_enabled": "Enable Life Shrink",
   "genshinerc.damageindicator.config.life_shrink_enabled.desc": "Shrink to 0 at the end of lifetime",

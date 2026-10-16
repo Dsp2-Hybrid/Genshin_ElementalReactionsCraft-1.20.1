@@ -1,6 +1,5 @@
 package com.dsp2.genshinerc.client.render.damageindicator.config;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -19,34 +18,33 @@ public class ConfigSelectScreen extends Screen {
         lastModListParent = parent;
     }
 
-    private Screen gameUiParent() {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.level != null) {
-            return new PauseScreen(true);
-        }
-        return new TitleScreen();
-    }
-
-    private void returnToGame() {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.level != null) {
-            mc.setScreen(null);
-        } else {
-            mc.setScreen(new TitleScreen());
-        }
-    }
-
     @Override
     protected void init() {
-        this.addRenderableWidget(Button.builder(
-                        Component.translatable("genshinerc.config.back_to_game_ui"),
-                        b -> this.minecraft.setScreen(gameUiParent()))
-                .bounds(10, 10, 140, 20).build());
+        int cornerW = 110;
+        int cornerH = 18;
+        int cornerX = 10;
+        int cornerY = 10;
 
         this.addRenderableWidget(Button.builder(
-                        Component.translatable("genshinerc.config.back_to_game"),
-                        b -> returnToGame())
-                .bounds(10, 32, 140, 20).build());
+                Component.translatable("genshinerc.config.back_to_game"),
+                b -> this.minecraft.setScreen(null)
+        ).bounds(cornerX, cornerY, cornerW, cornerH).build());
+
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("genshinerc.config.back_to_game_ui"),
+                b -> {
+                    if (this.minecraft.level == null) {
+                        this.minecraft.setScreen(new TitleScreen());
+                    } else {
+                        this.minecraft.setScreen(new PauseScreen(true));
+                    }
+                }
+        ).bounds(cornerX, cornerY + cornerH + 3, cornerW, cornerH).build());
+
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("genshinerc.config.back_to_list"),
+                b -> this.minecraft.setScreen(modListParent)
+        ).bounds(cornerX, cornerY + (cornerH + 3) * 2, cornerW, cornerH).build());
 
         int cx = this.width / 2;
         int cy = this.height / 2;
