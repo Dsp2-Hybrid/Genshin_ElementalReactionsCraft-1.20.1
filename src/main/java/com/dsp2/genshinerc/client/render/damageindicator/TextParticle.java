@@ -23,6 +23,7 @@ public class TextParticle {
     private final float shadowAlpha;
     private final float shadowOffsetX;
     private final float shadowOffsetY;
+    private final float zOffset;
     private final double gravity;
     private final double velocityMult;
     private final boolean isKill;
@@ -58,6 +59,7 @@ public class TextParticle {
         this.shadowAlpha = (float) Math.max(0.0, Math.min(1.0, cfg.shadowAlpha));
         this.shadowOffsetX = (float) cfg.shadowOffsetX;
         this.shadowOffsetY = (float) cfg.shadowOffsetY;
+        this.zOffset = (float) cfg.zOffset;
 
         boolean isWhite = color.getR() > 0.99f && color.getG() > 0.99f && color.getB() > 0.99f;
         this.altColor = isWhite ? CustomColor.hex(0x000000) : CustomColor.hex(0xFFFFFF);
@@ -131,6 +133,7 @@ public class TextParticle {
         ps.pushPose();
         ps.translate(dx, dy, dz);
         ps.mulPose(cam.rotation());
+        ps.translate(0f, 0f, zOffset);
         float s = 0.03f * currentScale();
         ps.scale(-s, -s, s);
 

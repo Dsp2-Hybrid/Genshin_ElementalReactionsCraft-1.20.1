@@ -13,10 +13,13 @@ import net.minecraft.network.chat.Component;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DamageTracker {
     private static final List<TextParticle> PARTICLES = new ArrayList<>();
+    private static final Map<Integer, Vector3d> LAST_SPAWN = new HashMap<>();
     private static DamageColorProvider colorProvider = DamageColorProvider.DEFAULT;
     private static DamageSizeProvider sizeProvider = DamageSizeProvider.DEFAULT;
 
@@ -39,6 +42,17 @@ public class DamageTracker {
         double yBase = info.entity.getY() + info.entity.getBbHeight() + cfg.offsetY + sizeOffset + heightOffset;
 
         Vector3d basePos = new Vector3d(info.entity.getX(), yBase, info.entity.getZ());
+
+        Vector3d last = LAST_SPAWN.get(info.entity.getId());
+        if (last != null) {
+            double dist = basePos.distance(last);
+            if (dist < cfg.particleMinSpacing) {
+                double angle = Math.random() * Math.PI * 2;
+                basePos.x += Math.cos(angle) * cfg.particleMinSpacing;
+                basePos.z += Math.sin(angle) * cfg.particleMinSpacing;
+            }
+        }
+        LAST_SPAWN.put(info.entity.getId(), new Vector3d(basePos));
 
         Vector3d velBase = new Vector3d(0, 0, 0);
         if (cfg.randomVelocityXZ) {
@@ -88,7 +102,10 @@ public class DamageTracker {
         return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
     }
 
-    public static void tickAll() { PARTICLES.removeIf(TextParticle::tick); }
+    public static void tickAll() {
+        PARTICLES.removeIf(TextParticle::tick);
+    }
+
     public static void renderAll(PoseStack ps, MultiBufferSource buf, Camera cam, float pt) {
         for (TextParticle p : PARTICLES) p.render(ps, buf, cam, pt);
     }

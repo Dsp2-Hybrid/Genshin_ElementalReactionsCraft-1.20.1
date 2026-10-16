@@ -24,6 +24,9 @@ public class DamageIndicatorConfig {
     @SerialEntry public double shadowOffsetX = 0.60;
     @SerialEntry public double shadowOffsetY = 0.80;
 
+    @SerialEntry public double zOffset = -0.02;
+    @SerialEntry public double particleMinSpacing = 0.30;
+
     @SerialEntry public int lifeTime = 16;
     @SerialEntry public double velocityMultiplier = 0.20;
     @SerialEntry public double gravityStrength = -0.15;
@@ -129,10 +132,7 @@ public class DamageIndicatorConfig {
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
-                .save(() -> {
-                    DamageIndicatorConfig.save();
-                    ConfigSelectScreen.pendingReturnToModList = true;
-                })
+                .save(DamageIndicatorConfig::save)
                 .build()
                 .generateScreen(escParent);
     }
@@ -147,6 +147,9 @@ public class DamageIndicatorConfig {
                 .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
                 .option(dblOpt(false, "shadow_offset_x", 0.60, () -> c.shadowOffsetX, v -> c.shadowOffsetX = v, -3.00, 3.00))
                 .option(dblOpt(false, "shadow_offset_y", 0.80, () -> c.shadowOffsetY, v -> c.shadowOffsetY = v, -3.00, 3.00))
+
+                .option(dblOpt(false, "z_offset", -0.02, () -> c.zOffset, v -> c.zOffset = v, -0.50, 0.50))
+                .option(dblOpt(false, "particle_min_spacing", 0.30, () -> c.particleMinSpacing, v -> c.particleMinSpacing = v, 0.00, 2.00))
 
                 .option(intOpt(false, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(false, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
@@ -199,10 +202,7 @@ public class DamageIndicatorConfig {
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
-                .save(() -> {
-                    DamageIndicatorConfig.save();
-                    ConfigSelectScreen.pendingReturnToModList = true;
-                })
+                .save(DamageIndicatorConfig::save)
                 .build()
                 .generateScreen(escParent);
     }

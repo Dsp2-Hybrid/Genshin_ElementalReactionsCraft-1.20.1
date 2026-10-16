@@ -14,7 +14,7 @@
   "genshinerc.damageindicator.config.max_distance.desc": "服务端广播范围。超过这个距离的玩家不会收到伤害数字",
   "genshinerc.damageindicator.config.draw_shadow": "绘制阴影",
   "genshinerc.damageindicator.config.draw_shadow.desc": "数字是否带阴影",
-  "genshinerc.damageindicator.config.shadow_color": "阴影颜色",
+  "genshinerc.damageindicator.config.shadow_color": "阴影加深颜色",
   "genshinerc.damageindicator.config.life_time": "粒子生命时长 (Tick)",
   "genshinerc.damageindicator.config.life_time.desc": "伤害数字存活的总 Tick，必须是整数",
   "genshinerc.damageindicator.config.velocity_multiplier": "速度系数",
@@ -43,6 +43,10 @@
   "genshinerc.damageindicator.config.absorb_color.desc": "伤害吸收抵消部分以及恢复吸收值的固定颜色",
   "genshinerc.damageindicator.config.debug": "调试模式",
   "genshinerc.damageindicator.config.debug.desc": "打印伤害调试信息",
+  "genshinerc.damageindicator.config.z_offset": "Z 通道偏移",
+  "genshinerc.damageindicator.config.z_offset.desc": "防止多个面片渲染时的 Z 冲突闪烁，负值往相机方向推，范围 -0.50 ~ 0.50，精度 0.01",
+  "genshinerc.damageindicator.config.particle_min_spacing": "粒子最小间距",
+  "genshinerc.damageindicator.config.particle_min_spacing.desc": "同一实体连续生成伤害数字时，新粒子与上一个保持的最小距离。防止遮挡，范围 0.00 ~ 2.00，精度 0.01",
 
   "genshinerc.damageindicator.config.color_physical": "物理颜色",
   "genshinerc.damageindicator.config.color_physical.desc": "物理伤害数字颜色",
@@ -103,7 +107,7 @@
   "genshinerc.damageindicator.config.shadow_offset_x.desc": "阴影相对文字的水平偏移，范围 -3 ~ 3，精度 0.01",
   "genshinerc.damageindicator.config.shadow_offset_y": "阴影 Y 偏移",
   "genshinerc.damageindicator.config.shadow_offset_y.desc": "阴影相对文字的垂直偏移，范围 -3 ~ 3，精度 0.01",
-  "genshinerc.damageindicator.config.shadow_color.desc": "阴影颜色,颜色亮度通道控制加深深度",
+  "genshinerc.damageindicator.config.shadow_color.desc": "控制阴影颜色,由所选颜色的亮度通道控制加深深度",
 
   "genshinerc.damageindicator.easing.linear": "线性",
   "genshinerc.damageindicator.easing.ease_in": "缓入",
