@@ -1,33 +1,42 @@
 package com.dsp2.genshinerc.client.render.damageindicator.config;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public class ConfigSelectScreen extends Screen {
-    private final Screen parent;
+
+    private final Screen modListParent;
+    public static volatile boolean fromSave = false;
 
     public ConfigSelectScreen(Screen parent) {
         super(Component.translatable("genshinerc.config.select"));
-        this.parent = parent;
+        this.modListParent = parent;
     }
 
     @Override
     protected void init() {
+        if (fromSave) {
+            fromSave = false;
+            Minecraft.getInstance().setScreen(modListParent);
+            return;
+        }
+
         int cx = this.width / 2;
         int cy = this.height / 2;
 
         this.addRenderableWidget(Button.builder(
                 Component.translatable("genshinerc.config.client"),
                 b -> this.minecraft.setScreen(
-                        DamageIndicatorConfig.createScreen(DamageIndicatorConfig.get(), false, this.parent))
+                        DamageIndicatorConfig.createScreen(DamageIndicatorConfig.get(), false, this))
         ).bounds(cx - 100, cy - 30, 200, 20).build());
 
         this.addRenderableWidget(Button.builder(
                 Component.translatable("genshinerc.config.server"),
                 b -> this.minecraft.setScreen(
-                        DamageIndicatorConfig.createScreen(DamageIndicatorConfig.get(), true, this.parent))
+                        DamageIndicatorConfig.createScreen(DamageIndicatorConfig.get(), true, this))
         ).bounds(cx - 100, cy + 10, 200, 20).build());
     }
 
@@ -40,6 +49,6 @@ public class ConfigSelectScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parent);
+        this.minecraft.setScreen(modListParent);
     }
 }

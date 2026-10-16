@@ -18,8 +18,12 @@ public class DamageIndicatorConfig {
     @SerialEntry public boolean enabled = true;
     @SerialEntry public int maxDistance = 35;
 
-    @SerialEntry public boolean drawShadow = false;
+    @SerialEntry public boolean drawShadow = true;
     @SerialEntry public String shadowColor = "#929292";
+    @SerialEntry public double shadowAlpha = 0.75;
+    @SerialEntry public double shadowOffsetX = 1.00;
+    @SerialEntry public double shadowOffsetY = 1.00;
+
     @SerialEntry public int lifeTime = 16;
     @SerialEntry public double velocityMultiplier = 0.20;
     @SerialEntry public double gravityStrength = -0.15;
@@ -106,11 +110,11 @@ public class DamageIndicatorConfig {
     private static Component tsrv(String k) { return Component.translatable(k).append(" ").append(Component.translatable("genshinerc.damageindicator.label.server")); }
     private static String P(String k) { return "genshinerc.damageindicator.config." + k; }
 
-    public static Screen createScreen(DamageIndicatorConfig c, boolean serverView, Screen parent) {
-        return serverView ? createServerScreen(c, parent) : createClientScreen(c, parent);
+    public static Screen createScreen(DamageIndicatorConfig c, boolean serverView, Screen escParent) {
+        return serverView ? createServerScreen(c, escParent) : createClientScreen(c, escParent);
     }
 
-    private static Screen createServerScreen(DamageIndicatorConfig c, Screen parent) {
+    private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
         boolean lock = isMultiplayerClient();
 
         OptionGroup group = OptionGroup.createBuilder()
@@ -125,18 +129,25 @@ public class DamageIndicatorConfig {
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
-                .save(DamageIndicatorConfig::save)
+                .save(() -> {
+                    DamageIndicatorConfig.save();
+                    ConfigSelectScreen.fromSave = true;
+                })
                 .build()
-                .generateScreen(parent);
+                .generateScreen(escParent);
     }
 
-    private static Screen createClientScreen(DamageIndicatorConfig c, Screen parent) {
+    private static Screen createClientScreen(DamageIndicatorConfig c, Screen escParent) {
         OptionGroup group = OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.indicator"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
 
-                .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
+                .option(boolOpt(false, "draw_shadow", true, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
+                .option(dblOpt(false, "shadow_alpha", 0.75, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
+                .option(dblOpt(false, "shadow_offset_x", 1.00, () -> c.shadowOffsetX, v -> c.shadowOffsetX = v, -3.00, 3.00))
+                .option(dblOpt(false, "shadow_offset_y", 1.00, () -> c.shadowOffsetY, v -> c.shadowOffsetY = v, -3.00, 3.00))
+
                 .option(intOpt(false, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(false, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
                 .option(dblOpt(false, "gravity_strength", -0.15, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
@@ -188,9 +199,12 @@ public class DamageIndicatorConfig {
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
-                .save(DamageIndicatorConfig::save)
+                .save(() -> {
+                    DamageIndicatorConfig.save();
+                    ConfigSelectScreen.fromSave = true;
+                })
                 .build()
-                .generateScreen(parent);
+                .generateScreen(escParent);
     }
 
     private static Option<Boolean> boolOpt(boolean lock, String key, boolean def, java.util.function.Supplier<Boolean> g, java.util.function.Consumer<Boolean> s) {

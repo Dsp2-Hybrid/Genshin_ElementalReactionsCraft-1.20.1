@@ -5,8 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [],
   "client": [
-    "patch.gui.epicfight.EntityRenderDispatcherMixin",
-    "patch.gui.yacl.YACLScreenMixin"
+    "patch.gui.epicfight.EntityRenderDispatcherMixin"
   ],
   "injectors": {
     "defaultRequire": 1

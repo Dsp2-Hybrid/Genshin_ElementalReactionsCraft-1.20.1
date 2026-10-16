@@ -19,6 +19,10 @@ public class TextParticle {
     private final CustomColor color;
     private final float baseScale;
     private final boolean drawShadow;
+    private final int shadowRgb;
+    private final float shadowAlpha;
+    private final float shadowOffsetX;
+    private final float shadowOffsetY;
     private final double gravity;
     private final double velocityMult;
     private final boolean isKill;
@@ -44,6 +48,14 @@ public class TextParticle {
         double randFactor = 1.0 + (Math.random() * 2 - 1) * cfg.birthSizeRandomPercent;
         this.baseScale = (float) (scale * randFactor);
 
+        int hex;
+        try { hex = Integer.parseInt(cfg.shadowColor.replace("#", "").trim(), 16); }
+        catch (Exception e) { hex = 0x929292; }
+        this.shadowRgb = hex & 0xFFFFFF;
+        this.shadowAlpha = (float) Math.max(0.0, Math.min(1.0, cfg.shadowAlpha));
+        this.shadowOffsetX = (float) cfg.shadowOffsetX;
+        this.shadowOffsetY = (float) cfg.shadowOffsetY;
+
         boolean isWhite = color.getR() > 0.99f && color.getG() > 0.99f && color.getB() > 0.99f;
         this.altColor = isWhite ? CustomColor.hex(0x000000) : CustomColor.hex(0xFFFFFF);
         this.shrinkEasing = EasingType.fromName(cfg.lifeShrinkEasing.name());
@@ -62,23 +74,18 @@ public class TextParticle {
 
     private boolean skipBirthScale() {
         if (!cfg.lifeShrinkEnabled) return false;
-        int shrinkStart = Math.max(0, maxAge - cfg.lifeShrinkStartTick);
-        return shrinkStart < cfg.birthScaleDuration;
+        return Math.max(0, maxAge - cfg.lifeShrinkStartTick) < cfg.birthScaleDuration;
     }
     private boolean skipBirthFade() {
         if (!cfg.lifeFadeEnabled) return false;
-        int fadeStart = Math.max(0, maxAge - cfg.lifeFadeStartTick);
-        return fadeStart < cfg.birthFadeDuration;
+        return Math.max(0, maxAge - cfg.lifeFadeStartTick) < cfg.birthFadeDuration;
     }
 
     private float currentScale() {
         float s = baseScale;
-
         if (cfg.birthScaleEnabled && !skipBirthScale() && age < cfg.birthScaleDuration) {
-            float t = age / (float) cfg.birthScaleDuration;
-            s *= birthScaleEasing.apply(t);
+            s *= birthScaleEasing.apply(age / (float) cfg.birthScaleDuration);
         }
-
         if (cfg.lifeShrinkEnabled) {
             int start = Math.max(0, maxAge - cfg.lifeShrinkStartTick);
             if (age >= start) {
@@ -91,12 +98,9 @@ public class TextParticle {
 
     private float currentAlpha() {
         float a = 1f;
-
         if (cfg.birthFadeEnabled && !skipBirthFade() && age < cfg.birthFadeDuration) {
-            float t = age / (float) cfg.birthFadeDuration;
-            a *= birthFadeEasing.apply(t);
+            a *= birthFadeEasing.apply(age / (float) cfg.birthFadeDuration);
         }
-
         if (cfg.lifeFadeEnabled) {
             int start = Math.max(0, maxAge - cfg.lifeFadeStartTick);
             if (age >= start) {
@@ -111,8 +115,7 @@ public class TextParticle {
         if (!isKill || !cfg.killFlashEnabled) return color;
         int interval = Math.max(1, cfg.killFlashInterval);
         if (age < cfg.killFlashTicks) {
-            int phase = (age / interval) % 2;
-            return phase == 0 ? color : altColor;
+            return (age / interval) % 2 == 0 ? color : altColor;
         }
         return color;
     }
@@ -136,8 +139,21 @@ public class TextParticle {
         int r = (argb >> 16) & 0xFF, g = (argb >> 8) & 0xFF, b = argb & 0xFF;
         int finalArgb = (a << 24) | (r << 16) | (g << 8) | b;
 
-        font.drawInBatch(text, font.width(text) / -2.0f, 0f, finalArgb, drawShadow,
+        float textX = font.width(text) / -2.0f;
+
+        if (drawShadow && shadowAlpha > 0.001f) {
+            int sa = (int) (a * shadowAlpha);
+            int sr = (shadowRgb >> 16) & 0xFF;
+            int sg = (shadowRgb >> 8) & 0xFF;
+            int sb = shadowRgb & 0xFF;
+            int shadowArgb = (sa << 24) | (sr << 16) | (sg << 8) | sb;
+            font.drawInBatch(text, textX + shadowOffsetX, shadowOffsetY, shadowArgb, false,
+                    ps.last().pose(), buf, Font.DisplayMode.NORMAL, 0, 15728880);
+        }
+
+        font.drawInBatch(text, textX, 0f, finalArgb, false,
                 ps.last().pose(), buf, Font.DisplayMode.NORMAL, 0, 15728880);
+
         ps.popPose();
     }
 }
