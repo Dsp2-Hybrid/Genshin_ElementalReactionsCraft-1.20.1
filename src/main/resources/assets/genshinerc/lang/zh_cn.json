@@ -8,6 +8,7 @@
   "genshinerc.damageindicator.group.server": "伤害指示器服务端",
   "genshinerc.damageindicator.group.server.desc": "服务端权威配置，控制广播与范围",
 
+
   "genshinerc.damageindicator.config.enabled": "启用伤害指示器",
   "genshinerc.damageindicator.config.enabled.desc": "服务端总开关。关闭后不再向任何玩家广播伤害数字",
   "genshinerc.damageindicator.config.max_distance": "最大渲染距离",
@@ -48,6 +49,7 @@
   "genshinerc.damageindicator.config.particle_min_spacing": "粒子最小间距",
   "genshinerc.damageindicator.config.particle_min_spacing.desc": "同一实体连续生成伤害数字时，新粒子与上一个保持的最小距离。防止遮挡，范围 0.00 ~ 2.00，精度 0.01",
 
+
   "genshinerc.damageindicator.config.color_physical": "物理颜色",
   "genshinerc.damageindicator.config.color_physical.desc": "物理伤害数字颜色",
   "genshinerc.damageindicator.config.color_pyro": "火元素颜色",
@@ -67,6 +69,7 @@
   "genshinerc.damageindicator.config.color_overload": "超载颜色",
   "genshinerc.damageindicator.config.color_overload.desc": "超载伤害数字颜色",
 
+
   "genshinerc.config.back_to_game_ui": "返回游戏 UI",
   "genshinerc.config.back_to_game": "返回游戏",
   "genshinerc.config.back_to_list": "返回模组列表",
@@ -75,6 +78,7 @@
   "genshinerc.damageindicator.number_format.integer": "整数",
   "genshinerc.damageindicator.number_format.one_decimal": "一位小数",
   "genshinerc.damageindicator.number_format.two_decimals": "两位小数",
+
 
   "genshinerc.damageindicator.config.life_shrink_enabled": "启用生命周期缩放",
   "genshinerc.damageindicator.config.life_shrink_enabled.desc": "生命后期逐渐缩小到 0",
@@ -89,6 +93,7 @@
   "genshinerc.damageindicator.config.life_fade_easing": "淡出缓动",
   "genshinerc.damageindicator.config.life_fade_easing.desc": "透明度变化的缓动曲线",
 
+
   "genshinerc.damageindicator.config.birth_scale_enabled": "启用出生缩放动画",
   "genshinerc.damageindicator.config.birth_scale_enabled.desc": "粒子出生时从 0 缩放到目标大小。如果生命周期缩放起始 Tick 小于出生动画时长，则跳过出生动画",
   "genshinerc.damageindicator.config.birth_scale_duration": "出生缩放时长 (Tick)",
@@ -101,7 +106,6 @@
   "genshinerc.damageindicator.config.birth_fade_duration.desc": "透明度从 0 到 1 所需 Tick",
   "genshinerc.damageindicator.config.birth_fade_easing": "出生淡入缓动",
   "genshinerc.damageindicator.config.birth_fade_easing.desc": "出生淡入的缓动曲线",
-
   "genshinerc.damageindicator.config.kill_flash_enabled": "启用击杀闪烁",
   "genshinerc.damageindicator.config.kill_flash_enabled.desc": "最后一击数字颜色交替闪烁",
   "genshinerc.damageindicator.config.kill_flash_interval": "闪烁间隔 (Tick)",
@@ -117,18 +121,18 @@
   "genshinerc.damageindicator.config.shadow_offset_y": "阴影 Y 偏移",
   "genshinerc.damageindicator.config.shadow_offset_y.desc": "阴影相对文字的垂直偏移，范围 -3 ~ 3，精度 0.01",
   "genshinerc.damageindicator.config.shadow_color.desc": "控制阴影颜色,由所选颜色的亮度通道控制加深深度",
-
   "genshinerc.damageindicator.easing.linear": "线性",
   "genshinerc.damageindicator.easing.ease_in": "缓入",
   "genshinerc.damageindicator.easing.ease_out": "缓出",
   "genshinerc.damageindicator.easing.ease_in_out": "缓入缓出",
 
+
   "genshinerc.config.select": "选择配置类型",
   "genshinerc.config.client": "客户端配置",
   "genshinerc.config.server": "服务端配置",
-
   "key.genshinerc.damageindicator.config": "打开伤害指示器配置",
   "category.genshinerc.damageindicator": "GenshinERC",
+
 
   "genshinerc.damageindicator.damage_type.physical": "物理",
   "genshinerc.damageindicator.damage_type.pyro": "火元素",
@@ -140,9 +144,11 @@
   "genshinerc.damageindicator.damage_type.geo": "岩元素",
   "genshinerc.damageindicator.damage_type.overload": "超载",
 
+
+
+
   "genshinerc.config.title": "Genshin ERC 综合配置",
   "genshinerc.config.category.display": "显示",
-
   "genshinerc.bar.group.title": "状态条综合",
   "genshinerc.bar.group.desc": "设置生物头顶血条的样式与位置",
   "genshinerc.bar.config.enabled": "启用血条",

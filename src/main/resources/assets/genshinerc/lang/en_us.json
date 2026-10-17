@@ -7,7 +7,6 @@
   "genshinerc.damageindicator.group.indicator.desc": "All damage indicator related options",
   "genshinerc.damageindicator.group.server": "DI Server",
   "genshinerc.damageindicator.group.server.desc": "Server-authoritative settings controlling broadcast and range",
-
   "genshinerc.damageindicator.config.enabled": "Enable Damage Indicator",
   "genshinerc.damageindicator.config.enabled.desc": "Server master switch. When off, damage numbers are not broadcast to any player",
   "genshinerc.damageindicator.config.max_distance": "Max Render Distance",
@@ -54,7 +53,6 @@
   "genshinerc.damageindicator.config.z_offset.desc": "Prevents Z-fighting flicker between overlapping quads. Negative pushes toward camera. Range -0.15 ~ 0.15, precision 0.01",
   "genshinerc.damageindicator.config.particle_min_spacing": "Particle Min Spacing",
   "genshinerc.damageindicator.config.particle_min_spacing.desc": "Minimum distance between consecutive damage numbers on the same entity. Prevents overlap. Range 0.00 ~ 2.00, precision 0.01",
-
   "genshinerc.damageindicator.config.color_physical": "Physical Color",
   "genshinerc.damageindicator.config.color_physical.desc": "Physical damage number color",
   "genshinerc.damageindicator.config.color_pyro": "Pyro Color",
@@ -73,7 +71,6 @@
   "genshinerc.damageindicator.config.color_geo.desc": "Geo damage number color",
   "genshinerc.damageindicator.config.color_overload": "Overload Color",
   "genshinerc.damageindicator.config.color_overload.desc": "Overload damage number color",
-
   "genshinerc.config.back_to_game_ui": "Back to Game UI",
   "genshinerc.config.back_to_game": "Back to Game",
   "genshinerc.config.back_to_list": "Back to Mod List",
@@ -82,6 +79,7 @@
   "genshinerc.damageindicator.number_format.integer": "Integer",
   "genshinerc.damageindicator.number_format.one_decimal": "One Decimal",
   "genshinerc.damageindicator.number_format.two_decimals": "Two Decimals",
+
 
   "genshinerc.damageindicator.config.life_shrink_enabled": "Enable Life Shrink",
   "genshinerc.damageindicator.config.life_shrink_enabled.desc": "Shrink to 0 at the end of lifetime",
@@ -95,7 +93,6 @@
   "genshinerc.damageindicator.config.life_fade_start_tick.desc": "Ticks before despawn to start fading. Clamped if it exceeds lifetime",
   "genshinerc.damageindicator.config.life_fade_easing": "Fade Easing",
   "genshinerc.damageindicator.config.life_fade_easing.desc": "Easing curve for alpha change",
-
   "genshinerc.damageindicator.config.birth_scale_enabled": "Enable Birth Scale Animation",
   "genshinerc.damageindicator.config.birth_scale_enabled.desc": "Particle scales from 0 to target at spawn. Skipped if lifetime shrink start tick is smaller than birth duration",
   "genshinerc.damageindicator.config.birth_scale_duration": "Birth Scale Duration (ticks)",
@@ -108,7 +105,6 @@
   "genshinerc.damageindicator.config.birth_fade_duration.desc": "Ticks for alpha to go from 0 to 1",
   "genshinerc.damageindicator.config.birth_fade_easing": "Birth Fade Easing",
   "genshinerc.damageindicator.config.birth_fade_easing.desc": "Easing curve for birth fade",
-
   "genshinerc.damageindicator.config.kill_flash_enabled": "Enable Kill Flash",
   "genshinerc.damageindicator.config.kill_flash_enabled.desc": "Alternating color flash on kill",
   "genshinerc.damageindicator.config.kill_flash_interval": "Flash Interval (ticks)",
@@ -117,19 +113,17 @@
   "genshinerc.damageindicator.config.kill_flash_ticks.desc": "Total ticks of alternating flash",
   "genshinerc.damageindicator.config.kill_extra_ticks": "Kill Final Hit Extra Ticks",
   "genshinerc.damageindicator.config.kill_extra_ticks.desc": "Extra lifetime ticks for the killing blow number. Added on top of base lifetime",
-
   "genshinerc.damageindicator.easing.linear": "Linear",
   "genshinerc.damageindicator.easing.ease_in": "Ease In",
   "genshinerc.damageindicator.easing.ease_out": "Ease Out",
   "genshinerc.damageindicator.easing.ease_in_out": "Ease In Out",
 
+
   "genshinerc.config.select": "Select Config Type",
   "genshinerc.config.client": "Client Render Config",
   "genshinerc.config.server": "Server Broadcast Config",
-
   "key.genshinerc.damageindicator.config": "Open Damage Indicator Config",
   "category.genshinerc.damageindicator": "GenshinERC",
-
   "genshinerc.damageindicator.damage_type.physical": "Physical",
   "genshinerc.damageindicator.damage_type.pyro": "Pyro",
   "genshinerc.damageindicator.damage_type.hydro": "Hydro",
@@ -139,10 +133,8 @@
   "genshinerc.damageindicator.damage_type.cryo": "Cryo",
   "genshinerc.damageindicator.damage_type.geo": "Geo",
   "genshinerc.damageindicator.damage_type.overload": "Overload",
-
   "genshinerc.config.title": "Genshin ERC Config",
   "genshinerc.config.category.display": "Display",
-
   "genshinerc.bar.group.title": "Status Bar Settings",
   "genshinerc.bar.group.desc": "Configure the health bars above entities",
   "genshinerc.bar.config.enabled": "Enabled",

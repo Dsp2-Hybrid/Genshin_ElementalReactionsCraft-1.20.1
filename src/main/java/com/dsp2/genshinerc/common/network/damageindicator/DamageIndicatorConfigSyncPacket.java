@@ -12,9 +12,9 @@ public class DamageIndicatorConfigSyncPacket {
     public final boolean enabled;
     public final int maxDistance;
 
-    public DamageIndicatorConfigSyncPacket(DamageIndicatorConfig c) {
-        this.enabled = c.enabled;
-        this.maxDistance = c.maxDistance;
+    public DamageIndicatorConfigSyncPacket(boolean enabled, int maxDistance) {
+        this.enabled = enabled;
+        this.maxDistance = maxDistance;
     }
 
     public DamageIndicatorConfigSyncPacket(FriendlyByteBuf b) {
@@ -33,14 +33,11 @@ public class DamageIndicatorConfigSyncPacket {
 
     public static void handle(DamageIndicatorConfigSyncPacket p, Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
-        if (context.getSender() != null) {
-            context.setPacketHandled(true);
-            return;
-        }
+        if (context.getSender() != null) { context.setPacketHandled(true); return; }
         context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
             DamageIndicatorConfig c = DamageIndicatorConfig.get();
-            c.enabled = p.enabled;
-            c.maxDistance = p.maxDistance;
+            c.serverEnabled = p.enabled;
+            c.serverMaxDistance = p.maxDistance;
         }));
         context.setPacketHandled(true);
     }

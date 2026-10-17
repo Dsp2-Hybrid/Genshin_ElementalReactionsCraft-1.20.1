@@ -1,7 +1,8 @@
 package com.dsp2.genshinerc.server.render.damageindicator;
 
-import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorConfigSyncPacket;
+import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorNetworkHandler;
+import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorConfigSyncPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;
@@ -33,6 +34,8 @@ public class DamageServerEventHandler {
         LivingEntity e = event.getEntity();
         if (e.level().isClientSide()) return;
 
+        if (!ServerConfig.ENABLED.get()) return;
+
         if (!PRE_STATE.containsKey(e.getId())) {
             PreDamageState state = new PreDamageState();
             state.entity = e;
@@ -46,6 +49,11 @@ public class DamageServerEventHandler {
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         if (PRE_STATE.isEmpty()) return;
+
+        if (!ServerConfig.ENABLED.get()) {
+            PRE_STATE.clear();
+            return;
+        }
 
         for (PreDamageState state : PRE_STATE.values()) {
             LivingEntity e = state.entity;
@@ -68,6 +76,8 @@ public class DamageServerEventHandler {
     @SubscribeEvent
     public static void onLivingHeal(LivingHealEvent event) {
         if (event.getEntity().level().isClientSide()) return;
+        if (!ServerConfig.ENABLED.get()) return;
+
         LivingEntity e = event.getEntity();
         float healAmount = event.getAmount();
         if (healAmount <= 0) return;
@@ -87,6 +97,8 @@ public class DamageServerEventHandler {
         if (event.phase != TickEvent.Phase.END) return;
         if (!(event.player instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide()) return;
+        if (!ServerConfig.ENABLED.get()) return;
+
         float current = sp.getAbsorptionAmount();
         Float last = LAST_ABSORPTION.get(sp.getUUID());
         if (last == null) { LAST_ABSORPTION.put(sp.getUUID(), current); return; }
@@ -105,7 +117,10 @@ public class DamageServerEventHandler {
     @SubscribeEvent
     public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+
         DamageIndicatorNetworkHandler.syncConfigTo(sp, new DamageIndicatorConfigSyncPacket(
-                com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig.get()));
+                ServerConfig.ENABLED.get(),
+                ServerConfig.MAX_DISTANCE.get()
+        ));
     }
 }

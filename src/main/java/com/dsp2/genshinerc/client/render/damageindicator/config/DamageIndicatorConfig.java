@@ -16,8 +16,9 @@ import java.awt.Color;
 
 public class DamageIndicatorConfig {
 
-    @SerialEntry public boolean enabled = true;
-    @SerialEntry public int maxDistance = 35;
+    public transient boolean serverEnabled = true;
+    public transient int serverMaxDistance = 35;
+
     @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
     @SerialEntry public double shadowAlpha = 0.55;
@@ -125,12 +126,13 @@ public class DamageIndicatorConfig {
     }
 
     private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
-        boolean lock = isMultiplayerClient();
+        boolean lock = true;
+
         OptionGroup group = OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.server"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.server")))
-                .option(boolOpt(lock, "enabled", true, () -> c.enabled, v -> c.enabled = v))
-                .option(intOpt(lock, "max_distance", 35, () -> c.maxDistance, v -> c.maxDistance = v, 1, 128))
+                .option(boolOpt(lock, "enabled", true, () -> c.serverEnabled, v -> c.serverEnabled = v))
+                .option(intOpt(lock, "max_distance", 35, () -> c.serverMaxDistance, v -> c.serverMaxDistance = v, 1, 128))
                 .build();
 
         return YetAnotherConfigLib.createBuilder()
@@ -138,7 +140,7 @@ public class DamageIndicatorConfig {
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
-                .save(DamageIndicatorConfig::save)
+                .save(() -> {})
                 .build()
                 .generateScreen(escParent);
     }

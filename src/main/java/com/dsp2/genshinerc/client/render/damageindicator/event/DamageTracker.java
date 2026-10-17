@@ -28,9 +28,12 @@ public class DamageTracker {
 
     public static void addParticle(DamageInfo info) {
         DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
-        if (!cfg.enabled || info.entity == null) return;
+        if (!cfg.serverEnabled || info.entity == null) return;
+
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+
+        if (mc.player.distanceTo(info.entity) > cfg.serverMaxDistance) return;
 
         float scale = info.hasOverrideSize() ? info.overrideSize : sizeProvider.getSize(info);
         CustomColor color = info.hasOverrideColor()
@@ -62,15 +65,12 @@ public class DamageTracker {
         double camLen = toCamera.length();
         if (camLen > 0.0001) {
             toCamera.div(camLen);
-
             double lo = Math.min(cfg.zRandomMin, cfg.zRandomMax);
             double hi = Math.max(cfg.zRandomMin, cfg.zRandomMax);
             double randomZ = lo + Math.random() * (hi - lo);
-
             if (info.entity.isOnFire()) {
                 randomZ += cfg.zOffsetBurning;
             }
-
             if (Math.abs(randomZ) > 0.0001) {
                 basePos.fma(randomZ, toCamera);
             }
