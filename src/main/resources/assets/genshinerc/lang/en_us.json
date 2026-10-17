@@ -187,5 +187,11 @@
   "genshinerc.bar.config.show_full_health_mobs.desc": "If enabled, mobs at full health will also show health bars",
   "genshinerc.bar.config.player_mode.none": "None",
   "genshinerc.bar.config.player_mode.on_hurt": "On Hurt (2s)",
-  "genshinerc.bar.config.player_mode.always": "Always"
+  "genshinerc.bar.config.player_mode.always": "Always",
+  "genshinerc.damageindicator.config.z_random_min": "Spawn O Offset Min",
+  "genshinerc.damageindicator.config.z_random_min.desc": "Lower bound of random offset toward camera on spawn. Negative pushes into the entity. Range -1.00 ~ 1.00, precision 0.01",
+  "genshinerc.damageindicator.config.z_random_max": "Spawn O Offset Max",
+  "genshinerc.damageindicator.config.z_random_max.desc": "Upper bound of random offset toward camera on spawn. Positive pushes toward the camera. Range -1.00 ~ 2.00, precision 0.01",
+  "genshinerc.damageindicator.config.z_offset_burning": "Burning Extra O Offset",
+  "genshinerc.damageindicator.config.z_offset_burning.desc": "Extra distance toward the camera when the entity is on fire, prevents being hidden behind fire. Range 0.00 ~ 1.00, precision 0.01"
 }

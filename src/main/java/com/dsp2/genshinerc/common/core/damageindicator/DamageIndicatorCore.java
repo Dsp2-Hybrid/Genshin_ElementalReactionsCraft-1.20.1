@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.damageindicator.core;
+package com.dsp2.genshinerc.common.core.damageindicator;
 
 import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;

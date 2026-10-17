@@ -3,7 +3,6 @@ package com.dsp2.genshinerc.common.network;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -19,38 +18,49 @@ import java.util.UUID;
 public class DamageServerEventHandler {
 
     private static final Map<UUID, Float> LAST_ABSORPTION = new HashMap<>();
-    private static final Map<UUID, Float> PRE_ABSORPTION = new HashMap<>();
-    private static final Map<UUID, Float> PRE_HEALTH = new HashMap<>();
+
+    private static class PreDamageState {
+        LivingEntity entity;
+        float preHealth;
+        float preAbsorb;
+    }
+    private static final Map<Integer, PreDamageState> PRE_STATE = new HashMap<>();
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onLivingHurtPre(LivingHurtEvent event) {
         LivingEntity e = event.getEntity();
         if (e.level().isClientSide()) return;
-        PRE_ABSORPTION.put(e.getUUID(), e.getAbsorptionAmount());
-        PRE_HEALTH.put(e.getUUID(), e.getHealth());
+
+        if (!PRE_STATE.containsKey(e.getId())) {
+            PreDamageState state = new PreDamageState();
+            state.entity = e;
+            state.preHealth = e.getHealth();
+            state.preAbsorb = e.getAbsorptionAmount();
+            PRE_STATE.put(e.getId(), state);
+        }
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onLivingDamage(LivingDamageEvent event) {
-        LivingEntity e = event.getEntity();
-        if (e.level().isClientSide()) return;
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if (PRE_STATE.isEmpty()) return;
 
-        Float preAbsorbBoxed = PRE_ABSORPTION.remove(e.getUUID());
-        Float preHealthBoxed = PRE_HEALTH.remove(e.getUUID());
-        if (preAbsorbBoxed == null || preHealthBoxed == null) return;
+        for (PreDamageState state : PRE_STATE.values()) {
+            LivingEntity e = state.entity;
+            if (e == null || e.isRemoved()) continue;
 
-        float preAbsorb = preAbsorbBoxed;
-        float preHealth = preHealthBoxed;
-        float postAbsorb = e.getAbsorptionAmount();
-        float actualDamage = Math.max(0f, event.getAmount());
-        float absorbed = Math.max(0f, preAbsorb - postAbsorb);
+            float healthLoss = state.preHealth - e.getHealth();
+            float absorbLoss = state.preAbsorb - e.getAbsorptionAmount();
 
-        if (actualDamage < 0.001f && absorbed < 0.001f) return;
+            if (healthLoss < 0.001f && absorbLoss < 0.001f) continue;
 
-        boolean kill = (preHealth - actualDamage) <= 0;
-        if (kill) actualDamage = Math.min(actualDamage, preHealth);
+            float actualDamage = Math.max(0f, healthLoss);
+            float absorbed = Math.max(0f, absorbLoss);
+            boolean kill = e.getHealth() <= 0.001f;
 
-        NetworkHandler.sendDamage(e, "physical", actualDamage, false, kill, false, absorbed, null, null, false, false);
+            NetworkHandler.sendDamage(e, "physical", actualDamage, false, kill, false, absorbed, null, null, false, false);
+        }
+        PRE_STATE.clear();
     }
 
     @SubscribeEvent
@@ -88,8 +98,6 @@ public class DamageServerEventHandler {
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         LAST_ABSORPTION.remove(event.getEntity().getUUID());
-        PRE_ABSORPTION.remove(event.getEntity().getUUID());
-        PRE_HEALTH.remove(event.getEntity().getUUID());
     }
 
     @SubscribeEvent

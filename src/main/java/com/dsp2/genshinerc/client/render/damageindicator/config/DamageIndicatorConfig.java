@@ -65,6 +65,9 @@ public class DamageIndicatorConfig {
     @SerialEntry public int killFlashTicks = 10;
     @SerialEntry public int killExtraTicks = 4;
     @SerialEntry public boolean debug = false;
+    @SerialEntry public double zRandomMin = 0.00;
+    @SerialEntry public double zRandomMax = 0.50;
+    @SerialEntry public double zOffsetBurning = 0.30;
 
     public enum EasingWrapper {
         LINEAR, EASE_IN, EASE_OUT, EASE_IN_OUT;
@@ -97,9 +100,9 @@ public class DamageIndicatorConfig {
 
     public static final ConfigClassHandler<DamageIndicatorConfig> HANDLER =
             ConfigClassHandler.createBuilder(DamageIndicatorConfig.class)
-                    .id(ResourceLocation.fromNamespaceAndPath("genshinerc", "damageindicator"))
+                    .id(ResourceLocation.fromNamespaceAndPath("genshinerc", "core"))
                     .serializer(cfg -> GsonConfigSerializerBuilder.create(cfg)
-                            .setPath(FMLPaths.CONFIGDIR.get().resolve("genshinerc-damageindicator.json5"))
+                            .setPath(FMLPaths.CONFIGDIR.get().resolve("genshinerc-core.json5"))
                             .build())
                     .build();
 
@@ -115,7 +118,7 @@ public class DamageIndicatorConfig {
     private static Component t(String k) { return Component.translatable(k); }
     private static Component td(String k) { return Component.translatable(k + ".desc"); }
     private static Component tsrv(String k) { return Component.translatable(k).append(" ").append(Component.translatable("genshinerc.damageindicator.label.server")); }
-    private static String P(String k) { return "genshinerc.damageindicator.config." + k; }
+    private static String P(String k) { return "genshinerc.core.config." + k; }
 
     public static Screen createScreen(DamageIndicatorConfig c, boolean serverView, Screen escParent) {
         return serverView ? createServerScreen(c, escParent) : createClientScreen(c, escParent);
@@ -124,16 +127,16 @@ public class DamageIndicatorConfig {
     private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
         boolean lock = isMultiplayerClient();
         OptionGroup group = OptionGroup.createBuilder()
-                .name(t("genshinerc.damageindicator.group.server"))
-                .description(OptionDescription.of(td("genshinerc.damageindicator.group.server")))
+                .name(t("genshinerc.core.group.server"))
+                .description(OptionDescription.of(td("genshinerc.core.group.server")))
                 .option(boolOpt(lock, "enabled", true, () -> c.enabled, v -> c.enabled = v))
                 .option(intOpt(lock, "max_distance", 35, () -> c.maxDistance, v -> c.maxDistance = v, 1, 128))
                 .build();
 
         return YetAnotherConfigLib.createBuilder()
-                .title(t("genshinerc.damageindicator.title.server"))
+                .title(t("genshinerc.core.title.server"))
                 .category(ConfigCategory.createBuilder()
-                        .name(t("genshinerc.damageindicator.category.display"))
+                        .name(t("genshinerc.core.category.display"))
                         .group(group).build())
                 .save(DamageIndicatorConfig::save)
                 .build()
@@ -147,9 +150,9 @@ public class DamageIndicatorConfig {
         OptionGroup barGroup = BarConfig.createGroup();
 
         return YetAnotherConfigLib.createBuilder()
-                .title(t("genshinerc.damageindicator.title"))
+                .title(t("genshinerc.core.title"))
                 .category(ConfigCategory.createBuilder()
-                        .name(t("genshinerc.damageindicator.category.display"))
+                        .name(t("genshinerc.core.category.display"))
                         .group(group)       // 伤害指示器
                         .group(barGroup)    // 状态条综合（并列）
                         .build())
@@ -164,8 +167,8 @@ public class DamageIndicatorConfig {
     private static OptionGroup buildGroup() {
         DamageIndicatorConfig c = get();
         return OptionGroup.createBuilder()
-                .name(t("genshinerc.damageindicator.group.indicator"))
-                .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
+                .name(t("genshinerc.core.group.indicator"))
+                .description(OptionDescription.of(td("genshinerc.core.group.indicator")))
                 .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
@@ -213,6 +216,9 @@ public class DamageIndicatorConfig {
                 .option(intOpt(false, "kill_flash_ticks", 10, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
                 .option(intOpt(false, "kill_extra_ticks", 4, () -> c.killExtraTicks, v -> c.killExtraTicks = v, 0, 20))
                 .option(boolOpt(false, "debug", false, () -> c.debug, v -> c.debug = v))
+                .option(dblOpt(false, "z_random_min", 0.00, () -> c.zRandomMin, v -> c.zRandomMin = v, -1.00, 1.00))
+                .option(dblOpt(false, "z_random_max", 0.50, () -> c.zRandomMax, v -> c.zRandomMax = v, -1.00, 2.00))
+                .option(dblOpt(false, "z_offset_burning", 0.30, () -> c.zOffsetBurning, v -> c.zOffsetBurning = v, 0.00, 1.00))
                 .build();
     }
 
@@ -246,7 +252,7 @@ public class DamageIndicatorConfig {
         Option.Builder<EasingWrapper> b = Option.<EasingWrapper>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
                 .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> EnumControllerBuilder.create(opt).enumClass(EasingWrapper.class)
-                        .formatValue(e -> Component.translatable("genshinerc.damageindicator.easing." + e.name().toLowerCase())));
+                        .formatValue(e -> Component.translatable("genshinerc.core.easing." + e.name().toLowerCase())));
         if (lock) b.available(false);
         return b.build();
     }
@@ -254,7 +260,7 @@ public class DamageIndicatorConfig {
         Option.Builder<NumberFormat> b = Option.<NumberFormat>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
                 .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> EnumControllerBuilder.create(opt).enumClass(NumberFormat.class)
-                        .formatValue(e -> Component.translatable("genshinerc.damageindicator.number_format." + e.name().toLowerCase())));
+                        .formatValue(e -> Component.translatable("genshinerc.core.number_format." + e.name().toLowerCase())));
         if (lock) b.available(false);
         return b.build();
     }

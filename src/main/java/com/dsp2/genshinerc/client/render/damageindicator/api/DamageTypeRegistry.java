@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class DamageTypeRegistry {
     private static final Map<String, DamageType> REGISTRY = new HashMap<>();
-    private static final String NP = "genshinerc.damageindicator.damage_type.";
+    private static final String NP = "genshinerc.core.damage_type.";
     private static final String CP = "color_";
 
     public static final DamageType PHYSICAL    = register("physical",   NP+"physical",   CP+"physical");

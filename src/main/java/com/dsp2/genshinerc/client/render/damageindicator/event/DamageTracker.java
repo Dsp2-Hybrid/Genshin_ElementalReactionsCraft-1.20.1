@@ -54,6 +54,28 @@ public class DamageTracker {
         }
         LAST_SPAWN.put(info.entity.getId(), new Vector3d(basePos));
 
+        Vector3d toCamera = new Vector3d(
+                mc.player.getX() - basePos.x,
+                mc.player.getY() + mc.player.getEyeHeight() - basePos.y,
+                mc.player.getZ() - basePos.z
+        );
+        double camLen = toCamera.length();
+        if (camLen > 0.0001) {
+            toCamera.div(camLen);
+
+            double lo = Math.min(cfg.zRandomMin, cfg.zRandomMax);
+            double hi = Math.max(cfg.zRandomMin, cfg.zRandomMax);
+            double randomZ = lo + Math.random() * (hi - lo);
+
+            if (info.entity.isOnFire()) {
+                randomZ += cfg.zOffsetBurning;
+            }
+
+            if (Math.abs(randomZ) > 0.0001) {
+                basePos.fma(randomZ, toCamera);
+            }
+        }
+
         Vector3d velBase = new Vector3d(0, 0, 0);
         if (cfg.randomVelocityXZ) {
             velBase.x = (Math.random() - 0.5) * 2 * cfg.randomVelocityXZAmount;
