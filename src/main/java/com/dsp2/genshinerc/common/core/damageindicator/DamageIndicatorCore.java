@@ -2,16 +2,16 @@ package com.dsp2.genshinerc.common.core.damageindicator;
 
 import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
-import com.dsp2.genshinerc.common.network.NetworkHandler;
+import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorNetworkHandler;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 public class DamageIndicatorCore {
     public static void init() {
-        NetworkHandler.register();
+        DamageIndicatorNetworkHandler.register();
         if (FMLEnvironment.dist.isClient()) {
             DamageIndicatorConfig.load();
             BarConfig.load();
-            NetworkHandler.currentRange = DamageIndicatorConfig.get().maxDistance;
+            DamageIndicatorNetworkHandler.currentRange = DamageIndicatorConfig.get().maxDistance;
         }
     }
 }

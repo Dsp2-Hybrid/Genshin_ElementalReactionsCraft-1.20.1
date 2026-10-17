@@ -67,7 +67,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public boolean debug = false;
     @SerialEntry public double zRandomMin = 0.00;
     @SerialEntry public double zRandomMax = 0.50;
-    @SerialEntry public double zOffsetBurning = 0.30;
+    @SerialEntry public double zOffsetBurning = 0.50;
 
     public enum EasingWrapper {
         LINEAR, EASE_IN, EASE_OUT, EASE_IN_OUT;
@@ -216,9 +216,9 @@ public class DamageIndicatorConfig {
                 .option(intOpt(false, "kill_flash_ticks", 10, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
                 .option(intOpt(false, "kill_extra_ticks", 4, () -> c.killExtraTicks, v -> c.killExtraTicks = v, 0, 20))
                 .option(boolOpt(false, "debug", false, () -> c.debug, v -> c.debug = v))
-                .option(dblOpt(false, "z_random_min", 0.00, () -> c.zRandomMin, v -> c.zRandomMin = v, -1.00, 1.00))
+                .option(dblOpt(false, "z_random_min", 0.00, () -> c.zRandomMin, v -> c.zRandomMin = v, -1.00, 2.00))
                 .option(dblOpt(false, "z_random_max", 0.50, () -> c.zRandomMax, v -> c.zRandomMax = v, -1.00, 2.00))
-                .option(dblOpt(false, "z_offset_burning", 0.30, () -> c.zOffsetBurning, v -> c.zOffsetBurning = v, 0.00, 1.00))
+                .option(dblOpt(false, "z_offset_burning", 0.50, () -> c.zOffsetBurning, v -> c.zOffsetBurning = v, 0.00, 1.00))
                 .build();
     }
 

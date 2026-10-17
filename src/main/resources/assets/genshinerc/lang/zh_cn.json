@@ -189,9 +189,9 @@
   "genshinerc.bar.config.player_mode.on_hurt": "受伤后显示两秒",
   "genshinerc.bar.config.player_mode.always": "始终显示",
   "genshinerc.damageindicator.config.z_random_min": "生成外偏移下限",
-  "genshinerc.damageindicator.config.z_random_min.desc": "粒子生成时朝摄像机方向随机偏移范围的下限，负值会往实体内部推，范围 -1.00 ~ 1.00，精度 0.01",
+  "genshinerc.damageindicator.config.z_random_min.desc": "粒子生成时朝摄像机方向随机偏移范围上限A，负值会往实体内部推，范围 -1.00 ~ 2.00，精度 0.01",
   "genshinerc.damageindicator.config.z_random_max": "生成外偏移上限",
-  "genshinerc.damageindicator.config.z_random_max.desc": "粒子生成时朝摄像机方向随机偏移范围的上限，正值往摄像机方向推，范围 -1.00 ~ 2.00，精度 0.01",
+  "genshinerc.damageindicator.config.z_random_max.desc": "粒子生成时朝摄像机方向随机偏移范围上限B，正值往摄像机方向推，范围 -1.00 ~ 2.00，精度 0.01",
   "genshinerc.damageindicator.config.z_offset_burning": "着火额外外偏移",
   "genshinerc.damageindicator.config.z_offset_burning.desc": "实体着火时粒子额外朝摄像机方向推的距离，防止被火焰面片遮挡，范围 0.00 ~ 1.00，精度 0.01"
 

@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.network;
+package com.dsp2.genshinerc.common.network.damageindicator;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -7,7 +7,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-public class NetworkHandler {
+public class DamageIndicatorNetworkHandler {
     private static final String P = "1";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             ResourceLocation.fromNamespaceAndPath("genshinerc", "damage_indicator"),

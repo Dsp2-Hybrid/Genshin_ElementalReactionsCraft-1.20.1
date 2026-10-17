@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.network;
+package com.dsp2.genshinerc.common.network.damageindicator;
 
 import com.dsp2.genshinerc.client.render.damageindicator.event.ClientPacketHandler;
 import net.minecraft.network.FriendlyByteBuf;

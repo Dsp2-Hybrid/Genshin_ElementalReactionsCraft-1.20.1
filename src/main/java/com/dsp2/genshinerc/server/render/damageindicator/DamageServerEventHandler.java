@@ -1,5 +1,7 @@
-package com.dsp2.genshinerc.common.network;
+package com.dsp2.genshinerc.server.render.damageindicator;
 
+import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorConfigSyncPacket;
+import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorNetworkHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;
@@ -58,7 +60,7 @@ public class DamageServerEventHandler {
             float absorbed = Math.max(0f, absorbLoss);
             boolean kill = e.getHealth() <= 0.001f;
 
-            NetworkHandler.sendDamage(e, "physical", actualDamage, false, kill, false, absorbed, null, null, false, false);
+            DamageIndicatorNetworkHandler.sendDamage(e, "physical", actualDamage, false, kill, false, absorbed, null, null, false, false);
         }
         PRE_STATE.clear();
     }
@@ -77,7 +79,7 @@ public class DamageServerEventHandler {
 
         boolean fullHeal = actualHeal >= missing - 0.001f;
 
-        NetworkHandler.sendDamage(e, "physical", -actualHeal, false, false, fullHeal, 0f, null, null, false, false);
+        DamageIndicatorNetworkHandler.sendDamage(e, "physical", -actualHeal, false, false, fullHeal, 0f, null, null, false, false);
     }
 
     @SubscribeEvent
@@ -91,7 +93,7 @@ public class DamageServerEventHandler {
         float diff = current - last;
         LAST_ABSORPTION.put(sp.getUUID(), current);
         if (diff > 0.001f) {
-            NetworkHandler.sendDamage(sp, "physical", diff, false, false, false, 0f, null, null, true, false);
+            DamageIndicatorNetworkHandler.sendDamage(sp, "physical", diff, false, false, false, 0f, null, null, true, false);
         }
     }
 
@@ -103,7 +105,7 @@ public class DamageServerEventHandler {
     @SubscribeEvent
     public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
-        NetworkHandler.syncConfigTo(sp, new DamageIndicatorConfigSyncPacket(
+        DamageIndicatorNetworkHandler.syncConfigTo(sp, new DamageIndicatorConfigSyncPacket(
                 com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig.get()));
     }
 }
