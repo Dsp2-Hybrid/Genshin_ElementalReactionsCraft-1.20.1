@@ -124,14 +124,18 @@ public class DamageIndicatorConfig {
 
     private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
         Minecraft mc = Minecraft.getInstance();
-        boolean isOp = mc.player != null && mc.player.hasPermissions(2);
-        boolean lock = !isOp;
+
+        boolean isSingleplayer = mc.hasSingleplayerServer();
+        boolean hasOp = mc.player != null && mc.player.hasPermissions(2);
+        boolean canEdit = isSingleplayer || hasOp;
+
+        boolean lock = !canEdit;
 
         OptionGroup group = OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.server"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.server")))
-                .option(boolOpt(lock, "enabled", true, () -> c.serverEnabled, v -> c.serverEnabled = v))
-                .option(intOpt(lock, "max_distance", 35, () -> c.serverMaxDistance, v -> c.serverMaxDistance = v, 1, 128))
+                .option(boolOpt(lock, "enabled", c.serverEnabled, () -> c.serverEnabled, v -> c.serverEnabled = v))
+                .option(intOpt(lock, "max_distance", c.serverMaxDistance, () -> c.serverMaxDistance, v -> c.serverMaxDistance = v, 1, 128))
                 .build();
 
         return YetAnotherConfigLib.createBuilder()
@@ -140,7 +144,7 @@ public class DamageIndicatorConfig {
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
                 .save(() -> {
-                    if (isOp) {
+                    if (canEdit) {
                         DamageIndicatorNetworkHandler.CHANNEL.sendToServer(
                                 new ServerConfigUpdatePacket(c.serverEnabled, c.serverMaxDistance)
                         );
