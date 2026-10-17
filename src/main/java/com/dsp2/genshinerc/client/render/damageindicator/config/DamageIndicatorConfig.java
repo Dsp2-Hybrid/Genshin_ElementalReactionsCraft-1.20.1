@@ -100,9 +100,9 @@ public class DamageIndicatorConfig {
 
     public static final ConfigClassHandler<DamageIndicatorConfig> HANDLER =
             ConfigClassHandler.createBuilder(DamageIndicatorConfig.class)
-                    .id(ResourceLocation.fromNamespaceAndPath("genshinerc", "core"))
+                    .id(ResourceLocation.fromNamespaceAndPath("genshinerc", "damageindicator"))
                     .serializer(cfg -> GsonConfigSerializerBuilder.create(cfg)
-                            .setPath(FMLPaths.CONFIGDIR.get().resolve("genshinerc-core.json5"))
+                            .setPath(FMLPaths.CONFIGDIR.get().resolve("genshinerc-damageindicator.json5"))
                             .build())
                     .build();
 
@@ -118,7 +118,7 @@ public class DamageIndicatorConfig {
     private static Component t(String k) { return Component.translatable(k); }
     private static Component td(String k) { return Component.translatable(k + ".desc"); }
     private static Component tsrv(String k) { return Component.translatable(k).append(" ").append(Component.translatable("genshinerc.damageindicator.label.server")); }
-    private static String P(String k) { return "genshinerc.core.config." + k; }
+    private static String P(String k) { return "genshinerc.damageindicator.config." + k; }
 
     public static Screen createScreen(DamageIndicatorConfig c, boolean serverView, Screen escParent) {
         return serverView ? createServerScreen(c, escParent) : createClientScreen(c, escParent);
@@ -127,16 +127,16 @@ public class DamageIndicatorConfig {
     private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
         boolean lock = isMultiplayerClient();
         OptionGroup group = OptionGroup.createBuilder()
-                .name(t("genshinerc.core.group.server"))
-                .description(OptionDescription.of(td("genshinerc.core.group.server")))
+                .name(t("genshinerc.damageindicator.group.server"))
+                .description(OptionDescription.of(td("genshinerc.damageindicator.group.server")))
                 .option(boolOpt(lock, "enabled", true, () -> c.enabled, v -> c.enabled = v))
                 .option(intOpt(lock, "max_distance", 35, () -> c.maxDistance, v -> c.maxDistance = v, 1, 128))
                 .build();
 
         return YetAnotherConfigLib.createBuilder()
-                .title(t("genshinerc.core.title.server"))
+                .title(t("genshinerc.damageindicator.title.server"))
                 .category(ConfigCategory.createBuilder()
-                        .name(t("genshinerc.core.category.display"))
+                        .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
                 .save(DamageIndicatorConfig::save)
                 .build()
@@ -145,20 +145,18 @@ public class DamageIndicatorConfig {
 
     private static Screen createClientScreen(DamageIndicatorConfig c, Screen escParent) {
         OptionGroup group = buildGroup();
-
-        // 获取血条的配置组
         OptionGroup barGroup = BarConfig.createGroup();
 
         return YetAnotherConfigLib.createBuilder()
-                .title(t("genshinerc.core.title"))
+                .title(t("genshinerc.damageindicator.title"))
                 .category(ConfigCategory.createBuilder()
-                        .name(t("genshinerc.core.category.display"))
-                        .group(group)       // 伤害指示器
-                        .group(barGroup)    // 状态条综合（并列）
+                        .name(t("genshinerc.damageindicator.category.display"))
+                        .group(group)
+                        .group(barGroup)
                         .build())
                 .save(() -> {
                     DamageIndicatorConfig.save();
-                    BarConfig.save(); // 保存时一起存
+                    BarConfig.save();
                 })
                 .build()
                 .generateScreen(escParent);
@@ -167,8 +165,8 @@ public class DamageIndicatorConfig {
     private static OptionGroup buildGroup() {
         DamageIndicatorConfig c = get();
         return OptionGroup.createBuilder()
-                .name(t("genshinerc.core.group.indicator"))
-                .description(OptionDescription.of(td("genshinerc.core.group.indicator")))
+                .name(t("genshinerc.damageindicator.group.indicator"))
+                .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
                 .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
@@ -252,7 +250,7 @@ public class DamageIndicatorConfig {
         Option.Builder<EasingWrapper> b = Option.<EasingWrapper>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
                 .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> EnumControllerBuilder.create(opt).enumClass(EasingWrapper.class)
-                        .formatValue(e -> Component.translatable("genshinerc.core.easing." + e.name().toLowerCase())));
+                        .formatValue(e -> Component.translatable("genshinerc.damageindicator.easing." + e.name().toLowerCase())));
         if (lock) b.available(false);
         return b.build();
     }
@@ -260,7 +258,7 @@ public class DamageIndicatorConfig {
         Option.Builder<NumberFormat> b = Option.<NumberFormat>createBuilder().name(lock ? tsrv(P(key)) : t(P(key)))
                 .description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> EnumControllerBuilder.create(opt).enumClass(NumberFormat.class)
-                        .formatValue(e -> Component.translatable("genshinerc.core.number_format." + e.name().toLowerCase())));
+                        .formatValue(e -> Component.translatable("genshinerc.damageindicator.number_format." + e.name().toLowerCase())));
         if (lock) b.available(false);
         return b.build();
     }
