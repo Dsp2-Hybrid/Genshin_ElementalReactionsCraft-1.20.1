@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.mixin.patch.gui.epicfight.fixguimodelbyep;
+package com.dsp2.genshinerc.mixin.patch.gui.epicfight.fixguimodelbyef;
 
 import com.dsp2.genshinerc.patch.gui.render.GuiRenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;

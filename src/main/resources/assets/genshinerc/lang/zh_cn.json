@@ -66,6 +66,7 @@
   "genshinerc.damageindicator.config.color_geo.desc": "岩元素伤害数字颜色",
   "genshinerc.damageindicator.config.color_overload": "超载颜色",
   "genshinerc.damageindicator.config.color_overload.desc": "超载伤害数字颜色",
+
   "genshinerc.config.back_to_game_ui": "返回游戏 UI",
   "genshinerc.config.back_to_game": "返回游戏",
   "genshinerc.config.back_to_list": "返回模组列表",
@@ -137,5 +138,29 @@
   "genshinerc.damageindicator.damage_type.dendro": "草元素",
   "genshinerc.damageindicator.damage_type.cryo": "冰元素",
   "genshinerc.damageindicator.damage_type.geo": "岩元素",
-  "genshinerc.damageindicator.damage_type.overload": "超载"
+  "genshinerc.damageindicator.damage_type.overload": "超载",
+
+  "genshinerc.config.title": "Genshin ERC 综合配置",
+  "genshinerc.config.category.display": "显示",
+
+  "genshinerc.bar.group.title": "状态条综合",
+  "genshinerc.bar.group.desc": "设置生物头顶血条的样式与位置",
+  "genshinerc.bar.config.enabled": "启用血条",
+  "genshinerc.bar.config.enabled.desc": "是否在生物头顶渲染血条",
+  "genshinerc.bar.config.y_offset": "Y轴偏移",
+  "genshinerc.bar.config.y_offset.desc": "调整血条相对生物头顶的高度",
+  "genshinerc.bar.config.scale_factor": "尺寸缩放",
+  "genshinerc.bar.config.scale_factor.desc": "整体调整血条的大小",
+  "genshinerc.bar.config.enemy_color": "敌方颜色",
+  "genshinerc.bar.config.enemy_color.desc": "敌对生物血条的填充颜色",
+  "genshinerc.bar.config.ally_color": "友方/中立颜色",
+  "genshinerc.bar.config.ally_color.desc": "友方或中立生物血条的填充颜色",
+  "genshinerc.bar.config.u0": "纹理 U0 (左)",
+  "genshinerc.bar.config.u0.desc": "图集左侧裁剪点 (0.0 - 1.0)",
+  "genshinerc.bar.config.v0": "纹理 V0 (上)",
+  "genshinerc.bar.config.v0.desc": "图集上方裁剪点 (0.0 - 1.0)",
+  "genshinerc.bar.config.u1": "纹理 U1 (右)",
+  "genshinerc.bar.config.u1.desc": "图集右侧裁剪点 (0.0 - 1.0)",
+  "genshinerc.bar.config.v1": "纹理 V1 (下)",
+  "genshinerc.bar.config.v1.desc": "图集下方裁剪点 (0.0 - 1.0)"
 }

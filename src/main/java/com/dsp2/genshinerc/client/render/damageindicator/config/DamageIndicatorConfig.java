@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.client.render.damageindicator.config;
 
+import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.*;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
@@ -17,17 +18,14 @@ public class DamageIndicatorConfig {
 
     @SerialEntry public boolean enabled = true;
     @SerialEntry public int maxDistance = 35;
-
     @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
     @SerialEntry public double shadowAlpha = 0.55;
     @SerialEntry public double shadowOffsetX = 0.60;
     @SerialEntry public double shadowOffsetY = 0.80;
-
     @SerialEntry public double zOffset = -0.01;
     @SerialEntry public double particleMinSpacing = 0.30;
     @SerialEntry public int numberFormat = 1;
-
     @SerialEntry public int lifeTime = 16;
     @SerialEntry public double velocityMultiplier = 0.20;
     @SerialEntry public double gravityStrength = -0.15;
@@ -41,7 +39,6 @@ public class DamageIndicatorConfig {
     @SerialEntry public double killSize = 3.00;
     @SerialEntry public double birthSizeRandomPercent = 0.15;
     @SerialEntry public String absorbColor = "#FFEE00";
-
     @SerialEntry public String colorPhysical = "#FFFFFF";
     @SerialEntry public String colorPyro     = "#FF6600";
     @SerialEntry public String colorHydro    = "#00CCFF";
@@ -51,7 +48,6 @@ public class DamageIndicatorConfig {
     @SerialEntry public String colorCryo     = "#B4FFFE";
     @SerialEntry public String colorGeo      = "#EFC01B";
     @SerialEntry public String colorOverload = "#FD375A";
-
     @SerialEntry public boolean lifeShrinkEnabled = true;
     @SerialEntry public int lifeShrinkStartTick = 4;
     @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_OUT;
@@ -66,7 +62,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public EasingWrapper birthFadeEasing = EasingWrapper.EASE_IN;
     @SerialEntry public boolean killFlashEnabled = true;
     @SerialEntry public int killFlashInterval = 2;
-    @SerialEntry public int killFlashTicks = 8;
+    @SerialEntry public int killFlashTicks = 10;
     @SerialEntry public int killExtraTicks = 4;
     @SerialEntry public boolean debug = false;
 
@@ -127,7 +123,6 @@ public class DamageIndicatorConfig {
 
     private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
         boolean lock = isMultiplayerClient();
-
         OptionGroup group = OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.server"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.server")))
@@ -146,22 +141,39 @@ public class DamageIndicatorConfig {
     }
 
     private static Screen createClientScreen(DamageIndicatorConfig c, Screen escParent) {
-        OptionGroup group = OptionGroup.createBuilder()
+        OptionGroup group = buildGroup();
+
+        // 获取血条的配置组
+        OptionGroup barGroup = BarConfig.createGroup();
+
+        return YetAnotherConfigLib.createBuilder()
+                .title(t("genshinerc.damageindicator.title"))
+                .category(ConfigCategory.createBuilder()
+                        .name(t("genshinerc.damageindicator.category.display"))
+                        .group(group)       // 伤害指示器
+                        .group(barGroup)    // 状态条综合（并列）
+                        .build())
+                .save(() -> {
+                    DamageIndicatorConfig.save();
+                    BarConfig.save(); // 保存时一起存
+                })
+                .build()
+                .generateScreen(escParent);
+    }
+
+    private static OptionGroup buildGroup() {
+        DamageIndicatorConfig c = get();
+        return OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.indicator"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
-
                 .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
                 .option(dblOpt(false, "shadow_offset_x", 0.60, () -> c.shadowOffsetX, v -> c.shadowOffsetX = v, -3.00, 3.00))
                 .option(dblOpt(false, "shadow_offset_y", 0.80, () -> c.shadowOffsetY, v -> c.shadowOffsetY = v, -3.00, 3.00))
-
                 .option(dblOpt(false, "z_offset", -0.01, () -> c.zOffset, v -> c.zOffset = v, -0.15, 0.15))
                 .option(dblOpt(false, "particle_min_spacing", 0.30, () -> c.particleMinSpacing, v -> c.particleMinSpacing = v, 0.00, 2.00))
-                .option(enumOpt(false, "number_format", NumberFormat.ONE_DECIMAL,
-                        () -> NumberFormat.fromInt(c.numberFormat),
-                        v -> c.numberFormat = v.ordinal()))
-
+                .option(enumOpt(false, "number_format", NumberFormat.ONE_DECIMAL, () -> NumberFormat.fromInt(c.numberFormat), v -> c.numberFormat = v.ordinal()))
                 .option(intOpt(false, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(false, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
                 .option(dblOpt(false, "gravity_strength", -0.15, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
@@ -175,7 +187,6 @@ public class DamageIndicatorConfig {
                 .option(dblOpt(false, "kill_size", 3.00, () -> c.killSize, v -> c.killSize = v, 0.50, 5.00))
                 .option(dblOpt(false, "birth_size_random_percent", 0.15, () -> c.birthSizeRandomPercent, v -> c.birthSizeRandomPercent = v, 0.00, 0.45))
                 .option(colorOpt(false, "absorb_color", new Color(0xFFEE00), () -> toAwt(c.absorbColor), v -> c.absorbColor = fromAwt(v)))
-
                 .option(colorOpt(false, "color_physical", new Color(0xFFFFFF), () -> toAwt(c.colorPhysical), v -> c.colorPhysical = fromAwt(v)))
                 .option(colorOpt(false, "color_pyro", new Color(0xFF6600), () -> toAwt(c.colorPyro), v -> c.colorPyro = fromAwt(v)))
                 .option(colorOpt(false, "color_hydro", new Color(0x00CCFF), () -> toAwt(c.colorHydro), v -> c.colorHydro = fromAwt(v)))
@@ -185,37 +196,24 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(false, "color_cryo", new Color(0xB4FFFE), () -> toAwt(c.colorCryo), v -> c.colorCryo = fromAwt(v)))
                 .option(colorOpt(false, "color_geo", new Color(0xEFC01B), () -> toAwt(c.colorGeo), v -> c.colorGeo = fromAwt(v)))
                 .option(colorOpt(false, "color_overload", new Color(0xFD375A), () -> toAwt(c.colorOverload), v -> c.colorOverload = fromAwt(v)))
-
                 .option(boolOpt(false, "life_shrink_enabled", true, () -> c.lifeShrinkEnabled, v -> c.lifeShrinkEnabled = v))
                 .option(intOpt(false, "life_shrink_start_tick", 4, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
                 .option(easingOpt(false, "life_shrink_easing", EasingWrapper.EASE_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))
                 .option(boolOpt(false, "life_fade_enabled", true, () -> c.lifeFadeEnabled, v -> c.lifeFadeEnabled = v))
                 .option(intOpt(false, "life_fade_start_tick", 6, () -> c.lifeFadeStartTick, v -> c.lifeFadeStartTick = v, 1, 30))
                 .option(easingOpt(false, "life_fade_easing", EasingWrapper.EASE_OUT, () -> c.lifeFadeEasing, v -> c.lifeFadeEasing = v))
-
                 .option(boolOpt(false, "birth_scale_enabled", true, () -> c.birthScaleEnabled, v -> c.birthScaleEnabled = v))
                 .option(intOpt(false, "birth_scale_duration", 4, () -> c.birthScaleDuration, v -> c.birthScaleDuration = v, 1, 20))
                 .option(easingOpt(false, "birth_scale_easing", EasingWrapper.EASE_IN, () -> c.birthScaleEasing, v -> c.birthScaleEasing = v))
                 .option(boolOpt(false, "birth_fade_enabled", true, () -> c.birthFadeEnabled, v -> c.birthFadeEnabled = v))
                 .option(intOpt(false, "birth_fade_duration", 4, () -> c.birthFadeDuration, v -> c.birthFadeDuration = v, 1, 20))
                 .option(easingOpt(false, "birth_fade_easing", EasingWrapper.EASE_IN, () -> c.birthFadeEasing, v -> c.birthFadeEasing = v))
-
                 .option(boolOpt(false, "kill_flash_enabled", true, () -> c.killFlashEnabled, v -> c.killFlashEnabled = v))
                 .option(intOpt(false, "kill_flash_interval", 2, () -> c.killFlashInterval, v -> c.killFlashInterval = v, 1, 10))
-                .option(intOpt(false, "kill_flash_ticks", 8, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
+                .option(intOpt(false, "kill_flash_ticks", 10, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
                 .option(intOpt(false, "kill_extra_ticks", 4, () -> c.killExtraTicks, v -> c.killExtraTicks = v, 0, 20))
-
                 .option(boolOpt(false, "debug", false, () -> c.debug, v -> c.debug = v))
                 .build();
-
-        return YetAnotherConfigLib.createBuilder()
-                .title(t("genshinerc.damageindicator.title"))
-                .category(ConfigCategory.createBuilder()
-                        .name(t("genshinerc.damageindicator.category.display"))
-                        .group(group).build())
-                .save(DamageIndicatorConfig::save)
-                .build()
-                .generateScreen(escParent);
     }
 
     private static Option<Boolean> boolOpt(boolean lock, String key, boolean def, java.util.function.Supplier<Boolean> g, java.util.function.Consumer<Boolean> s) {

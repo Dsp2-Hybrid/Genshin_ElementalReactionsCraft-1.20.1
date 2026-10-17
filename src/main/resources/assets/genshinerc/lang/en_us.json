@@ -73,6 +73,7 @@
   "genshinerc.damageindicator.config.color_geo.desc": "Geo damage number color",
   "genshinerc.damageindicator.config.color_overload": "Overload Color",
   "genshinerc.damageindicator.config.color_overload.desc": "Overload damage number color",
+
   "genshinerc.config.back_to_game_ui": "Back to Game UI",
   "genshinerc.config.back_to_game": "Back to Game",
   "genshinerc.config.back_to_list": "Back to Mod List",
@@ -137,5 +138,29 @@
   "genshinerc.damageindicator.damage_type.dendro": "Dendro",
   "genshinerc.damageindicator.damage_type.cryo": "Cryo",
   "genshinerc.damageindicator.damage_type.geo": "Geo",
-  "genshinerc.damageindicator.damage_type.overload": "Overload"
+  "genshinerc.damageindicator.damage_type.overload": "Overload",
+
+  "genshinerc.config.title": "Genshin ERC Config",
+  "genshinerc.config.category.display": "Display",
+
+  "genshinerc.bar.group.title": "Status Bar Settings",
+  "genshinerc.bar.group.desc": "Configure the health bars above entities",
+  "genshinerc.bar.config.enabled": "Enabled",
+  "genshinerc.bar.config.enabled.desc": "Toggle rendering of health bars",
+  "genshinerc.bar.config.y_offset": "Y Offset",
+  "genshinerc.bar.config.y_offset.desc": "Adjust height above the entity's head",
+  "genshinerc.bar.config.scale_factor": "Scale Factor",
+  "genshinerc.bar.config.scale_factor.desc": "Overall size of the bar",
+  "genshinerc.bar.config.enemy_color": "Enemy Color",
+  "genshinerc.bar.config.enemy_color.desc": "Fill color for hostile mobs",
+  "genshinerc.bar.config.ally_color": "Ally/Neutral Color",
+  "genshinerc.bar.config.ally_color.desc": "Fill color for allies and neutral mobs",
+  "genshinerc.bar.config.u0": "Texture U0 (Left)",
+  "genshinerc.bar.config.u0.desc": "Left crop point for the atlas (0.0 - 1.0)",
+  "genshinerc.bar.config.v0": "Texture V0 (Top)",
+  "genshinerc.bar.config.v0.desc": "Top crop point for the atlas (0.0 - 1.0)",
+  "genshinerc.bar.config.u1": "Texture U1 (Right)",
+  "genshinerc.bar.config.u1.desc": "Right crop point for the atlas (0.0 - 1.0)",
+  "genshinerc.bar.config.v1": "Texture V1 (Bottom)",
+  "genshinerc.bar.config.v1.desc": "Bottom crop point for the atlas (0.0 - 1.0)"
 }

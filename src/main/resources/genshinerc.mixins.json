@@ -7,8 +7,12 @@
   "client": [
     "patch.gui.epicfight.EntityRenderDispatcherMixin",
     "patch.gui.yacl.YACLScreenActionMixin",
-    "patch.gui.epicfight.fixguimodelbyep.MixinScreen",
-    "patch.gui.epicfight.fixguimodelbyep.MixinPatchedLivingEntityRenderer"
+    "patch.gui.epicfight.fixguimodelbyef.MixinScreen",
+    "patch.gui.epicfight.fixguimodelbyef.MixinPatchedLivingEntityRenderer",
+    "patch.gui.epicfight.bar.MixinHealthBar"
+
+
+
   ],
   "injectors": {
     "defaultRequire": 1
