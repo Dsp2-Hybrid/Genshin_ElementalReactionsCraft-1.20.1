@@ -1,6 +1,8 @@
 package com.dsp2.genshinerc.client.render.damageindicator.config;
 
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
+import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorNetworkHandler;
+import com.dsp2.genshinerc.common.network.damageindicator.ServerConfigUpdatePacket;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.*;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
@@ -111,11 +113,6 @@ public class DamageIndicatorConfig {
     public static void load() { HANDLER.load(); }
     public static void save() { HANDLER.save(); }
 
-    public static boolean isMultiplayerClient() {
-        Minecraft mc = Minecraft.getInstance();
-        return mc != null && mc.level != null && !mc.hasSingleplayerServer();
-    }
-
     private static Component t(String k) { return Component.translatable(k); }
     private static Component td(String k) { return Component.translatable(k + ".desc"); }
     private static Component tsrv(String k) { return Component.translatable(k).append(" ").append(Component.translatable("genshinerc.damageindicator.label.server")); }
@@ -126,7 +123,9 @@ public class DamageIndicatorConfig {
     }
 
     private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
-        boolean lock = true;
+        Minecraft mc = Minecraft.getInstance();
+        boolean isOp = mc.player != null && mc.player.hasPermissions(2);
+        boolean lock = !isOp;
 
         OptionGroup group = OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.server"))
@@ -140,7 +139,13 @@ public class DamageIndicatorConfig {
                 .category(ConfigCategory.createBuilder()
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group).build())
-                .save(() -> {})
+                .save(() -> {
+                    if (isOp) {
+                        DamageIndicatorNetworkHandler.CHANNEL.sendToServer(
+                                new ServerConfigUpdatePacket(c.serverEnabled, c.serverMaxDistance)
+                        );
+                    }
+                })
                 .build()
                 .generateScreen(escParent);
     }

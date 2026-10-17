@@ -19,6 +19,7 @@ public class DamageIndicatorNetworkHandler {
         int id = 0;
         CHANNEL.registerMessage(id++, DamagePacket.class, DamagePacket::encode, DamagePacket::decode, DamagePacket::handle);
         CHANNEL.registerMessage(id++, DamageIndicatorConfigSyncPacket.class, DamageIndicatorConfigSyncPacket::encode, DamageIndicatorConfigSyncPacket::decode, DamageIndicatorConfigSyncPacket::handle);
+        CHANNEL.registerMessage(id++, ServerConfigUpdatePacket.class, ServerConfigUpdatePacket::encode, ServerConfigUpdatePacket::decode, ServerConfigUpdatePacket::handle);
     }
 
     public static void sendDamage(LivingEntity e, String k, float a, boolean c, boolean kl, boolean fh,
