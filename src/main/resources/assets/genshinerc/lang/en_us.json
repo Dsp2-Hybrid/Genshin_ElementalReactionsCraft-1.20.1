@@ -176,5 +176,16 @@
   "genshinerc.bar.config.fill_v0": "Fill Texture V0 (Top)",
   "genshinerc.bar.config.fill_v0.desc": "Top crop boundary for fill",
   "genshinerc.bar.config.fill_v1": "Fill Texture V1 (Bottom)",
-  "genshinerc.bar.config.fill_v1.desc": "Bottom crop boundary for fill"
+  "genshinerc.bar.config.fill_v1.desc": "Bottom crop boundary for fill",
+  "genshinerc.bar.config.base_size": "Base Bar Size",
+  "genshinerc.bar.config.base_size.desc": "Base scale factor of the bar",
+  "genshinerc.bar.config.uv_size": "Texture Total Size",
+  "genshinerc.bar.config.uv_size.desc": "Total height of the texture atlas",
+  "genshinerc.bar.config.player_mode": "Player Bar Mode",
+  "genshinerc.bar.config.player_mode.desc": "Configure when to show player health bars",
+  "genshinerc.bar.config.show_full_health_mobs": "Always Show Full Health Mobs",
+  "genshinerc.bar.config.show_full_health_mobs.desc": "If enabled, mobs at full health will also show health bars",
+  "genshinerc.bar.config.player_mode.none": "None",
+  "genshinerc.bar.config.player_mode.on_hurt": "On Hurt (2s)",
+  "genshinerc.bar.config.player_mode.always": "Always"
 }

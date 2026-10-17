@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,7 +13,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 import yesman.epicfight.client.gui.EntityUI;
-import yesman.epicfight.client.renderer.EpicFightRenderTypes;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
@@ -57,12 +57,8 @@ public class CustomBarRenderer {
     private static final Map<LivingEntity, Tracker> TRACKERS = new ConcurrentHashMap<>();
 
     public static void render(LivingEntity entity, LivingEntityPatch<?> entitypatch, LocalPlayerPatch playerpatch, PoseStack poseStack, MultiBufferSource buffers, float partialTicks) {
-        if (!(entity instanceof LivingEntity)) return;
-
         BarConfig config = BarConfig.get();
         if (!config.enabled) return;
-
-        if (entity.distanceToSqr(Minecraft.getInstance().getCameraEntity()) > config.maxDistance * config.maxDistance) return;
 
         Tracker tracker = TRACKERS.computeIfAbsent(entity, Tracker::new);
         tracker.update(entity);
@@ -76,13 +72,21 @@ public class CustomBarRenderer {
 
         matrix.scale(actualSize, actualSize, actualSize);
 
-        float healthBarHeight = 0.048828125F;
-        float innerHealthBarHeight = 0.029296875F;
+        // 修正高度：你的贴图宽273，高16，宽高比 1.0 : (16/273) ≈ 0.0586
+        float healthBarHeight = 16.0F / 273.0F / 2.0F;
+        // 内部填充稍微矮一点
+        float innerHealthBarHeight = healthBarHeight * 0.7F;
+
         float maxHealth = tracker.maxHp;
+
+        float bgV0F = (float)config.bgV0 / config.uvSize;
+        float bgV1F = (float)config.bgV1 / config.uvSize;
+        float fillV0F = (float)config.fillV0 / config.uvSize;
+        float fillV1F = (float)config.fillV1 / config.uvSize;
 
         drawTexture(matrix, buffers, BG_TEXTURE,
                 -0.5F, -healthBarHeight, 0.5F, healthBarHeight,
-                0.0F, config.bgV0, 1.0F, config.bgV1,
+                0.0F, bgV0F, 1.0F, bgV1F,
                 0xFFFFFFFF);
 
         float displayRatio = Mth.clamp(tracker.displayHp / maxHealth, 0.0F, 1.0F);
@@ -90,7 +94,7 @@ public class CustomBarRenderer {
             float displayEndX = Math.max(-0.5F + displayRatio, -0.46875F);
             drawTexture(matrix, buffers, FILL_TEXTURE,
                     -0.5F, -innerHealthBarHeight, displayEndX, innerHealthBarHeight,
-                    0.0F, config.fillV0, displayRatio, config.fillV1,
+                    0.0F, fillV0F, displayRatio, fillV1F,
                     0xFFFFFFFF);
         }
 
@@ -101,7 +105,7 @@ public class CustomBarRenderer {
 
             drawTexture(matrix, buffers, FILL_TEXTURE,
                     -0.5F, -innerHealthBarHeight, fillEndX, innerHealthBarHeight,
-                    0.0F, config.fillV0, ratio, config.fillV1,
+                    0.0F, fillV0F, ratio, fillV1F,
                     fillColor);
         }
     }
@@ -109,11 +113,12 @@ public class CustomBarRenderer {
     private static void drawTexture(Matrix4f matrix, MultiBufferSource buffer, ResourceLocation texture,
                                     float minX, float minY, float maxX, float maxY,
                                     float minU, float minV, float maxU, float maxV, int color) {
-        VertexConsumer vertexConsumer = buffer.getBuffer(EpicFightRenderTypes.entityUITexture(texture));
-        vertexConsumer.vertex(matrix, minX, minY, 0.0F).color(color).uv(minU, maxV).endVertex();
-        vertexConsumer.vertex(matrix, maxX, minY, 0.0F).color(color).uv(maxU, maxV).endVertex();
-        vertexConsumer.vertex(matrix, maxX, maxY, 0.0F).color(color).uv(maxU, minV).endVertex();
-        vertexConsumer.vertex(matrix, minX, maxY, 0.0F).color(color).uv(minU, minV).endVertex();
+        VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.text(texture));
+        // uv2(0x00F000F0) 代表全亮光照
+        vertexConsumer.vertex(matrix, minX, minY, 0.0F).color(color).uv(minU, maxV).uv2(0x00F000F0).endVertex();
+        vertexConsumer.vertex(matrix, maxX, minY, 0.0F).color(color).uv(maxU, maxV).uv2(0x00F000F0).endVertex();
+        vertexConsumer.vertex(matrix, maxX, maxY, 0.0F).color(color).uv(maxU, minV).uv2(0x00F000F0).endVertex();
+        vertexConsumer.vertex(matrix, minX, maxY, 0.0F).color(color).uv(minU, minV).uv2(0x00F000F0).endVertex();
     }
 
     private static int getColorForEntity(LivingEntity entity, BarConfig config) {

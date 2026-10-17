@@ -176,6 +176,17 @@
   "genshinerc.bar.config.fill_v0": "填充纹理 V0 (上)",
   "genshinerc.bar.config.fill_v0.desc": "填充图集裁剪上边界",
   "genshinerc.bar.config.fill_v1": "填充纹理 V1 (下)",
-  "genshinerc.bar.config.fill_v1.desc": "填充图集裁剪下边界"
+  "genshinerc.bar.config.fill_v1.desc": "填充图集裁剪下边界",
+  "genshinerc.bar.config.base_size": "状态栏基础大小",
+  "genshinerc.bar.config.base_size.desc": "血条的整体缩放基础值",
+  "genshinerc.bar.config.uv_size": "纹理总高度 (像素)",
+  "genshinerc.bar.config.uv_size.desc": "图集的真实总高度，用于计算 V 坐标",
+  "genshinerc.bar.config.player_mode": "玩家血量条显示模式",
+  "genshinerc.bar.config.player_mode.desc": "设置玩家头顶血条的显示逻辑",
+  "genshinerc.bar.config.show_full_health_mobs": "满血怪物始终显示",
+  "genshinerc.bar.config.show_full_health_mobs.desc": "开启后，满血的怪物也会一直显示血条",
+  "genshinerc.bar.config.player_mode.none": "不显示",
+  "genshinerc.bar.config.player_mode.on_hurt": "受伤后显示两秒",
+  "genshinerc.bar.config.player_mode.always": "始终显示"
 
 }
