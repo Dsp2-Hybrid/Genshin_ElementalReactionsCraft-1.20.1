@@ -1,14 +1,17 @@
 package com.dsp2.genshinerc.client.render.bar.config;
 
+import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.OptionGroup;
+import dev.isxander.yacl3.api.YetAnotherConfigLib;
 import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
 import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -30,13 +33,20 @@ public class BarConfig {
 
     @SerialEntry public boolean enabled = true;
     @SerialEntry public float yOffset = 0.25f;
-    @SerialEntry public float scaleFactor = 1.0f;
+    @SerialEntry public float baseSize = 1.0f;
+    @SerialEntry public float maxDistance = 32.0f;
+
+    @SerialEntry public float heightScaleFactor = 0.1f;
+    @SerialEntry public float bboxSizeFactor = 0.2f;
+
     @SerialEntry public String enemyColor = "#FF4444";
     @SerialEntry public String allyColor = "#44FF44";
-    @SerialEntry public float u0 = 0.0f;
-    @SerialEntry public float v0 = 0.0f;
-    @SerialEntry public float u1 = 1.0f;
-    @SerialEntry public float v1 = 1.0f;
+
+    @SerialEntry public float bgV0 = 0.046875f;
+    @SerialEntry public float bgV1 = 0.296875f;
+
+    @SerialEntry public float fillV0 = 0.421875f;
+    @SerialEntry public float fillV1 = 0.671875f;
 
     private static Component t(String k) { return Component.translatable(k); }
     private static Component td(String k) { return Component.translatable(k + ".desc"); }
@@ -48,14 +58,17 @@ public class BarConfig {
                 .name(t("genshinerc.bar.group.title"))
                 .description(OptionDescription.of(td("genshinerc.bar.group")))
                 .option(boolOpt("enabled", true, () -> c.enabled, v -> c.enabled = v))
-                .option(floatOpt("y_offset", 0.25f, () -> c.yOffset, v -> c.yOffset = v, 0f, 2f))
-                .option(floatOpt("scale_factor", 1.0f, () -> c.scaleFactor, v -> c.scaleFactor = v, 0.1f, 3f))
+                .option(floatOpt("max_distance", 32f, () -> c.maxDistance, v -> c.maxDistance = v, 4f, 128f))
+                .option(floatOpt("base_size", 1.0f, () -> c.baseSize, v -> c.baseSize = v, 0.1f, 3f))
+                .option(floatOpt("y_offset", 0.25f, () -> c.yOffset, v -> c.yOffset = v, -1f, 3f))
+                .option(floatOpt("height_scale_factor", 0.1f, () -> c.heightScaleFactor, v -> c.heightScaleFactor = v, 0f, 2f))
+                .option(floatOpt("bbox_size_factor", 0.2f, () -> c.bboxSizeFactor, v -> c.bboxSizeFactor = v, 0f, 2f))
                 .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
                 .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
-                .option(floatOpt("u0", 0f, () -> c.u0, v -> c.u0 = v, 0f, 1f))
-                .option(floatOpt("v0", 0f, () -> c.v0, v -> c.v0 = v, 0f, 1f))
-                .option(floatOpt("u1", 1f, () -> c.u1, v -> c.u1 = v, 0f, 1f))
-                .option(floatOpt("v1", 1f, () -> c.v1, v -> c.v1 = v, 0f, 1f))
+                .option(floatOpt("bg_v0", 0.046875f, () -> c.bgV0, v -> c.bgV0 = v, 0f, 1f))
+                .option(floatOpt("bg_v1", 0.296875f, () -> c.bgV1, v -> c.bgV1 = v, 0f, 1f))
+                .option(floatOpt("fill_v0", 0.421875f, () -> c.fillV0, v -> c.fillV0 = v, 0f, 1f))
+                .option(floatOpt("fill_v1", 0.671875f, () -> c.fillV1, v -> c.fillV1 = v, 0f, 1f))
                 .build();
     }
 
@@ -63,17 +76,14 @@ public class BarConfig {
         return Option.<Boolean>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key))))
                 .binding(def, g, s).controller(TickBoxControllerBuilder::create).build();
     }
-
     private static Option<Float> floatOpt(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max) {
         return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key))))
                 .binding(def, g, s).controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(0.01f)).build();
     }
-
     private static Option<Color> colorOpt(String key, Color def, java.util.function.Supplier<Color> g, java.util.function.Consumer<Color> s) {
         return Option.<Color>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key))))
                 .binding(def, g, s).controller(ColorControllerBuilder::create).build();
     }
-
     static Color toAwt(String hex) {
         try { return new Color(Integer.parseInt(hex.replace("#","").trim(), 16)); }
         catch (Exception e) { return Color.WHITE; }

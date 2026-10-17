@@ -162,5 +162,19 @@
   "genshinerc.bar.config.u1": "Texture U1 (Right)",
   "genshinerc.bar.config.u1.desc": "Right crop point for the atlas (0.0 - 1.0)",
   "genshinerc.bar.config.v1": "Texture V1 (Bottom)",
-  "genshinerc.bar.config.v1.desc": "Bottom crop point for the atlas (0.0 - 1.0)"
+  "genshinerc.bar.config.v1.desc": "Bottom crop point for the atlas (0.0 - 1.0)",
+  "genshinerc.bar.config.max_distance": "Max Render Distance",
+  "genshinerc.bar.config.max_distance.desc": "Entities beyond this distance will not render health bars",
+  "genshinerc.bar.config.height_scale_factor": "Height Scale Factor",
+  "genshinerc.bar.config.height_scale_factor.desc": "The higher the entity's bounding box, the more Y offset is applied",
+  "genshinerc.bar.config.bbox_size_factor": "BBox Size Factor",
+  "genshinerc.bar.config.bbox_size_factor.desc": "The wider the entity, the larger the bar scales based on its base size",
+  "genshinerc.bar.config.bg_v0": "BG Texture V0 (Top)",
+  "genshinerc.bar.config.bg_v0.desc": "Top crop boundary for background",
+  "genshinerc.bar.config.bg_v1": "BG Texture V1 (Bottom)",
+  "genshinerc.bar.config.bg_v1.desc": "Bottom crop boundary for background",
+  "genshinerc.bar.config.fill_v0": "Fill Texture V0 (Top)",
+  "genshinerc.bar.config.fill_v0.desc": "Top crop boundary for fill",
+  "genshinerc.bar.config.fill_v1": "Fill Texture V1 (Bottom)",
+  "genshinerc.bar.config.fill_v1.desc": "Bottom crop boundary for fill"
 }

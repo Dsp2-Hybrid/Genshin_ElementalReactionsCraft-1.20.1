@@ -4,6 +4,7 @@ import com.dsp2.genshinerc.util.framesequence.meta.FrameMetadata;
 import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
 
+@SuppressWarnings({"removal", "unused", "deprecation"})
 public final class FrameSequence {
 
     private final ResourceLocation id;

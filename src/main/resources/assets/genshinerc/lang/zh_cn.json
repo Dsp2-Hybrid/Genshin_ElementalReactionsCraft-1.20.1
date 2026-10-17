@@ -162,5 +162,20 @@
   "genshinerc.bar.config.u1": "纹理 U1 (右)",
   "genshinerc.bar.config.u1.desc": "图集右侧裁剪点 (0.0 - 1.0)",
   "genshinerc.bar.config.v1": "纹理 V1 (下)",
-  "genshinerc.bar.config.v1.desc": "图集下方裁剪点 (0.0 - 1.0)"
+  "genshinerc.bar.config.v1.desc": "图集下方裁剪点 (0.0 - 1.0)",
+  "genshinerc.bar.config.max_distance": "最大渲染距离",
+  "genshinerc.bar.config.max_distance.desc": "超过此距离的实体头顶将不渲染血条",
+  "genshinerc.bar.config.height_scale_factor": "高度偏移自适应系数",
+  "genshinerc.bar.config.height_scale_factor.desc": "生物碰撞箱越高，Y轴额外抬升的幅度越大",
+  "genshinerc.bar.config.bbox_size_factor": "体积大小自适应系数",
+  "genshinerc.bar.config.bbox_size_factor.desc": "生物碰撞箱越宽，血条在基础缩放之上变大的幅度",
+  "genshinerc.bar.config.bg_v0": "背景纹理 V0 (上)",
+  "genshinerc.bar.config.bg_v0.desc": "背景图集裁剪上边界",
+  "genshinerc.bar.config.bg_v1": "背景纹理 V1 (下)",
+  "genshinerc.bar.config.bg_v1.desc": "背景图集裁剪下边界",
+  "genshinerc.bar.config.fill_v0": "填充纹理 V0 (上)",
+  "genshinerc.bar.config.fill_v0.desc": "填充图集裁剪上边界",
+  "genshinerc.bar.config.fill_v1": "填充纹理 V1 (下)",
+  "genshinerc.bar.config.fill_v1.desc": "填充图集裁剪下边界"
+
 }
