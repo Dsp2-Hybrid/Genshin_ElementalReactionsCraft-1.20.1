@@ -82,9 +82,10 @@ public class CustomHealthBar extends EntityUI {
         float b = awtColor.getBlue() / 255f;
 
         float alpha = tracker.currentAlpha;
-        float healthEnd = tracker.visualHealthEnd;
-        float absorptionStart = healthEnd;
-        float absorptionEnd = tracker.visualAbsorptionEnd;
+
+        float renderHealthEnd = tracker.visualHealthEnd;
+        float renderAbsStart = renderHealthEnd;
+        float renderAbsEnd = tracker.visualAbsEnd;
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -94,29 +95,27 @@ public class CustomHealthBar extends EntityUI {
 
         drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, 1.0f, 1.0f, 1.0f, alpha);
 
-        if (healthEnd > 0.0f) {
-            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * healthEnd, maxY, 0, 0, healthEnd, 1, r, g, b, alpha);
+        if (renderHealthEnd > 0.001f) {
+            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, r, g, b, alpha);
         }
 
-        if (absorptionEnd > absorptionStart) {
-            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * absorptionStart, minY, minX + length * absorptionEnd, maxY, absorptionStart, 0, absorptionEnd, 1, 1.0f, 0.9f, 0.2f, alpha);
+        if (renderAbsEnd > renderAbsStart + 0.001f) {
+            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * renderAbsStart, minY, minX + length * renderAbsEnd, maxY, renderAbsStart, 0, renderAbsEnd, 1, 1.0f, 0.9f, 0.2f, alpha);
         }
 
-        if (tracker.whiteOverlayVisible) {
-            float actualStart = Math.min(tracker.whiteOverlayStart, tracker.whiteOverlayEnd);
-            float actualEnd = Math.max(tracker.whiteOverlayStart, tracker.whiteOverlayEnd);
-            if (actualEnd - actualStart > 0.001f) {
-                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * actualStart, minY, minX + length * actualEnd, maxY, actualStart, 0, actualEnd, 1, 1.0f, 1.0f, 1.0f, alpha);
+        if (tracker.hpWhite.active && tracker.hpWhite.alpha > 0.01f) {
+            float start = Math.min(tracker.hpWhite.startOverlay, tracker.hpWhite.endOverlay);
+            float end = Math.max(tracker.hpWhite.startOverlay, tracker.hpWhite.endOverlay);
+            if (end - start > 0.001f) {
+                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, minY, minX + length * end, maxY, start, 0, end, 1, 1.0f, 1.0f, 1.0f, tracker.hpWhite.alpha * alpha);
             }
         }
 
-        long now = System.currentTimeMillis();
-        float oldWhiteAlpha = tracker.getOldWhiteAlpha(now);
-        if (oldWhiteAlpha > 0.01f) {
-            float actualStart = Math.min(tracker.oldWhiteOverlayStart, tracker.oldWhiteOverlayEnd);
-            float actualEnd = Math.max(tracker.oldWhiteOverlayStart, tracker.oldWhiteOverlayEnd);
-            if (actualEnd - actualStart > 0.001f) {
-                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * actualStart, minY, minX + length * actualEnd, maxY, actualStart, 0, actualEnd, 1, 1.0f, 1.0f, 1.0f, oldWhiteAlpha * alpha);
+        if (tracker.absWhite.active && tracker.absWhite.alpha > 0.01f) {
+            float start = Math.min(tracker.absWhite.startOverlay, tracker.absWhite.endOverlay);
+            float end = Math.max(tracker.absWhite.startOverlay, tracker.absWhite.endOverlay);
+            if (end - start > 0.001f) {
+                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, minY, minX + length * end, maxY, start, 0, end, 1, 1.0f, 1.0f, 1.0f, tracker.absWhite.alpha * alpha);
             }
         }
 
@@ -139,49 +138,111 @@ public class CustomHealthBar extends EntityUI {
         vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
     }
 
-    private static float easeOutCubic(float x) {
-        float f = 1.0f - x;
-        return 1.0f - (f * f * f);
+    private static class WhiteState {
+        boolean active = false;
+        float startOverlay = 0f;
+        float endOverlay = 0f;
+        float maxWidth = 0f;
+        float baseScale = 0f;
+        long animStart = 0L;
+        boolean isHealing = false;
+        boolean extending = false;
+        boolean shrinking = false;
+        float alpha = 1.0f;
+
+        void trigger(float currentVisualScale, float exactTargetScale, long now) {
+            maxWidth = Math.abs(exactTargetScale - currentVisualScale);
+            if (maxWidth > 0.001f) {
+                isHealing = exactTargetScale > currentVisualScale;
+                baseScale = currentVisualScale;
+
+                startOverlay = baseScale;
+                endOverlay = baseScale;
+
+                animStart = now;
+                active = true;
+                extending = true;
+                shrinking = false;
+                alpha = 1.0f;
+            } else {
+                active = false;
+            }
+        }
+
+        void update(long now, float baseShrinkTime, BarConfig.EasingType easing) {
+            if (!active) return;
+            long elapsed = now - animStart;
+
+            if (extending) {
+                float progress = Math.min(1.0f, elapsed / 350f);
+                float eased = BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
+                if (isHealing) {
+                    endOverlay = baseScale + (maxWidth * eased);
+                } else {
+                    startOverlay = baseScale - (maxWidth * eased);
+                }
+                if (progress >= 1.0f) {
+                    if (isHealing) {
+                        startOverlay = baseScale;
+                        endOverlay = baseScale + maxWidth;
+                    } else {
+                        startOverlay = baseScale - maxWidth;
+                        endOverlay = baseScale;
+                    }
+                    extending = false;
+                    shrinking = true;
+                    animStart = now;
+                }
+            } else if (shrinking) {
+                float dynamicDuration = Math.max(0.3f, maxWidth * baseShrinkTime) * 1000f;
+                long shrinkDurationMs = (long)dynamicDuration;
+                long shrinkElapsed = elapsed;
+
+                if (shrinkElapsed >= shrinkDurationMs) {
+                    active = false;
+                    shrinking = false;
+                } else {
+                    float progress = Math.min(1.0f, shrinkElapsed / (float)shrinkDurationMs);
+                    float eased = BarConfig.interpolate(progress, easing);
+
+                    if (isHealing) {
+                        startOverlay = baseScale + (maxWidth * eased);
+                    } else {
+                        endOverlay = baseScale - (maxWidth * eased);
+                    }
+
+                    if (progress > 0.7f) {
+                        alpha = 1.0f - (progress - 0.7f) / 0.3f;
+                    } else {
+                        alpha = 1.0f;
+                    }
+                }
+            }
+        }
     }
 
     private static class Tracker {
         private float currentHealth = -1f;
         private float currentAbsorption = -1f;
+        private float lastMaxHealth = -1f;
 
-        private float visualHealthEnd = 0f;
-        private float visualAbsorptionEnd = 0f;
-        private float startHealthEnd = 0f;
-        private float startAbsorptionEnd = 0f;
-        private float targetHealthEnd = 0f;
-        private float targetAbsorptionEnd = 0f;
+        public float visualHealthEnd = 1.0f;
+        public float visualAbsEnd = 1.0f;
+        private float targetHealthEnd = 1.0f;
+        private float targetAbsEnd = 1.0f;
+        private float startHealthEnd = 1.0f;
+        private float startAbsEnd = 1.0f;
 
-        private long mainAnimStartTime = 0L;
-        private boolean isAnimatingMain = false;
-        private static final long MAIN_BAR_DURATION = 500L;
+        private long mainBarAnimStartTime = 0L;
+        private boolean mainBarAnimating = false;
+        private static final long MAIN_BAR_DURATION = 900L;
 
-        private boolean whiteOverlayVisible = false;
-        private float whiteOverlayStart = 0f;
-        private float whiteOverlayEnd = 0f;
-        private float whiteOverlayMaxWidth = 0f;
-        private long whiteOverlayAnimStartTime = 0L;
-        private boolean isHealing = false;
-        private boolean whiteOverlayExtending = false;
-        private boolean whiteOverlayShrinking = false;
-
-        private static final long WHITE_EXTEND_DURATION = 350L;
-        private static final long WHITE_SHRINK_DURATION = 300L;
-        private static final long WHITE_FADE_OUT_DURATION = 200L;
-
-        private boolean oldWhiteOverlayVisible = false;
-        private float oldWhiteOverlayStart = 0f;
-        private float oldWhiteOverlayEnd = 0f;
-        private long oldWhiteOverlayFadeStartTime = 0L;
-        private boolean oldWhiteOverlayFading = false;
-
-        private float previousTotalEnd = -1f;
+        public WhiteState hpWhite = new WhiteState();
+        public WhiteState absWhite = new WhiteState();
 
         private boolean isDead = false;
         private long deathTime = 0;
+        private long lastHealthChangeTime = 0;
 
         public enum Phase { IDLE, FADING_IN, HOLDING, FADING_OUT }
         private Phase phase = Phase.IDLE;
@@ -200,141 +261,77 @@ public class CustomHealthBar extends EntityUI {
                 currentAlpha = 0f;
             }
 
-            float newHealthEnd, newAbsorptionEnd;
-            if (health + absorption <= maxHealth) {
-                newHealthEnd = Mth.clamp(health / maxHealth, 0.0F, 1.0F);
-                newAbsorptionEnd = Mth.clamp((health + absorption) / maxHealth, 0.0F, 1.0F);
-            } else {
-                newHealthEnd = Mth.clamp(health / (health + absorption), 0.0F, 1.0F);
-                newAbsorptionEnd = 1.0F;
-            }
-
             if (currentHealth == -1f) {
                 currentHealth = health;
                 currentAbsorption = absorption;
-                visualHealthEnd = newHealthEnd;
-                visualAbsorptionEnd = newAbsorptionEnd;
-                startHealthEnd = newHealthEnd;
-                startAbsorptionEnd = newAbsorptionEnd;
-                targetHealthEnd = newHealthEnd;
-                targetAbsorptionEnd = newAbsorptionEnd;
-                previousTotalEnd = newAbsorptionEnd;
+                lastMaxHealth = maxHealth;
+
+                if (health + absorption <= maxHealth) {
+                    visualHealthEnd = Mth.clamp(health / maxHealth, 0.0F, 1.0F);
+                    visualAbsEnd = Mth.clamp((health + absorption) / maxHealth, 0.0F, 1.0F);
+                } else {
+                    visualHealthEnd = Mth.clamp(health / (health + absorption), 0.0F, 1.0F);
+                    visualAbsEnd = 1.0F;
+                }
+                targetHealthEnd = visualHealthEnd;
+                targetAbsEnd = visualAbsEnd;
+                startHealthEnd = visualHealthEnd;
+                startAbsEnd = visualAbsEnd;
             }
 
-            boolean changed = Math.abs(health - currentHealth) > 0.01f || Math.abs(absorption - currentAbsorption) > 0.01f;
+            boolean healthChanged = Math.abs(health - currentHealth) > 0.001f;
+            boolean absorptionChanged = Math.abs(absorption - currentAbsorption) > 0.001f;
+            boolean maxHealthChanged = Math.abs(maxHealth - lastMaxHealth) > 0.001f;
 
-            if (changed) {
+            if (healthChanged || absorptionChanged || maxHealthChanged) {
+                lastHealthChangeTime = now;
+
                 startHealthEnd = visualHealthEnd;
-                startAbsorptionEnd = visualAbsorptionEnd;
-                targetHealthEnd = newHealthEnd;
-                targetAbsorptionEnd = newAbsorptionEnd;
+                startAbsEnd = visualAbsEnd;
 
-                mainAnimStartTime = now;
-                isAnimatingMain = true;
-
-                float exactTargetScale = newAbsorptionEnd;
-                float oldTotalEnd = previousTotalEnd;
-                boolean currentIsHealing = exactTargetScale > oldTotalEnd;
-
-                boolean isDirectionChanged = false;
-                if (whiteOverlayVisible && (whiteOverlayExtending || whiteOverlayShrinking)) {
-                    isDirectionChanged = (currentIsHealing != isHealing);
-                }
-
-                if (isDirectionChanged) {
-                    if (whiteOverlayVisible) {
-                        float actualStart = Math.min(whiteOverlayStart, whiteOverlayEnd);
-                        float actualEnd = Math.max(whiteOverlayStart, whiteOverlayEnd);
-                        oldWhiteOverlayStart = actualStart;
-                        oldWhiteOverlayEnd = actualEnd;
-                        oldWhiteOverlayFadeStartTime = now;
-                        oldWhiteOverlayFading = true;
-                        oldWhiteOverlayVisible = true;
-
-                        whiteOverlayVisible = false;
-                        whiteOverlayExtending = false;
-                        whiteOverlayShrinking = false;
-                    }
+                if (health + absorption <= maxHealth) {
+                    targetHealthEnd = Mth.clamp(health / maxHealth, 0.0F, 1.0F);
+                    targetAbsEnd = Mth.clamp((health + absorption) / maxHealth, 0.0F, 1.0F);
                 } else {
-                    if (oldWhiteOverlayVisible) {
-                        oldWhiteOverlayFading = true;
-                    }
+                    targetHealthEnd = Mth.clamp(health / (health + absorption), 0.0F, 1.0F);
+                    targetAbsEnd = 1.0F;
                 }
 
-                isHealing = currentIsHealing;
-                whiteOverlayMaxWidth = Math.abs(exactTargetScale - oldTotalEnd);
-
-                if (whiteOverlayMaxWidth > 0.001f) {
-                    if (isHealing) {
-                        whiteOverlayStart = oldTotalEnd;
-                        whiteOverlayEnd = oldTotalEnd;
-                    } else {
-                        whiteOverlayStart = oldTotalEnd;
-                        whiteOverlayEnd = oldTotalEnd;
-                    }
-                    whiteOverlayAnimStartTime = now;
-                    whiteOverlayVisible = true;
-                    whiteOverlayExtending = true;
-                    whiteOverlayShrinking = false;
-                } else {
-                    whiteOverlayVisible = false;
+                if (Math.abs(targetHealthEnd - visualHealthEnd) > 0.001f) {
+                    hpWhite.trigger(visualHealthEnd, targetHealthEnd, now);
                 }
 
-                previousTotalEnd = exactTargetScale;
+                if (Math.abs(targetAbsEnd - visualAbsEnd) > 0.001f) {
+                    absWhite.trigger(visualAbsEnd, targetAbsEnd, now);
+                }
+
+                mainBarAnimStartTime = now;
+                mainBarAnimating = true;
+
                 currentHealth = health;
                 currentAbsorption = absorption;
+                lastMaxHealth = maxHealth;
             }
 
-            if (isAnimatingMain) {
-                long elapsed = now - mainAnimStartTime;
+            if (mainBarAnimating) {
+                long elapsed = now - mainBarAnimStartTime;
                 if (elapsed >= MAIN_BAR_DURATION) {
                     visualHealthEnd = targetHealthEnd;
-                    visualAbsorptionEnd = targetAbsorptionEnd;
-                    isAnimatingMain = false;
+                    visualAbsEnd = targetAbsEnd;
+                    mainBarAnimating = false;
                 } else {
-                    float progress = Math.min(1.0f, elapsed / (float) MAIN_BAR_DURATION);
-                    float eased = easeOutCubic(progress);
+                    float progress = Math.min(1.0f, elapsed / (float)MAIN_BAR_DURATION);
+                    float eased = BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
                     visualHealthEnd = startHealthEnd + (targetHealthEnd - startHealthEnd) * eased;
-                    visualAbsorptionEnd = startAbsorptionEnd + (targetAbsorptionEnd - startAbsorptionEnd) * eased;
+                    visualAbsEnd = startAbsEnd + (targetAbsEnd - startAbsEnd) * eased;
                 }
             }
 
-            if (whiteOverlayVisible) {
-                long elapsed = now - whiteOverlayAnimStartTime;
-                if (whiteOverlayExtending) {
-                    float progress = Math.min(1.0f, elapsed / (float) WHITE_EXTEND_DURATION);
-                    float eased = easeOutCubic(progress);
-                    if (isHealing) {
-                        whiteOverlayEnd = previousTotalEnd - whiteOverlayMaxWidth + (whiteOverlayMaxWidth * eased);
-                    } else {
-                        whiteOverlayStart = previousTotalEnd + whiteOverlayMaxWidth - (whiteOverlayMaxWidth * eased);
-                    }
-                    if (progress >= 1.0f) {
-                        if (isHealing) {
-                            whiteOverlayStart = previousTotalEnd - whiteOverlayMaxWidth;
-                            whiteOverlayEnd = previousTotalEnd;
-                        } else {
-                            whiteOverlayStart = previousTotalEnd;
-                            whiteOverlayEnd = previousTotalEnd + whiteOverlayMaxWidth;
-                        }
-                        whiteOverlayExtending = false;
-                        whiteOverlayShrinking = true;
-                        whiteOverlayAnimStartTime = now;
-                    }
-                } else if (whiteOverlayShrinking) {
-                    float progress = Math.min(1.0f, elapsed / (float) WHITE_SHRINK_DURATION);
-                    float eased = easeOutCubic(progress);
-                    if (isHealing) {
-                        whiteOverlayStart = previousTotalEnd - whiteOverlayMaxWidth + (whiteOverlayMaxWidth * eased);
-                    } else {
-                        whiteOverlayEnd = previousTotalEnd + whiteOverlayMaxWidth - (whiteOverlayMaxWidth * eased);
-                    }
-                    if (progress >= 1.0f) {
-                        whiteOverlayVisible = false;
-                        whiteOverlayShrinking = false;
-                    }
-                }
-            }
+            boolean isPlayer = entity instanceof Player;
+            float baseShrinkTime = isPlayer ? config.playerOverlayShrinkTime : config.mobOverlayShrinkTime;
+
+            hpWhite.update(now, baseShrinkTime, config.whiteEasing);
+            absWhite.update(now, baseShrinkTime, config.whiteEasing);
 
             if (!entity.isAlive() && !isDead) {
                 isDead = true;
@@ -354,7 +351,6 @@ public class CustomHealthBar extends EntityUI {
                 return;
             }
 
-            boolean isPlayer = entity instanceof Player;
             BarConfig.PlayerMode pMode = config.playerMode;
             BarConfig.MobMode mMode = config.mobMode;
             boolean isAlways = false;
@@ -369,7 +365,7 @@ public class CustomHealthBar extends EntityUI {
                 }
             }
 
-            if (changed) {
+            if (healthChanged || absorptionChanged || maxHealthChanged) {
                 if (phase == Phase.IDLE) {
                     phase = Phase.FADING_IN;
                     phaseStartTime = now;
@@ -387,6 +383,17 @@ public class CustomHealthBar extends EntityUI {
             if (isAlways && phase == Phase.IDLE) {
                 phase = Phase.FADING_IN;
                 phaseStartTime = now;
+            }
+
+            if (phase == Phase.HOLDING && !isAlways) {
+                if (hpWhite.active || absWhite.active || mainBarAnimating) {
+                    phaseStartTime = now;
+                } else {
+                    if (now - lastHealthChangeTime > config.hurtDisplayTime * 1000f) {
+                        phase = Phase.FADING_OUT;
+                        phaseStartTime = now;
+                    }
+                }
             }
 
             long elapsedPhase = now - phaseStartTime;
@@ -407,10 +414,6 @@ public class CustomHealthBar extends EntityUI {
                     break;
                 case HOLDING:
                     currentAlpha = 1f;
-                    if (!isAlways && elapsedPhase > config.hurtDisplayTime * 1000f) {
-                        phase = Phase.FADING_OUT;
-                        phaseStartTime = now;
-                    }
                     break;
                 case FADING_OUT:
                     if (config.fadeOutTime <= 0) {
@@ -429,17 +432,6 @@ public class CustomHealthBar extends EntityUI {
                     currentAlpha = 0f;
                     break;
             }
-        }
-
-        public float getOldWhiteAlpha(long now) {
-            if (!oldWhiteOverlayVisible || !oldWhiteOverlayFading) return 0f;
-            long elapsed = now - oldWhiteOverlayFadeStartTime;
-            if (elapsed >= WHITE_FADE_OUT_DURATION) {
-                oldWhiteOverlayVisible = false;
-                oldWhiteOverlayFading = false;
-                return 0f;
-            }
-            return 1.0f - (float)elapsed / WHITE_FADE_OUT_DURATION;
         }
     }
 }

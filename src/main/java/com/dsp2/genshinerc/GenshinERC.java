@@ -1,7 +1,7 @@
 package com.dsp2.genshinerc;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
-import com.dsp2.genshinerc.common.core.damageindicator.DamageIndicatorCore;
+import com.dsp2.genshinerc.common.config.ConfigInitCore;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -14,6 +14,6 @@ public class GenshinERC {
     public GenshinERC(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
         context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
-        DamageIndicatorCore.init();
+        ConfigInitCore.init();
     }
 }

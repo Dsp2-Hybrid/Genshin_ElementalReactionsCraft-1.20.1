@@ -32,6 +32,7 @@ public class BarConfig {
 
     public enum PlayerMode { NONE, ON_CHANGE, ALWAYS }
     public enum MobMode { NONE, ALWAYS, ALWAYS_WHEN_NOT_FULLHP, ON_HURT }
+    public enum EasingType { EASE_IN_CUBIC, EASE_OUT_CUBIC, EASE_IN_OUT_CUBIC, LINEAR, SINE }
 
     @SerialEntry public boolean enabled = true;
     @SerialEntry public PlayerMode playerMode = PlayerMode.ON_CHANGE;
@@ -50,13 +51,32 @@ public class BarConfig {
     @SerialEntry public String enemyColor = "#FF4444";
     @SerialEntry public String allyColor = "#44FF44";
 
-    @SerialEntry public float overlayShrinkTime = 0.75f;
+    @SerialEntry public float playerOverlayShrinkTime = 1.5f;
+    @SerialEntry public float mobOverlayShrinkTime = 1.5f;
+    @SerialEntry public EasingType whiteEasing = EasingType.EASE_OUT_CUBIC;
     @SerialEntry public float overlayFadeTime = 0.55f;
 
     @SerialEntry public float hurtDisplayTime = 2.0f;
     @SerialEntry public float deathFadeDelay = 0.35f;
     @SerialEntry public float fadeInTime = 0.25f;
     @SerialEntry public float fadeOutTime = 0.25f;
+
+    public static float interpolate(float x, EasingType type) {
+        if (x <= 0f) return 0f;
+        if (x >= 1f) return 1f;
+        switch (type) {
+            case LINEAR: return x;
+            case EASE_IN_CUBIC: return x * x * x;
+            case EASE_OUT_CUBIC:
+                float f = 1.0f - x;
+                return 1.0f - (f * f * f);
+            case EASE_IN_OUT_CUBIC:
+                return x < 0.5f ? 4.0f * x * x * x : 1.0f - (float)Math.pow(-2.0f * x + 2.0f, 3.0f) / 2.0f;
+            case SINE:
+                return (float)(1.0f - Math.cos((x * Math.PI) / 2.0f));
+            default: return x;
+        }
+    }
 
     private static Component t(String k) { return Component.translatable(k); }
     private static Component td(String k) { return Component.translatable(k + ".desc"); }
@@ -79,7 +99,9 @@ public class BarConfig {
                 .option(floatOpt("bbox_length_factor", 0.40f, () -> c.bboxLengthFactor, v -> c.bboxLengthFactor = v, 0.0f, 1.0f))
                 .option(floatOpt("height_width_factor", 0.0f, () -> c.heightWidthFactor, v -> c.heightWidthFactor = v, 0.0f, 0.25f))
                 .option(floatOpt("bbox_width_factor", 0.0f, () -> c.bboxWidthFactor, v -> c.bboxWidthFactor = v, 0.0f, 0.25f))
-                .option(floatOpt("overlay_shrink_time", 0.75f, () -> c.overlayShrinkTime, v -> c.overlayShrinkTime = v, 0.1f, 2f))
+                .option(floatOpt("player_overlay_shrink_time", 1.5f, () -> c.playerOverlayShrinkTime, v -> c.playerOverlayShrinkTime = v, 0.1f, 5f))
+                .option(floatOpt("mob_overlay_shrink_time", 1.5f, () -> c.mobOverlayShrinkTime, v -> c.mobOverlayShrinkTime = v, 0.1f, 5f))
+                .option(enumOpt("white_easing", EasingType.class, EasingType.EASE_OUT_CUBIC, () -> c.whiteEasing, v -> c.whiteEasing = v))
                 .option(floatOpt("overlay_fade_time", 0.55f, () -> c.overlayFadeTime, v -> c.overlayFadeTime = v, 0.1f, 2f))
                 .option(floatOpt("hurt_display_time", 2.0f, () -> c.hurtDisplayTime, v -> c.hurtDisplayTime = v, 0.1f, 10f))
                 .option(floatOpt("death_fade_delay", 0.35f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0f, 1f))

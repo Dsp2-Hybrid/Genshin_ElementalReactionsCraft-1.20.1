@@ -221,5 +221,11 @@
   "genshinerc.bar.config.mob_mode.NONE": "Never",
   "genshinerc.bar.config.mob_mode.ALWAYS": "Always",
   "genshinerc.bar.config.mob_mode.ALWAYS_WHEN_NOT_FULLHP": "Always When Not Full HP",
-  "genshinerc.bar.config.mob_mode.ON_HURT": "On Hurt"
+  "genshinerc.bar.config.mob_mode.ON_HURT": "On Hurt",
+  "genshinerc.bar.config.player_overlay_shrink_time": "Player White Shrink Factor",
+  "genshinerc.bar.config.player_overlay_shrink_time.desc": "Higher is slower. Adapts to large health drops automatically.",
+  "genshinerc.bar.config.mob_overlay_shrink_time": "Mob White Shrink Factor",
+  "genshinerc.bar.config.mob_overlay_shrink_time.desc": "White shrink factor for non-player entities.",
+  "genshinerc.bar.config.white_easing": "White Easing Curve",
+  "genshinerc.bar.config.white_easing.desc": "Animation curve for the white overlay (Default: EaseOutCubic)"
 }

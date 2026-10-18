@@ -226,5 +226,11 @@
   "genshinerc.bar.config.mob_mode.NONE": "从不显示",
   "genshinerc.bar.config.mob_mode.ALWAYS": "恒久渲染",
   "genshinerc.bar.config.mob_mode.ALWAYS_WHEN_NOT_FULLHP": "非满血恒久",
-  "genshinerc.bar.config.mob_mode.ON_HURT": "仅变化时显示"
+  "genshinerc.bar.config.mob_mode.ON_HURT": "仅变化时显示",
+  "genshinerc.bar.config.player_overlay_shrink_time": "玩家白条滑动系数",
+  "genshinerc.bar.config.player_overlay_shrink_time.desc": "数值越大滑动越慢，跨度大时自动延长",
+  "genshinerc.bar.config.mob_overlay_shrink_time": "实体白条滑动系数",
+  "genshinerc.bar.config.mob_overlay_shrink_time.desc": "非玩家实体的白条滑动系数",
+  "genshinerc.bar.config.white_easing": "白条滑动缓动曲线",
+  "genshinerc.bar.config.white_easing.desc": "控制白条滑动的动画曲线(默认立方缓出)"
 }
