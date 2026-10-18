@@ -205,5 +205,21 @@
   "genshinerc.bar.config.bbox_length_factor.desc": "How entity size affects the bar length",
   "genshinerc.bar.config.bbox_width_factor": "BBox Width Factor",
   "genshinerc.bar.config.bbox_width_factor.desc": "How entity size affects the bar width",
-  "genshinerc.damageindicator.config.z_offset_burning.desc": "Extra push distance of fire particles toward the camera when the entity is on fire, to avoid occlusion by flame billboards. Range 0.00 ~ 1.00, precision 0.01."
+  "genshinerc.damageindicator.config.z_offset_burning.desc": "Extra push distance of fire particles toward the camera when the entity is on fire, to avoid occlusion by flame billboards. Range 0.00 ~ 1.00, precision 0.01.",
+  "genshinerc.bar.config.y_offset_height_factor": "Y-Offset Height Factor",
+  "genshinerc.bar.config.y_offset_height_factor.desc": "Extra Y offset added based on entity height",
+  "genshinerc.bar.config.hurt_display_time": "Hurt Display Time(s)",
+  "genshinerc.bar.config.hurt_display_time.desc": "Duration to show HUD after health changes",
+  "genshinerc.bar.config.death_fade_delay": "Death Fade Delay(s)",
+  "genshinerc.bar.config.death_fade_delay.desc": "Time to stay fully opaque after death",
+  "genshinerc.bar.config.fade_in_time": "Fade In Time(s)",
+  "genshinerc.bar.config.fade_in_time.desc": "Fade in duration when HUD appears",
+  "genshinerc.bar.config.fade_out_time": "Fade Out Time(s)",
+  "genshinerc.bar.config.fade_out_time.desc": "Fade out duration when HUD disappears",
+  "genshinerc.bar.config.mob_mode": "Mob HUD Mode",
+  "genshinerc.bar.config.mob_mode.desc": "Controls how the HUD shows for mobs",
+  "genshinerc.bar.config.mob_mode.NONE": "Never",
+  "genshinerc.bar.config.mob_mode.ALWAYS": "Always",
+  "genshinerc.bar.config.mob_mode.ALWAYS_WHEN_NOT_FULLHP": "Always When Not Full HP",
+  "genshinerc.bar.config.mob_mode.ON_HURT": "On Hurt"
 }

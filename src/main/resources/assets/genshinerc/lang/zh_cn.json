@@ -8,7 +8,6 @@
   "genshinerc.damageindicator.group.server": "伤害指示器服务端",
   "genshinerc.damageindicator.group.server.desc": "服务端权威配置，控制广播与范围",
 
-
   "genshinerc.damageindicator.config.enabled": "启用伤害指示器",
   "genshinerc.damageindicator.config.enabled.desc": "服务端总开关。关闭后不再向任何玩家广播伤害数字",
   "genshinerc.damageindicator.config.max_distance": "最大渲染距离",
@@ -49,7 +48,6 @@
   "genshinerc.damageindicator.config.particle_min_spacing": "粒子最小间距",
   "genshinerc.damageindicator.config.particle_min_spacing.desc": "同一实体连续生成伤害数字时，新粒子与上一个保持的最小距离。防止遮挡，范围 0.00 ~ 2.00，精度 0.01",
 
-
   "genshinerc.damageindicator.config.color_physical": "物理颜色",
   "genshinerc.damageindicator.config.color_physical.desc": "物理伤害数字颜色",
   "genshinerc.damageindicator.config.color_pyro": "火元素颜色",
@@ -69,7 +67,6 @@
   "genshinerc.damageindicator.config.color_overload": "超载颜色",
   "genshinerc.damageindicator.config.color_overload.desc": "超载伤害数字颜色",
 
-
   "genshinerc.config.back_to_game_ui": "返回游戏 UI",
   "genshinerc.config.back_to_game": "返回游戏",
   "genshinerc.config.back_to_list": "返回模组列表",
@@ -78,7 +75,6 @@
   "genshinerc.damageindicator.number_format.integer": "整数",
   "genshinerc.damageindicator.number_format.one_decimal": "一位小数",
   "genshinerc.damageindicator.number_format.two_decimals": "两位小数",
-
 
   "genshinerc.damageindicator.config.life_shrink_enabled": "启用生命周期缩放",
   "genshinerc.damageindicator.config.life_shrink_enabled.desc": "生命后期逐渐缩小到 0",
@@ -92,7 +88,6 @@
   "genshinerc.damageindicator.config.life_fade_start_tick.desc": "粒子消失前多少 Tick 开始淡出，超过生命时长会取最大",
   "genshinerc.damageindicator.config.life_fade_easing": "淡出缓动",
   "genshinerc.damageindicator.config.life_fade_easing.desc": "透明度变化的缓动曲线",
-
 
   "genshinerc.damageindicator.config.birth_scale_enabled": "启用出生缩放动画",
   "genshinerc.damageindicator.config.birth_scale_enabled.desc": "粒子出生时从 0 缩放到目标大小。如果生命周期缩放起始 Tick 小于出生动画时长，则跳过出生动画",
@@ -126,13 +121,11 @@
   "genshinerc.damageindicator.easing.ease_out": "缓出",
   "genshinerc.damageindicator.easing.ease_in_out": "缓入缓出",
 
-
   "genshinerc.config.select": "选择配置类型",
   "genshinerc.config.client": "客户端配置",
   "genshinerc.config.server": "服务端配置",
   "key.genshinerc.damageindicator.config": "打开伤害指示器配置",
   "category.genshinerc.damageindicator": "GenshinERC",
-
 
   "genshinerc.damageindicator.damage_type.physical": "物理",
   "genshinerc.damageindicator.damage_type.pyro": "火元素",
@@ -143,7 +136,6 @@
   "genshinerc.damageindicator.damage_type.cryo": "冰元素",
   "genshinerc.damageindicator.damage_type.geo": "岩元素",
   "genshinerc.damageindicator.damage_type.overload": "超载",
-
 
 
 
@@ -218,5 +210,21 @@
   "genshinerc.bar.config.bbox_length_factor": "体积自适应长度系数",
   "genshinerc.bar.config.bbox_length_factor.desc": "实体体积对血条长度的影响",
   "genshinerc.bar.config.bbox_width_factor": "体积自适应宽度系数",
-  "genshinerc.bar.config.bbox_width_factor.desc": "实体体积对血条宽度的影响"
+  "genshinerc.bar.config.bbox_width_factor.desc": "实体体积对血条宽度的影响",
+  "genshinerc.bar.config.y_offset_height_factor": "Y轴高度自适应系数",
+  "genshinerc.bar.config.y_offset_height_factor.desc": "根据生物高度增加Y轴偏移",
+  "genshinerc.bar.config.hurt_display_time": "受击显示时长(秒)",
+  "genshinerc.bar.config.hurt_display_time.desc": "血量变化后显示HUD的持续时间",
+  "genshinerc.bar.config.death_fade_delay": "死亡保持时长(秒)",
+  "genshinerc.bar.config.death_fade_delay.desc": "死亡后保持完全不透明的时长",
+  "genshinerc.bar.config.fade_in_time": "淡入时长(秒)",
+  "genshinerc.bar.config.fade_in_time.desc": "HUD出现时的淡入时间",
+  "genshinerc.bar.config.fade_out_time": "淡出时长(秒)",
+  "genshinerc.bar.config.fade_out_time.desc": "HUD消失时的淡出时间",
+  "genshinerc.bar.config.mob_mode": "世界实体显示模式",
+  "genshinerc.bar.config.mob_mode.desc": "控制非玩家生物的HUD显示方式",
+  "genshinerc.bar.config.mob_mode.NONE": "从不显示",
+  "genshinerc.bar.config.mob_mode.ALWAYS": "恒久渲染",
+  "genshinerc.bar.config.mob_mode.ALWAYS_WHEN_NOT_FULLHP": "非满血恒久",
+  "genshinerc.bar.config.mob_mode.ON_HURT": "仅变化时显示"
 }
