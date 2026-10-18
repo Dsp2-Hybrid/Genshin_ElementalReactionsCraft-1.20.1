@@ -55,8 +55,8 @@ public class BarConfig {
 
     @SerialEntry public float hurtDisplayTime = 2.0f;
     @SerialEntry public float deathFadeDelay = 0.35f;
-    @SerialEntry public float fadeInTime = 0.35f;
-    @SerialEntry public float fadeOutTime = 0.35f;
+    @SerialEntry public float fadeInTime = 0.25f;
+    @SerialEntry public float fadeOutTime = 0.25f;
 
     private static Component t(String k) { return Component.translatable(k); }
     private static Component td(String k) { return Component.translatable(k + ".desc"); }
@@ -82,9 +82,9 @@ public class BarConfig {
                 .option(floatOpt("overlay_shrink_time", 0.75f, () -> c.overlayShrinkTime, v -> c.overlayShrinkTime = v, 0.1f, 2f))
                 .option(floatOpt("overlay_fade_time", 0.55f, () -> c.overlayFadeTime, v -> c.overlayFadeTime = v, 0.1f, 2f))
                 .option(floatOpt("hurt_display_time", 2.0f, () -> c.hurtDisplayTime, v -> c.hurtDisplayTime = v, 0.1f, 10f))
-                .option(floatOpt("death_fade_delay", 0.35f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0f, 2f))
-                .option(floatOpt("fade_in_time", 0.35f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 2f))
-                .option(floatOpt("fade_out_time", 0.35f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 2f))
+                .option(floatOpt("death_fade_delay", 0.35f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0f, 1f))
+                .option(floatOpt("fade_in_time", 0.25f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 1f))
+                .option(floatOpt("fade_out_time", 0.25f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 1f))
                 .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
                 .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
                 .build();
