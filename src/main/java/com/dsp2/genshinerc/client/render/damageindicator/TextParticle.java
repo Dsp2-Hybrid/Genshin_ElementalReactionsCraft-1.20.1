@@ -86,30 +86,30 @@ public class TextParticle {
         return Math.max(0, maxAge - cfg.lifeFadeStartTick) < cfg.birthFadeDuration;
     }
 
-    private float currentScale() {
+    private float currentScale(float renderAge) {
         float s = baseScale;
-        if (cfg.birthScaleEnabled && !skipBirthScale() && age < cfg.birthScaleDuration) {
-            s *= birthScaleEasing.apply(age / (float) cfg.birthScaleDuration);
+        if (cfg.birthScaleEnabled && !skipBirthScale() && renderAge < cfg.birthScaleDuration) {
+            s *= birthScaleEasing.apply(renderAge / (float) cfg.birthScaleDuration);
         }
         if (cfg.lifeShrinkEnabled) {
             int start = Math.max(0, maxAge - cfg.lifeShrinkStartTick);
-            if (age >= start) {
-                float t = (age - start) / (float) Math.max(1, maxAge - start);
+            if (renderAge >= start) {
+                float t = (renderAge - start) / (float) Math.max(1, maxAge - start);
                 s *= (1f - shrinkEasing.apply(t));
             }
         }
         return Math.max(0f, s);
     }
 
-    private float currentAlpha() {
+    private float currentAlpha(float renderAge) {
         float a = 1f;
-        if (cfg.birthFadeEnabled && !skipBirthFade() && age < cfg.birthFadeDuration) {
-            a *= birthFadeEasing.apply(age / (float) cfg.birthFadeDuration);
+        if (cfg.birthFadeEnabled && !skipBirthFade() && renderAge < cfg.birthFadeDuration) {
+            a *= birthFadeEasing.apply(renderAge / (float) cfg.birthFadeDuration);
         }
         if (cfg.lifeFadeEnabled) {
             int start = Math.max(0, maxAge - cfg.lifeFadeStartTick);
-            if (age >= start) {
-                float t = (age - start) / (float) Math.max(1, maxAge - start);
+            if (renderAge >= start) {
+                float t = (renderAge - start) / (float) Math.max(1, maxAge - start);
                 a *= (1f - fadeEasing.apply(t));
             }
         }
@@ -130,17 +130,21 @@ public class TextParticle {
         double dy = Mth.lerp(partialTick, py, y) - cam.getPosition().y;
         double dz = Mth.lerp(partialTick, pz, z) - cam.getPosition().z;
 
+        float renderAge = Math.min(maxAge, age + partialTick);
+
         ps.pushPose();
         ps.translate(dx, dy, dz);
         ps.mulPose(cam.rotation());
         ps.translate(0f, 0f, zOffset);
-        float s = 0.03f * currentScale();
+
+        float s = 0.03f * currentScale(renderAge);
         ps.scale(-s, -s, s);
 
         Font font = Minecraft.getInstance().font;
         CustomColor c = currentColor();
         int argb = c.argb();
-        float alpha = currentAlpha();
+
+        float alpha = currentAlpha(renderAge);
         int a = (int) (((argb >> 24) & 0xFF) * alpha);
         int r = (argb >> 16) & 0xFF, g = (argb >> 8) & 0xFF, b = argb & 0xFF;
         int finalArgb = (a << 24) | (r << 16) | (g << 8) | b;

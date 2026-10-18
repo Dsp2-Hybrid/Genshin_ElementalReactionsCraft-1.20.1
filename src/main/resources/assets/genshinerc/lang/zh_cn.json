@@ -199,6 +199,24 @@
   "genshinerc.damageindicator.config.z_random_max": "生成外偏移上限",
   "genshinerc.damageindicator.config.z_random_max.desc": "粒子生成时朝摄像机方向随机偏移范围上限B，正值往摄像机方向推，范围 -1.00 ~ 2.00，精度 0.01",
   "genshinerc.damageindicator.config.z_offset_burning": "着火额外外偏移",
-  "genshinerc.damageindicator.config.z_offset_burning.desc": "实体着火时粒子额外朝摄像机方向推的距离，防止被火焰面片遮挡，范围 0.00 ~ 1.00，精度 0.01"
-
+  "genshinerc.damageindicator.config.z_offset_burning.desc": "实体着火时粒子额外朝摄像机方向推的距离，防止被火焰面片遮挡，范围 0.00 ~ 1.00，精度 0.01",
+  "genshinerc.bar.config.overlay_extend_time": "白条延伸时间(秒)",
+  "genshinerc.bar.config.overlay_extend_time.desc": "白色覆盖层延伸动画的时间",
+  "genshinerc.bar.config.overlay_shrink_time": "白条收缩时间(秒)",
+  "genshinerc.bar.config.overlay_shrink_time.desc": "白色覆盖层收缩动画的时间",
+  "genshinerc.bar.config.overlay_fade_time": "白条淡出时间(秒)",
+  "genshinerc.bar.config.overlay_fade_time.desc": "白色覆盖层淡出的时间",
+  "genshinerc.bar.config.bar_padding": "边缘内缩比例",
+  "genshinerc.bar.config.base_length": "基础长度",
+  "genshinerc.bar.config.base_length.desc": "血条的初始长度",
+  "genshinerc.bar.config.base_width": "基础宽度",
+  "genshinerc.bar.config.base_width.desc": "血条的初始宽度",
+  "genshinerc.bar.config.height_length_factor": "高度自适应长度系数",
+  "genshinerc.bar.config.height_length_factor.desc": "实体高度对血条长度的影响",
+  "genshinerc.bar.config.height_width_factor": "高度自适应宽度系数",
+  "genshinerc.bar.config.height_width_factor.desc": "实体高度对血条宽度的影响",
+  "genshinerc.bar.config.bbox_length_factor": "体积自适应长度系数",
+  "genshinerc.bar.config.bbox_length_factor.desc": "实体体积对血条长度的影响",
+  "genshinerc.bar.config.bbox_width_factor": "体积自适应宽度系数",
+  "genshinerc.bar.config.bbox_width_factor.desc": "实体体积对血条宽度的影响"
 }

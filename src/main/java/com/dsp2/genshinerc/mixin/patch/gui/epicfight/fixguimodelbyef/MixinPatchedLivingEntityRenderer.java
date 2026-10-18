@@ -47,9 +47,6 @@ public abstract class MixinPatchedLivingEntityRenderer {
             float partialTicks,
             CallbackInfo ci) {
 
-        System.out.println("[genshinerc] render called, inGui=" + GuiRenderContext.isInGui()
-                + " entity=" + entity.getType());
-
         if (!GuiRenderContext.isInGui()) return;
 
         @SuppressWarnings({"rawtypes", "unchecked"})

@@ -65,7 +65,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public EasingWrapper birthFadeEasing = EasingWrapper.EASE_IN;
     @SerialEntry public boolean killFlashEnabled = true;
     @SerialEntry public int killFlashInterval = 2;
-    @SerialEntry public int killFlashTicks = 10;
+    @SerialEntry public int killFlashTicks = 11;
     @SerialEntry public int killExtraTicks = 4;
     @SerialEntry public boolean debug = false;
     @SerialEntry public double zRandomMin = 0.00;
@@ -222,7 +222,7 @@ public class DamageIndicatorConfig {
                 .option(easingOpt(false, "birth_fade_easing", EasingWrapper.EASE_IN, () -> c.birthFadeEasing, v -> c.birthFadeEasing = v))
                 .option(boolOpt(false, "kill_flash_enabled", true, () -> c.killFlashEnabled, v -> c.killFlashEnabled = v))
                 .option(intOpt(false, "kill_flash_interval", 2, () -> c.killFlashInterval, v -> c.killFlashInterval = v, 1, 10))
-                .option(intOpt(false, "kill_flash_ticks", 10, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
+                .option(intOpt(false, "kill_flash_ticks", 11, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
                 .option(intOpt(false, "kill_extra_ticks", 4, () -> c.killExtraTicks, v -> c.killExtraTicks = v, 0, 20))
                 .option(boolOpt(false, "debug", false, () -> c.debug, v -> c.debug = v))
                 .option(dblOpt(false, "z_random_min", 0.00, () -> c.zRandomMin, v -> c.zRandomMin = v, -1.00, 2.00))
