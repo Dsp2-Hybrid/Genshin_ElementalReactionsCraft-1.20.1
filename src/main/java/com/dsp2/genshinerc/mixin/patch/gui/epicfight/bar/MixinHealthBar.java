@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import yesman.epicfight.client.gui.HealthBar;
+import yesman.epicfight.client.gui.EntityUI;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 import com.dsp2.genshinerc.client.render.bar.CustomHealthBar;
@@ -14,7 +15,11 @@ import com.dsp2.genshinerc.client.render.bar.CustomHealthBar;
 public class MixinHealthBar {
 
     static {
-        new CustomHealthBar();
+        boolean hasCustomBar = EntityUI.ENTITY_UI_LIST.stream()
+                .anyMatch(ui -> ui instanceof CustomHealthBar);
+        if (!hasCustomBar) {
+            new CustomHealthBar();
+        }
     }
 
     @Inject(method = "shouldDraw", at = @At("HEAD"), cancellable = true, remap = false)
