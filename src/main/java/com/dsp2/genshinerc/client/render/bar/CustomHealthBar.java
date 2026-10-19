@@ -15,6 +15,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.joml.Matrix4f;
 import yesman.epicfight.client.gui.EntityUI;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
@@ -64,7 +65,11 @@ public class CustomHealthBar extends EntityUI {
         Tracker tracker = trackers.computeIfAbsent(entity, k -> new Tracker());
 
         float entityHeight = Math.max(entity.getBbHeight(), 1.0f);
-        float yOffset = entityHeight + config.yOffset + (entityHeight * config.yOffsetHeightFactor);
+
+        String entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
+        float specificOffset = config.getYOffsetForEntity(entityId);
+
+        float yOffset = entityHeight + config.yOffset + (entityHeight * config.yOffsetHeightFactor) + specificOffset;
         Matrix4f matrix = super.getModelViewMatrixAlignedToCamera(poseStack, entity, 0.0F, yOffset, 0.0F, true, partialTicks);
 
         float shakeX = tracker.getShakeOffset(System.currentTimeMillis(), config);

@@ -247,6 +247,7 @@
   "genshinerc.bar.config.fatal_shake_min_percent": "Fatal Shake Min(%)",
   "genshinerc.bar.config.fatal_shake_min_percent.desc": "Minimum amplitude percentage of max health for fatal shake",
   "genshinerc.bar.config.fatal_shake_max_percent": "Fatal Shake Max(%)",
-  "genshinerc.bar.config.fatal_shake_max_percent.desc": "Maximum amplitude percentage of max health for fatal shake"
-
+  "genshinerc.bar.config.fatal_shake_max_percent.desc": "Maximum amplitude percentage of max health for fatal shake",
+  "genshinerc.bar.config.entity_y_offsets": "Edit Entity Y-Offsets",
+  "genshinerc.bar.config.entity_y_offsets.desc": "Click to edit. Format: [EntityID Space Offset], e.g., minecraft:witch 0.45. Offset is the Y-axis height in blocks, limited from -10.0 to 10.0. Use + to add rows and trash can to delete.Float Number Type."
 }

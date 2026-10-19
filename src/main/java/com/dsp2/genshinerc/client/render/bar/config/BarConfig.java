@@ -1,21 +1,32 @@
 package com.dsp2.genshinerc.client.render.bar.config;
 
+import dev.isxander.yacl3.api.ButtonOption;
+import dev.isxander.yacl3.api.ConfigCategory;
+import dev.isxander.yacl3.api.ListOption;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.OptionGroup;
+import dev.isxander.yacl3.api.YetAnotherConfigLib;
 import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class BarConfig {
     public static final ConfigClassHandler<BarConfig> HANDLER =
@@ -73,6 +84,47 @@ public class BarConfig {
     @SerialEntry public float deathFadeDelay = 3.0f;
     @SerialEntry public float fadeInTime = 0.25f;
     @SerialEntry public float fadeOutTime = 0.4f;
+
+    @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.45"));
+
+    public float getYOffsetForEntity(String entityKey) {
+        if (entityYOffsets != null && !entityYOffsets.isEmpty()) {
+            for (String pair : entityYOffsets) {
+                String[] parts = pair.trim().split("\\s+");
+                if (parts.length >= 2 && parts[0].equals(entityKey)) {
+                    try {
+                        float val = Float.parseFloat(parts[1]);
+                        return Mth.clamp(val, -10.0f, 10.0f);
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+        return 0f;
+    }
+
+    public static void registerDefaultYOffsets(Map<String, Float> defaults) {
+        BarConfig c = get();
+        if (c.entityYOffsets == null) {
+            c.entityYOffsets = new ArrayList<>();
+        }
+        boolean changed = false;
+        for (Map.Entry<String, Float> entry : defaults.entrySet()) {
+            boolean exists = false;
+            for (String s : c.entityYOffsets) {
+                if (s.trim().startsWith(entry.getKey() + " ")) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                c.entityYOffsets.add(entry.getKey() + " " + entry.getValue());
+                changed = true;
+            }
+        }
+        if (changed) {
+            save();
+        }
+    }
 
     public static float interpolate(float x, EasingType type) {
         if (x <= 0f) return 0f;
@@ -132,7 +184,33 @@ public class BarConfig {
                 .option(floatOpt("fade_out_time", 0.4f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 2f))
                 .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
                 .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
+                .option(ButtonOption.createBuilder()
+                        .name(t(P("entity_y_offsets")))
+                        .description(OptionDescription.of(td(P("entity_y_offsets"))))
+                        .action((screen, option) -> Minecraft.getInstance().setScreen(createOffsetScreen(screen)))
+                        .build())
                 .build();
+    }
+
+    public static Screen createOffsetScreen(Screen parent) {
+        BarConfig c = get();
+        return YetAnotherConfigLib.createBuilder()
+                .title(t(P("entity_y_offsets")))
+                .category(ConfigCategory.createBuilder()
+                        .name(t(P("entity_y_offsets")))
+                        .option(ListOption.<String>createBuilder()
+                                .name(t(P("entity_y_offsets")))
+                                .description(OptionDescription.of(td(P("entity_y_offsets"))))
+                                .binding(List.of("minecraft:witch 0.45"), () -> c.entityYOffsets, v -> c.entityYOffsets = new ArrayList<>(v))
+                                .controller(StringControllerBuilder::create)
+                                .initial("minecraft:creeper 0.5")
+                                .build())
+                        .build())
+                .save(() -> {
+                    BarConfig.save();
+                })
+                .build()
+                .generateScreen(parent);
     }
 
     private static Option<Boolean> boolOpt(String key, boolean def, java.util.function.Supplier<Boolean> g, java.util.function.Consumer<Boolean> s) {
