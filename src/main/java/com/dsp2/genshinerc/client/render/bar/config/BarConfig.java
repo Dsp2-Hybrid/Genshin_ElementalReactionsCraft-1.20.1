@@ -51,23 +51,23 @@ public class BarConfig {
     @SerialEntry public String enemyColor = "#FF4444";
     @SerialEntry public String allyColor = "#44FF44";
 
-    @SerialEntry public float playerOverlayShrinkTime = 3.5f;
+    @SerialEntry public float playerOverlayShrinkTime = 1.35f;
     @SerialEntry public float mobOverlayShrinkTime = 1.25f;
     @SerialEntry public EasingType whiteEasing = EasingType.EASE_OUT_CUBIC;
     @SerialEntry public float overlayFadeTime = 0.30f;
 
     @SerialEntry public boolean smallChangeEnabled = true;
     @SerialEntry public float smallChangeThreshold = 0.03f;
-    @SerialEntry public float smallChangeDuration = 0.2f;
+    @SerialEntry public float smallChangeDuration = 0.75f;
 
     @SerialEntry public float shakeDuration = 0.35f;
-    @SerialEntry public float shakeAmplitudeFactor = 2.50f;
+    @SerialEntry public float shakeAmplitudeFactor = 1.75f;
     @SerialEntry public float shakeFrequencyFactor = 8.0f;
     @SerialEntry public float shakeDecayFactor = 0.50f;
 
     @SerialEntry public float fatalShakeMultiplier = 2.75f;
-    @SerialEntry public float fatalShakeMinPercent = 0.70f;
-    @SerialEntry public float fatalShakeMaxPercent = 1.25f;
+    @SerialEntry public float fatalShakeMinPercent = 0.60f;
+    @SerialEntry public float fatalShakeMaxPercent = 1.00f;
 
     @SerialEntry public float hurtDisplayTime = 3.0f;
     @SerialEntry public float deathFadeDelay = 3.0f;
@@ -112,20 +112,20 @@ public class BarConfig {
                 .option(floatOpt("bbox_length_factor", 0.40f, () -> c.bboxLengthFactor, v -> c.bboxLengthFactor = v, 0.0f, 1.0f))
                 .option(floatOpt("height_width_factor", 0.0f, () -> c.heightWidthFactor, v -> c.heightWidthFactor = v, 0.0f, 0.25f))
                 .option(floatOpt("bbox_width_factor", 0.0f, () -> c.bboxWidthFactor, v -> c.bboxWidthFactor = v, 0.0f, 0.25f))
-                .option(floatOpt("player_overlay_shrink_time", 3.5f, () -> c.playerOverlayShrinkTime, v -> c.playerOverlayShrinkTime = v, 0f, 6f))
+                .option(floatOpt("player_overlay_shrink_time", 1.35f, () -> c.playerOverlayShrinkTime, v -> c.playerOverlayShrinkTime = v, 0f, 6f))
                 .option(floatOpt("mob_overlay_shrink_time", 1.25f, () -> c.mobOverlayShrinkTime, v -> c.mobOverlayShrinkTime = v, 0f, 3f))
                 .option(enumOpt("white_easing", EasingType.class, EasingType.EASE_OUT_CUBIC, () -> c.whiteEasing, v -> c.whiteEasing = v))
                 .option(floatOpt("overlay_fade_time", 0.30f, () -> c.overlayFadeTime, v -> c.overlayFadeTime = v, 0.0f, 1.0f))
                 .option(boolOpt("small_change_enabled", true, () -> c.smallChangeEnabled, v -> c.smallChangeEnabled = v))
                 .option(percentOpt("small_change_threshold", 0.03f, () -> c.smallChangeThreshold, v -> c.smallChangeThreshold = v, 0.0f, 0.15f))
-                .option(floatOpt("small_change_duration", 0.2f, () -> c.smallChangeDuration, v -> c.smallChangeDuration = v, 0.05f, 1f))
+                .option(floatOpt("small_change_duration", 0.75f, () -> c.smallChangeDuration, v -> c.smallChangeDuration = v, 0.05f, 1f))
                 .option(floatOpt("shake_duration", 0.35f, () -> c.shakeDuration, v -> c.shakeDuration = v, 0.0f, 1.0f))
-                .option(floatOpt("shake_amplitude_factor", 2.50f, () -> c.shakeAmplitudeFactor, v -> c.shakeAmplitudeFactor = v, 0f, 7.5f))
+                .option(floatOpt("shake_amplitude_factor", 1.75f, () -> c.shakeAmplitudeFactor, v -> c.shakeAmplitudeFactor = v, 0f, 3f))
                 .option(floatOpt("shake_frequency_factor", 8.0f, () -> c.shakeFrequencyFactor, v -> c.shakeFrequencyFactor = v, 1f, 16f))
                 .option(floatOpt("shake_decay_factor", 0.50f, () -> c.shakeDecayFactor, v -> c.shakeDecayFactor = v, 0.05f, 1.5f))
                 .option(floatOpt("fatal_shake_multiplier", 2.75f, () -> c.fatalShakeMultiplier, v -> c.fatalShakeMultiplier = v, 1f, 5f))
-                .option(percentOpt("fatal_shake_min_percent", 0.70f, () -> c.fatalShakeMinPercent, v -> c.fatalShakeMinPercent = v, 0.35f, 0.70f))
-                .option(percentOpt("fatal_shake_max_percent", 1.25f, () -> c.fatalShakeMaxPercent, v -> c.fatalShakeMaxPercent = v, 0.75f, 1.65f))
+                .option(percentOpt("fatal_shake_min_percent", 0.60f, () -> c.fatalShakeMinPercent, v -> c.fatalShakeMinPercent = v, 0.35f, 0.70f))
+                .option(percentOpt("fatal_shake_max_percent", 1.00f, () -> c.fatalShakeMaxPercent, v -> c.fatalShakeMaxPercent = v, 0.75f, 1.65f))
                 .option(floatOpt("hurt_display_time", 3.0f, () -> c.hurtDisplayTime, v -> c.hurtDisplayTime = v, 0.1f, 10f))
                 .option(floatOpt("death_fade_delay", 3.0f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0f, 5f))
                 .option(floatOpt("fade_in_time", 0.25f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 1f))

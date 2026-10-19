@@ -244,8 +244,9 @@
   "genshinerc.bar.config.small_change_enabled.desc": "Remaining health flashes white on small damage",
   "genshinerc.bar.config.small_change_threshold": "Small Change Threshold(%)",
   "genshinerc.bar.config.small_change_threshold.desc": "Damage below this ratio only flashes white (Default 3.0%)",
-  "genshinerc.bar.config.fatal_shake_min_percent": "死亡震动下限(%)",
-  "genshinerc.bar.config.fatal_shake_min_percent.desc": "死亡震动的保底振幅占满血量驱动的的比例",
-  "genshinerc.bar.config.fatal_shake_max_percent": "死亡震动上限(%)",
-  "genshinerc.bar.config.fatal_shake_max_percent.desc": "死亡震动的最大振幅占满血量的驱动的比例"
+  "genshinerc.bar.config.fatal_shake_min_percent": "Fatal Shake Min(%)",
+  "genshinerc.bar.config.fatal_shake_min_percent.desc": "Minimum amplitude percentage of max health for fatal shake",
+  "genshinerc.bar.config.fatal_shake_max_percent": "Fatal Shake Max(%)",
+  "genshinerc.bar.config.fatal_shake_max_percent.desc": "Maximum amplitude percentage of max health for fatal shake"
+
 }
