@@ -95,11 +95,9 @@ dependencies {
     implementation fg.deobf("curse.maven:epic-fight-avalon-1268823:7619938")
     implementation fg.deobf("curse.maven:epicfight-nightfall-1307848:8693642")
 
-    // 👇 新增：Mixin 注解处理器
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
-// 👇 新增：Mixin 扩展块
 mixin {
     add sourceSets.main, "genshinerc.refmap.json"
     config "genshinerc.mixins.json"

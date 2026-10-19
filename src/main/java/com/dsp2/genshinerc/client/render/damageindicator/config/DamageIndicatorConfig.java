@@ -18,9 +18,8 @@ import java.awt.Color;
 
 public class DamageIndicatorConfig {
 
-    public transient boolean serverEnabled = true;
-    public transient int serverMaxDistance = 35;
-
+    @SerialEntry public boolean serverEnabled = true;
+    @SerialEntry public int serverMaxDistance = 35;
     @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
     @SerialEntry public double shadowAlpha = 0.55;
