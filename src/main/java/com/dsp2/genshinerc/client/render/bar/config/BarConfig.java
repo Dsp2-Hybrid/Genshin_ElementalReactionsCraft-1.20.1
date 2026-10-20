@@ -106,6 +106,18 @@ public class BarConfig {
     @SerialEntry public float fadeOutTime = 0.4f;
     @SerialEntry public float deathFadeOutTime = 0.60f;
 
+    @SerialEntry public int hudOffsetX = 10;
+    @SerialEntry public int hudOffsetY = 10;
+    @SerialEntry public int buffSpacing = 22;
+    @SerialEntry public int maxBuffs = 5;
+
+    @SerialEntry public int levelOffsetX = -20;
+    @SerialEntry public int levelOffsetY = -30;
+
+    @SerialEntry public int elementBoxSize = 20;
+    @SerialEntry public int elementSpacing = 2;
+    @SerialEntry public int elementOffsetY = -50;
+
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
     public float getYOffsetForEntity(String entityKey) {
@@ -245,6 +257,15 @@ public class BarConfig {
                 .option(floatOpt("fade_in_time", 0.25f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 1f))
                 .option(floatOpt("fade_out_time", 0.4f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 2f))
                 .option(floatOpt("death_fade_out_time", 0.60f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
+                .option(intOpt("hud_offset_x", 10, () -> c.hudOffsetX, v -> c.hudOffsetX = v, 0, 100))
+                .option(intOpt("hud_offset_y", 10, () -> c.hudOffsetY, v -> c.hudOffsetY = v, 0, 100))
+                .option(intOpt("buff_spacing", 22, () -> c.buffSpacing, v -> c.buffSpacing = v, 10, 50))
+                .option(intOpt("max_buffs", 5, () -> c.maxBuffs, v -> c.maxBuffs = v, 1, 20))
+                .option(intOpt("level_offset_x", -20, () -> c.levelOffsetX, v -> c.levelOffsetX = v, -100, 100))
+                .option(intOpt("level_offset_y", -30, () -> c.levelOffsetY, v -> c.levelOffsetY = v, -100, 100))
+                .option(intOpt("element_box_size", 20, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10, 50))
+                .option(intOpt("element_spacing", 2, () -> c.elementSpacing, v -> c.elementSpacing = v, 0, 10))
+                .option(intOpt("element_offset_y", -50, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100))
                 .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
                 .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
                 .option(ButtonOption.createBuilder()
