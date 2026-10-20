@@ -105,20 +105,21 @@ public class BarConfig {
     @SerialEntry public float deathFadeDelay = 3.0f;
     @SerialEntry public float fadeInTime = 0.25f;
     @SerialEntry public float fadeOutTime = 0.4f;
-    @SerialEntry public float deathFadeOutTime = 0.60f;
+    @SerialEntry public float deathFadeOutTime = 0.45f;
 
     @SerialEntry public BuffDirection buffDirection = BuffDirection.RIGHT_TO_LEFT;
     @SerialEntry public int hudOffsetX = 10;
     @SerialEntry public int hudOffsetY = 10;
     @SerialEntry public int buffSpacing = 22;
     @SerialEntry public int maxBuffs = 5;
-
     @SerialEntry public int levelOffsetX = -20;
     @SerialEntry public int levelOffsetY = -30;
-
     @SerialEntry public int elementBoxSize = 20;
     @SerialEntry public int elementSpacing = 2;
     @SerialEntry public int elementOffsetY = -50;
+    @SerialEntry public boolean buffRenderBackground = true;
+    @SerialEntry public float buffBackgroundAlpha = 0.5f;
+    @SerialEntry public float buffOpacity = 1.0f;
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -261,7 +262,7 @@ public class BarConfig {
                 .option(floatOpt("death_fade_delay", 3.0f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0.0f, 10f))
                 .option(floatOpt("fade_in_time", 0.25f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 1f))
                 .option(floatOpt("fade_out_time", 0.4f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 2f))
-                .option(floatOpt("death_fade_out_time", 0.60f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
+                .option(floatOpt("death_fade_out_time", 0.45f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
                 .option(enumOpt("buff_direction", BuffDirection.class, BuffDirection.RIGHT_TO_LEFT, () -> c.buffDirection, v -> c.buffDirection = v))
                 .option(intOpt("hud_offset_x", 10, () -> c.hudOffsetX, v -> c.hudOffsetX = v, 0, 100))
                 .option(intOpt("hud_offset_y", 10, () -> c.hudOffsetY, v -> c.hudOffsetY = v, 0, 100))
@@ -272,6 +273,9 @@ public class BarConfig {
                 .option(intOpt("element_box_size", 20, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10, 50))
                 .option(intOpt("element_spacing", 2, () -> c.elementSpacing, v -> c.elementSpacing = v, 0, 10))
                 .option(intOpt("element_offset_y", -50, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100))
+                .option(boolOpt("buff_render_background", true, () -> c.buffRenderBackground, v -> c.buffRenderBackground = v))
+                .option(percentOpt("buff_background_alpha", 0.5f, () -> c.buffBackgroundAlpha, v -> c.buffBackgroundAlpha = v, 0.0f, 1.0f))
+                .option(percentOpt("buff_opacity", 1.0f, () -> c.buffOpacity, v -> c.buffOpacity = v, 0.0f, 1.0f))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))
                         .description(OptionDescription.of(td(P("entity_y_offsets"))))

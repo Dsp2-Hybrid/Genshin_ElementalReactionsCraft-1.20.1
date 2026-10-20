@@ -242,7 +242,7 @@ public class CustomHealthBar extends EntityUI {
                 tracker.isSmallChangeActive = false;
             }
         }
-
+        StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();

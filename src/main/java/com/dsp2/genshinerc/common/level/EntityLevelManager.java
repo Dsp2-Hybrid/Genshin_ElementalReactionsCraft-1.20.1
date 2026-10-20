@@ -27,7 +27,8 @@ import java.util.UUID;
 public class EntityLevelManager {
     private static final String NBT_LEVEL = "GenshinLevel";
     private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("cb3f55d3-645c-4f38-a497-9c13a33db5cf");
-    private static final UUID ATTACK_MODIFIER_UUID = UUID.fromString("cb3f55d3-645c-4f38-a497-9c13a33db5cg");
+
+    private static final UUID ATTACK_MODIFIER_UUID = UUID.fromString("cb3f55d3-645c-4f38-a497-9c13a33db5c0");
 
     public static int getLevel(LivingEntity entity) {
         CompoundTag tag = entity.getPersistentData();
@@ -35,6 +36,7 @@ public class EntityLevelManager {
     }
 
     public static void setLevel(LivingEntity entity, int level) {
+        if (entity instanceof Player) return;
         level = Math.max(0, Math.min(120, level));
         CompoundTag tag = entity.getPersistentData();
         tag.putInt(NBT_LEVEL, level);
