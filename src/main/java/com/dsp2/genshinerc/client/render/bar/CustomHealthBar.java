@@ -27,8 +27,8 @@ import java.util.Map;
 
 public class CustomHealthBar extends EntityUI {
 
-    private static final ResourceLocation BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/HP_bar.png");
-    private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/HP_bar2.png");
+    private static final ResourceLocation BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar.png");
+    private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar2.png");
 
     private final Map<LivingEntity, Tracker> trackers = new HashMap<>();
 
