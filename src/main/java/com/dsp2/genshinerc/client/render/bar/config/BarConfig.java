@@ -86,6 +86,10 @@ public class BarConfig {
     @SerialEntry public boolean smallChangeEnabled = true;
     @SerialEntry public float smallChangeThreshold = 0.03f;
     @SerialEntry public float smallChangeDuration = 0.75f;
+    @SerialEntry public float smallChangeFadeIn = 0.15f;
+    @SerialEntry public float smallChangeFadeOut = 0.35f;
+    @SerialEntry public boolean smallChangeUseShaderMode = true;
+    @SerialEntry public float smallChangeShaderDuration = 0.20f;
 
     @SerialEntry public float shakeDuration = 0.35f;
     @SerialEntry public float shakeAmplitudeFactor = 1.75f;
@@ -226,6 +230,11 @@ public class BarConfig {
                 .option(boolOpt("small_change_enabled", true, () -> c.smallChangeEnabled, v -> c.smallChangeEnabled = v))
                 .option(percentOpt("small_change_threshold", 0.03f, () -> c.smallChangeThreshold, v -> c.smallChangeThreshold = v, 0.0f, 0.15f))
                 .option(floatOpt("small_change_duration", 0.75f, () -> c.smallChangeDuration, v -> c.smallChangeDuration = v, 0.05f, 1f))
+                .option(floatOpt("small_change_duration", 0.75f, () -> c.smallChangeDuration, v -> c.smallChangeDuration = v, 0.05f, 1f))
+                .option(floatOpt("small_change_fade_in", 0.15f, () -> c.smallChangeFadeIn, v -> c.smallChangeFadeIn = v, 0.0f, 1.0f))
+                .option(floatOpt("small_change_fade_out", 0.35f, () -> c.smallChangeFadeOut, v -> c.smallChangeFadeOut = v, 0.0f, 1.0f))
+                .option(boolOpt("small_change_use_shader_mode", true, () -> c.smallChangeUseShaderMode, v -> c.smallChangeUseShaderMode = v))
+                .option(floatOpt("small_change_shader_duration", 0.20f, () -> c.smallChangeShaderDuration, v -> c.smallChangeShaderDuration = v, 0.0f, 1.0f))
                 .option(floatOpt("shake_duration", 0.35f, () -> c.shakeDuration, v -> c.shakeDuration = v, 0.0f, 1.0f))
                 .option(floatOpt("shake_amplitude_factor", 1.75f, () -> c.shakeAmplitudeFactor, v -> c.shakeAmplitudeFactor = v, 0f, 3f))
                 .option(floatOpt("shake_frequency_factor", 8.0f, () -> c.shakeFrequencyFactor, v -> c.shakeFrequencyFactor = v, 1f, 16f))

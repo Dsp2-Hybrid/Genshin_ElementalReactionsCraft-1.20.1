@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -22,6 +23,7 @@ import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerP
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
 import java.awt.Color;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,8 +34,42 @@ public class CustomHealthBar extends EntityUI {
 
     private final Map<LivingEntity, Tracker> trackers = new HashMap<>();
 
+    // 缓存光影检测状态，避免每帧反射消耗性能
+    private static long lastShaderCheckTime = 0L;
+    private static boolean cachedShaderState = false;
+
     public CustomHealthBar() {
         super();
+    }
+
+    // 底层光影检测
+    public static boolean isShaderPackEnabled() {
+        long now = System.currentTimeMillis();
+        if (now - lastShaderCheckTime < 2000L) {
+            return cachedShaderState;
+        }
+        lastShaderCheckTime = now;
+
+        try {
+            // 优先检测 Iris (Oculus 等光影前置基于 Iris)
+            Class<?> irisApiClass = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
+            Method getInstanceMethod = irisApiClass.getMethod("getInstance");
+            Object instance = getInstanceMethod.invoke(null);
+            Method isShaderPackInUseMethod = irisApiClass.getMethod("isShaderPackInUse");
+            cachedShaderState = (Boolean) isShaderPackInUseMethod.invoke(instance);
+            return cachedShaderState;
+        } catch (Throwable ignored) {}
+
+        try {
+            // 其次检测 OptiFine
+            Class<?> optifineConfig = Class.forName("net.optifine.Config");
+            Method isShaders = optifineConfig.getMethod("isShaders");
+            cachedShaderState = (Boolean) isShaders.invoke(null);
+            return cachedShaderState;
+        } catch (Throwable ignored) {}
+
+        cachedShaderState = false;
+        return false;
     }
 
     @Override
@@ -161,24 +197,46 @@ public class CustomHealthBar extends EntityUI {
             }
         }
 
-        if (tracker.isSmallChangeActive && renderHealthEnd > 0.001f) {
+        if (tracker.isSmallChangeActive) {
             long elapsed = System.currentTimeMillis() - tracker.lastSmallChangeTime;
-            float durationMs = config.smallChangeDuration * 1000f;
+            float smallAlpha = 0f;
+            boolean shouldDraw = false;
 
-            if (elapsed < durationMs) {
-                if (config.smallChangeDuration > 0.4f) {
-                    float smallAlpha = 1.0f;
-                    if (elapsed < 200f) {
-                        smallAlpha = elapsed / 200f;
-                    } else if (elapsed > durationMs - 200f) {
-                        smallAlpha = (durationMs - elapsed) / 200f;
+            if (isShaderPackEnabled() && config.smallChangeUseShaderMode) {
+                // 光影模式逻辑
+                float shaderDurationMs = config.smallChangeShaderDuration * 1000f;
+                if (elapsed < shaderDurationMs) {
+                    smallAlpha = 1.0f;
+                    shouldDraw = true;
+                }
+            } else {
+                // 原版逻辑：按时间轴走淡入 -> 全白 -> 淡出
+                float totalMs = config.smallChangeDuration * 1000f;
+                float fadeInMs = config.smallChangeFadeIn * 1000f;
+                float fadeOutMs = config.smallChangeFadeOut * 1000f;
+
+                if (elapsed < totalMs) {
+                    shouldDraw = true;
+                    if (totalMs < fadeInMs + fadeOutMs) {
+                        // 如果时间不足以覆盖淡入和淡出，直接纯淡出
+                        smallAlpha = 1.0f - (elapsed / totalMs);
+                    } else {
+                        if (elapsed < fadeInMs) {
+                            smallAlpha = fadeInMs > 0 ? (elapsed / fadeInMs) : 1.0f;
+                        } else if (elapsed < totalMs - fadeOutMs) {
+                            smallAlpha = 1.0f;
+                        } else {
+                            smallAlpha = fadeOutMs > 0 ? (totalMs - elapsed) / fadeOutMs : 0f;
+                        }
                     }
-                    smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
-                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
-                } else {
-                    float progress = Math.min(1.0f, elapsed / durationMs);
-                    float smallAlpha = 1.0f - BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
-                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
+                }
+            }
+
+            if (shouldDraw) {
+                smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
+                float maxHealthEnd = Math.max(tracker.smallChangeWidth, 0.001f);
+                if (maxHealthEnd > 0.001f) {
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * maxHealthEnd, maxY, 0, 0, maxHealthEnd, 1, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
                 }
             } else {
                 tracker.isSmallChangeActive = false;
@@ -192,16 +250,16 @@ public class CustomHealthBar extends EntityUI {
     }
 
     private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a) {
-        VertexConsumer vc = buffers.getBuffer(RenderType.text(tex));
+        VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(tex));
         int rInt = (int)(r * 255);
         int gInt = (int)(g * 255);
         int bInt = (int)(b * 255);
         int aInt = (int)(a * 255);
 
-        vc.vertex(matrix, x1, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v2).uv2(LightTexture.FULL_BRIGHT).endVertex();
-        vc.vertex(matrix, x2, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v2).uv2(LightTexture.FULL_BRIGHT).endVertex();
-        vc.vertex(matrix, x2, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
-        vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
+        vc.vertex(matrix, x1, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x2, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x2, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
     }
 
     private static class WhiteState {
@@ -291,14 +349,14 @@ public class CustomHealthBar extends EntityUI {
                 }
             } else if (shrinking) {
                 float dynamicDuration = Math.max(0.3f, maxWidth * baseShrinkTime) * 1000f;
-                long shrinkDurationMs = (long)dynamicDuration;
+                long shrinkDurationMs = (long) dynamicDuration;
                 long shrinkElapsed = elapsed;
 
                 if (shrinkElapsed >= shrinkDurationMs) {
                     active = false;
                     shrinking = false;
                 } else {
-                    float progress = Math.min(1.0f, shrinkElapsed / (float)shrinkDurationMs);
+                    float progress = Math.min(1.0f, shrinkElapsed / (float) shrinkDurationMs);
                     float eased = BarConfig.interpolate(progress, easing);
 
                     if (isHealing) {
@@ -340,6 +398,7 @@ public class CustomHealthBar extends EntityUI {
 
         public boolean isSmallChangeActive = false;
         public long lastSmallChangeTime = 0L;
+        public float smallChangeWidth = 1.0f;
 
         public boolean isShaking = false;
         private long shakeStartTime = 0L;
@@ -367,13 +426,13 @@ public class CustomHealthBar extends EntityUI {
             float t = elapsed / 1000.0f;
             float startAmplitude = shakeMagnitude * config.shakeAmplitudeFactor;
             float dampingRatio = 0.1f;
-            float omega0 = 2 * (float)Math.PI * config.shakeFrequencyFactor;
-            float omegaD = omega0 * (float)Math.sqrt(1 - dampingRatio * dampingRatio);
+            float omega0 = 2 * (float) Math.PI * config.shakeFrequencyFactor;
+            float omegaD = omega0 * (float) Math.sqrt(1 - dampingRatio * dampingRatio);
 
-            float amplitude = startAmplitude * (float)Math.exp(-dampingRatio * omega0 * t);
-            amplitude *= (float)Math.exp(-config.shakeDecayFactor * t);
+            float amplitude = startAmplitude * (float) Math.exp(-dampingRatio * omega0 * t);
+            amplitude *= (float) Math.exp(-config.shakeDecayFactor * t);
 
-            return amplitude * (float)Math.sin(omegaD * t);
+            return amplitude * (float) Math.sin(omegaD * t);
         }
 
         public void update(LivingEntity entity, BarConfig config) {
@@ -415,8 +474,11 @@ public class CustomHealthBar extends EntityUI {
                 lastHealthChangeTime = now;
                 boolean isSmallChange = false;
 
-                if (healthChanged) {
-                    float changePercent = Math.abs(health - currentHealth) / Math.max(1.0f, maxHealth);
+                if (healthChanged || absorptionChanged) {
+                    float hChange = Math.abs(health - currentHealth);
+                    float aChange = Math.abs(absorption - currentAbsorption);
+                    float maxChange = Math.max(hChange, aChange);
+                    float changePercent = maxChange / Math.max(1.0f, maxHealth);
 
                     if (health <= 0 && health < currentHealth) {
                         isShaking = true;
@@ -424,16 +486,17 @@ public class CustomHealthBar extends EntityUI {
                         float remainingPercent = currentHealth / maxHealth;
                         float calculatedMagnitude = remainingPercent * config.fatalShakeMultiplier;
                         shakeMagnitude = Mth.clamp(calculatedMagnitude, config.fatalShakeMinPercent, config.fatalShakeMaxPercent);
+                    } else if (changePercent < config.smallChangeThreshold && config.smallChangeEnabled) {
+                        isSmallChange = true;
+                        isSmallChangeActive = true;
+                        lastSmallChangeTime = now;
+                        smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
+                        hpWhite.interrupt(now);
+                        absWhite.interrupt(now);
                     } else if (health < currentHealth) {
-                        if (changePercent < config.smallChangeThreshold && config.smallChangeEnabled) {
-                            isSmallChange = true;
-                            isSmallChangeActive = true;
-                            lastSmallChangeTime = now;
-                        } else {
-                            isShaking = true;
-                            shakeStartTime = now;
-                            shakeMagnitude = Math.min(changePercent, 1.0f);
-                        }
+                        isShaking = true;
+                        shakeStartTime = now;
+                        shakeMagnitude = Math.min(changePercent, 1.0f);
                     }
                 }
 
@@ -456,9 +519,6 @@ public class CustomHealthBar extends EntityUI {
                     if (Math.abs(targetAbsEnd - visualAbsEnd) > 0.001f) {
                         absWhite.trigger(visualAbsEnd, targetAbsEnd, now);
                     }
-                } else {
-                    hpWhite.interrupt(now);
-                    absWhite.interrupt(now);
                 }
 
                 mainBarAnimStartTime = now;
@@ -476,7 +536,7 @@ public class CustomHealthBar extends EntityUI {
                     visualAbsEnd = targetAbsEnd;
                     mainBarAnimating = false;
                 } else {
-                    float progress = Math.min(1.0f, elapsed / (float)MAIN_BAR_DURATION);
+                    float progress = Math.min(1.0f, elapsed / (float) MAIN_BAR_DURATION);
                     float eased = BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
                     visualHealthEnd = startHealthEnd + (targetHealthEnd - startHealthEnd) * eased;
                     visualAbsEnd = startAbsEnd + (targetAbsEnd - startAbsEnd) * eased;
@@ -499,7 +559,7 @@ public class CustomHealthBar extends EntityUI {
                     currentAlpha = 1.0f;
                     phase = Phase.IDLE;
                 } else {
-                    long fadeElapsed = now - deathTime - (long)(config.deathFadeDelay * 1000f);
+                    long fadeElapsed = now - deathTime - (long) (config.deathFadeDelay * 1000f);
                     float progress = Math.min(1.0f, fadeElapsed / (config.deathFadeDelay * 1000f));
                     currentAlpha = 1.0f - progress;
                     phase = Phase.IDLE;
@@ -542,7 +602,7 @@ public class CustomHealthBar extends EntityUI {
             }
 
             if (phase == Phase.HOLDING && !isAlways) {
-                if (hpWhite.active || absWhite.active || mainBarAnimating || hpWhite.oldActive || absWhite.oldActive) {
+                if (hpWhite.active || absWhite.active || mainBarAnimating || hpWhite.oldActive || absWhite.oldActive || isSmallChangeActive) {
                     phaseStartTime = now;
                 } else {
                     if (now - lastHealthChangeTime > config.hurtDisplayTime * 1000f) {
@@ -561,7 +621,7 @@ public class CustomHealthBar extends EntityUI {
                         phase = Phase.HOLDING;
                         phaseStartTime = now;
                     } else {
-                        currentAlpha = Math.min(1f, (float)elapsedPhase / (config.fadeInTime * 1000f));
+                        currentAlpha = Math.min(1f, (float) elapsedPhase / (config.fadeInTime * 1000f));
                         if (currentAlpha >= 1f) {
                             phase = Phase.HOLDING;
                             phaseStartTime = now;
@@ -576,7 +636,7 @@ public class CustomHealthBar extends EntityUI {
                         currentAlpha = 0f;
                         phase = Phase.IDLE;
                     } else {
-                        currentAlpha = 1f - Math.min(1f, (float)elapsedPhase / (config.fadeOutTime * 1000f));
+                        currentAlpha = 1f - Math.min(1f, (float) elapsedPhase / (config.fadeOutTime * 1000f));
                         if (currentAlpha <= 0f) {
                             phase = Phase.IDLE;
                             currentAlpha = 0f;
