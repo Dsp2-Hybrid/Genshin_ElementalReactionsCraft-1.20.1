@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 
 import java.util.Collection;
@@ -47,35 +48,42 @@ public class StatusBar {
                     rightX - buffSize - (index * buffSpacing);
             float y = bottomY - buffSize;
 
-            float currentBuffAlpha = globalAlpha * config.buffOpacity;
+            // 独立不透明度
+            float iconAlpha = globalAlpha * config.buffOpacity;
+            float bgAlpha = globalAlpha * config.buffBackgroundAlpha;
 
-            boolean blink = effect.endsWithin(200) && effect.getDuration() % 20 < 10;
+            // 自定义闪烁频率：剩余时间小于200tick时，根据频率进行闪烁
+            boolean blink = effect.endsWithin(200) && (effect.getDuration() % config.buffBlinkRate < config.buffBlinkRate / 2);
             if (blink) {
-                currentBuffAlpha *= 0.5f;
+                iconAlpha *= 0.5f;
+                bgAlpha *= 0.5f;
             }
 
             if (config.buffRenderBackground) {
                 drawTexturedQuad(matrix, buffers, INVENTORY_TEXTURE, x, y, x + buffSize, y + buffSize,
-                        141f/256f, 166f/256f, 165f/256f, 190f/256f, 1f, 1f, 1f, currentBuffAlpha * config.buffBackgroundAlpha);
+                        141f/256f, 166f/256f, 165f/256f, 190f/256f, 1f, 1f, 1f, bgAlpha);
             }
 
             TextureAtlasSprite sprite = Minecraft.getInstance().getMobEffectTextures().get(effect.getEffect());
             if (sprite != null) {
                 drawTexturedQuad(matrix, buffers, sprite.atlasLocation(), x + 0.04f, y + 0.04f, x + buffSize - 0.04f, y + buffSize - 0.04f,
-                        sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), 1f, 1f, 1f, currentBuffAlpha);
+                        sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), 1f, 1f, 1f, iconAlpha);
             }
             index++;
         }
 
         float centerX = rightX - (hudWidth / 2.0f);
 
-        int level = EntityLevelManager.getLevel(entity);
-        if (level > 0) {
+        // 修复等级渲染逻辑：玩家不渲染，其他实体 >= 0 都渲染
+        if (!(entity instanceof Player)) {
+            int level = EntityLevelManager.getLevel(entity);
             String text = "Lv. " + level;
             Minecraft mc = Minecraft.getInstance();
 
             poseStack.pushPose();
-            float scale = 0.025f;
+            float scale = config.levelScale;
+
+            // 使用配置的 X/Y 偏移
             float textX = centerX + (config.levelOffsetX / 100.0f) - (mc.font.width(text) * scale / 2.0f);
             float textY = bottomY - buffSize - 0.2f + (config.levelOffsetY / 100.0f);
 

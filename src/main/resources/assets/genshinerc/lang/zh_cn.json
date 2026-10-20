@@ -310,5 +310,9 @@
   "genshinerc.bar.config.buff_background_alpha": "状态图标背景不透明度",
   "genshinerc.bar.config.buff_background_alpha.desc": "当开启渲染背景时，控制底部方框的不透明度。",
   "genshinerc.bar.config.buff_opacity": "状态图标整体不透明度",
-  "genshinerc.bar.config.buff_opacity.desc": "控制状态图标（Buff）本身的整体透明度。"
+  "genshinerc.bar.config.buff_opacity.desc": "控制状态图标（Buff）本身的整体透明度。",
+  "genshinerc.bar.config.level_scale": "等级文字大小",
+  "genshinerc.bar.config.level_scale.desc": "渲染 Lv. 文字时的缩放大小。",
+  "genshinerc.bar.config.buff_blink_rate": "状态图标闪烁频率",
+  "genshinerc.bar.config.buff_blink_rate.desc": "当状态图标剩余时间不多时，多少刻（Tick）闪烁一次。"
 }

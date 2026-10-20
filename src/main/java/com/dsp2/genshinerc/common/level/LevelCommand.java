@@ -8,7 +8,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -50,10 +49,13 @@ public class LevelCommand {
 
                             if (target instanceof LivingEntity living && !(living instanceof Player)) {
                                 EntityLevelManager.setLevel(living, level);
-                                context.getSource().sendSuccess(() -> Component.literal("已将 " + living.getName().getString() + " 等级设置为: " + level), false);
+
+                                living.setHealth(living.getMaxHealth());
+
+                                context.getSource().sendSuccess(() -> Component.literal("已将 " + living.getName().getString() + " 等级设置为: " + level + " 并回满血"), false);
                                 return 1;
                             } else {
-                                context.getSource().sendFailure(Component.literal("没有找到有效目标（不能是玩家）！"));
+                                context.getSource().sendFailure(Component.literal("未找到目标：请确保准星对准了非玩家生物，或在30格内有存活的生物！"));
                                 return 0;
                             }
                         })

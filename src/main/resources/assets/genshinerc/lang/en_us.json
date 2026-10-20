@@ -304,5 +304,9 @@
   "genshinerc.bar.config.buff_background_alpha": "Buff Background Opacity",
   "genshinerc.bar.config.buff_background_alpha.desc": "Controls the opacity of the background box when rendered.",
   "genshinerc.bar.config.buff_opacity": "Buff Icon Opacity",
-  "genshinerc.bar.config.buff_opacity.desc": "Controls the overall opacity of the buff icons."
+  "genshinerc.bar.config.buff_opacity.desc": "Controls the overall opacity of the buff icons.",
+  "genshinerc.bar.config.level_scale": "Level Text Scale",
+  "genshinerc.bar.config.level_scale.desc": "The scale size for rendering the Lv. text.",
+  "genshinerc.bar.config.buff_blink_rate": "Buff Blink Rate",
+  "genshinerc.bar.config.buff_blink_rate.desc": "How many ticks between each blink when the buff is about to expire."
 }

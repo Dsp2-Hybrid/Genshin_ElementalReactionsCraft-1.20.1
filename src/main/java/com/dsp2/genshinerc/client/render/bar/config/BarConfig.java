@@ -120,6 +120,8 @@ public class BarConfig {
     @SerialEntry public boolean buffRenderBackground = true;
     @SerialEntry public float buffBackgroundAlpha = 0.5f;
     @SerialEntry public float buffOpacity = 1.0f;
+    @SerialEntry public float levelScale = 0.025f;
+    @SerialEntry public int buffBlinkRate = 20;
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -276,6 +278,8 @@ public class BarConfig {
                 .option(boolOpt("buff_render_background", true, () -> c.buffRenderBackground, v -> c.buffRenderBackground = v))
                 .option(percentOpt("buff_background_alpha", 0.5f, () -> c.buffBackgroundAlpha, v -> c.buffBackgroundAlpha = v, 0.0f, 1.0f))
                 .option(percentOpt("buff_opacity", 1.0f, () -> c.buffOpacity, v -> c.buffOpacity = v, 0.0f, 1.0f))
+                .option(floatOpt("level_scale", 0.025f, () -> c.levelScale, v -> c.levelScale = v, 0.01f, 0.1f))
+                .option(intOpt("buff_blink_rate", 20, () -> c.buffBlinkRate, v -> c.buffBlinkRate = v, 10, 60))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))
                         .description(OptionDescription.of(td(P("entity_y_offsets"))))
