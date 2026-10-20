@@ -230,7 +230,6 @@ public class BarConfig {
                 .option(boolOpt("small_change_enabled", true, () -> c.smallChangeEnabled, v -> c.smallChangeEnabled = v))
                 .option(percentOpt("small_change_threshold", 0.03f, () -> c.smallChangeThreshold, v -> c.smallChangeThreshold = v, 0.0f, 0.15f))
                 .option(floatOpt("small_change_duration", 0.75f, () -> c.smallChangeDuration, v -> c.smallChangeDuration = v, 0.05f, 1f))
-                .option(floatOpt("small_change_duration", 0.75f, () -> c.smallChangeDuration, v -> c.smallChangeDuration = v, 0.05f, 1f))
                 .option(floatOpt("small_change_fade_in", 0.15f, () -> c.smallChangeFadeIn, v -> c.smallChangeFadeIn = v, 0.0f, 1.0f))
                 .option(floatOpt("small_change_fade_out", 0.35f, () -> c.smallChangeFadeOut, v -> c.smallChangeFadeOut = v, 0.0f, 1.0f))
                 .option(boolOpt("small_change_use_shader_mode", true, () -> c.smallChangeUseShaderMode, v -> c.smallChangeUseShaderMode = v))
