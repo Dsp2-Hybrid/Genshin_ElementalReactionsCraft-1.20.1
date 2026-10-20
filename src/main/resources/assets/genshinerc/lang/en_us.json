@@ -270,5 +270,13 @@
   "genshinerc.bar.config.entity_bar_opacity_multiplier.desc": "Applies only to non-player entities. The final bar opacity (fade-in, fade-out, and idle) is multiplied by this value. Range 0 ~ 1, default 1.",
   "genshinerc.bar.config.entity_y_offsets.error_message": "The current configuration contains format errors. Invalid entries will have no effect.",
   "genshinerc.bar.config.entity_y_offsets.error_continue": "Continue Editing",
-  "genshinerc.bar.config.entity_y_offsets.error_exit": "Exit Configuration"
+  "genshinerc.bar.config.entity_y_offsets.error_exit": "Exit Configuration",
+  "genshinerc.bar.config.small_change_fade_in": "Small Change Fade In Time",
+  "genshinerc.bar.config.small_change_fade_in.desc": "Time for the hit flash to fade in. Unit: seconds.",
+  "genshinerc.bar.config.small_change_fade_out": "Small Change Fade Out Time",
+  "genshinerc.bar.config.small_change_fade_out.desc": "Time for the hit flash to fade out. Unit: seconds.",
+  "genshinerc.bar.config.small_change_use_shader_mode": "Shader Compatibility Mode",
+  "genshinerc.bar.config.small_change_use_shader_mode.desc": "When shaders are detected, the rendering pipeline overrides alpha. Forces instant flash and disables fades.",
+  "genshinerc.bar.config.small_change_shader_duration": "Shader Flash Duration",
+  "genshinerc.bar.config.small_change_shader_duration.desc": "How long the flash remains fully opaque in Shader Compatibility Mode. Unit: seconds."
 }

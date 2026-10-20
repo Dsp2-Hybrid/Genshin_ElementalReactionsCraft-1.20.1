@@ -275,5 +275,13 @@
   "genshinerc.bar.config.entity_y_offsets": "编辑特定实体偏移",
   "genshinerc.bar.config.entity_y_offsets.desc": "点击执行按钮进入子菜单后，点击编辑。规则：格式为[实体ID 空格 偏移量]，例如 minecraft:witch 0.60。右侧偏移量代表方块高度(Y轴)，范围限制在 -10.0 到 10.0 之间。点击加号可新增条目，点击X可删除。精度为float，英文字符，如果不合法将写不进去.",
   "genshinerc.bar.config.death_fade_out_time": "死亡后淡出时间",
-  "genshinerc.bar.config.death_fade_out_time.desc": "实体死亡后血条淡出消失所需的时间，范围 0.10 ~ 2.00 秒"
+  "genshinerc.bar.config.death_fade_out_time.desc": "实体死亡后血条淡出消失所需的时间，范围 0.10 ~ 2.00 秒",
+  "genshinerc.bar.config.small_change_fade_in": "闪白淡入时间",
+  "genshinerc.bar.config.small_change_fade_in.desc": "受击闪白逐渐显现的时间，单位：秒。",
+  "genshinerc.bar.config.small_change_fade_out": "闪白淡出时间",
+  "genshinerc.bar.config.small_change_fade_out.desc": "受击闪白逐渐消失的时间，单位：秒。",
+  "genshinerc.bar.config.small_change_use_shader_mode": "光影兼容模式",
+  "genshinerc.bar.config.small_change_use_shader_mode.desc": "检测到光影时，启用此模式，因为光影底层会覆盖不透明度计算，将强制使用瞬间闪白，并禁用淡入淡出效果。",
+  "genshinerc.bar.config.small_change_shader_duration": "光影闪白持续时间",
+  "genshinerc.bar.config.small_change_shader_duration.desc": "在光影兼容模式下，受击闪白保持完全不透明的持续时间，单位：秒。"
 }
