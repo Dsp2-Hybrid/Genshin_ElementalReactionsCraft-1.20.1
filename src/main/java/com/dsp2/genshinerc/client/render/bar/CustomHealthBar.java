@@ -8,11 +8,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -27,8 +27,8 @@ import java.util.Map;
 
 public class CustomHealthBar extends EntityUI {
 
-    private static final ResourceLocation BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar.png");
-    private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar2.png");
+    private static final ResourceLocation BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/HP_bar.png");
+    private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/HP_bar2.png");
 
     private final Map<LivingEntity, Tracker> trackers = new HashMap<>();
 
@@ -43,8 +43,11 @@ public class CustomHealthBar extends EntityUI {
 
         if (entity.getMaxHealth() <= 0.0F) return false;
         if (entity.getBbWidth() <= 0.0F || entity.getBbHeight() <= 0.0F) return false;
-        if (entity.isInvulnerable() && entity.isSpectator()) return false;
-        if (entity instanceof net.minecraft.world.entity.decoration.ArmorStand) return false;
+        if (entity instanceof ArmorStand) return false;
+
+        if (entitypatch == null && !(entity instanceof Player)) {
+            return false;
+        }
 
         MobCategory category = entity.getType().getCategory();
         boolean isValidEntity = entity instanceof Player ||
@@ -161,10 +164,22 @@ public class CustomHealthBar extends EntityUI {
         if (tracker.isSmallChangeActive && renderHealthEnd > 0.001f) {
             long elapsed = System.currentTimeMillis() - tracker.lastSmallChangeTime;
             float durationMs = config.smallChangeDuration * 1000f;
+
             if (elapsed < durationMs) {
-                float progress = Math.min(1.0f, elapsed / durationMs);
-                float smallAlpha = 1.0f - BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
-                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
+                if (config.smallChangeDuration > 0.4f) {
+                    float smallAlpha = 1.0f;
+                    if (elapsed < 200f) {
+                        smallAlpha = elapsed / 200f;
+                    } else if (elapsed > durationMs - 200f) {
+                        smallAlpha = (durationMs - elapsed) / 200f;
+                    }
+                    smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
+                } else {
+                    float progress = Math.min(1.0f, elapsed / durationMs);
+                    float smallAlpha = 1.0f - BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
+                }
             } else {
                 tracker.isSmallChangeActive = false;
             }
@@ -177,16 +192,16 @@ public class CustomHealthBar extends EntityUI {
     }
 
     private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a) {
-        VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(tex));
+        VertexConsumer vc = buffers.getBuffer(RenderType.text(tex));
         int rInt = (int)(r * 255);
         int gInt = (int)(g * 255);
         int bInt = (int)(b * 255);
         int aInt = (int)(a * 255);
 
-        vc.vertex(matrix, x1, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x1, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v2).uv2(LightTexture.FULL_BRIGHT).endVertex();
+        vc.vertex(matrix, x2, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v2).uv2(LightTexture.FULL_BRIGHT).endVertex();
+        vc.vertex(matrix, x2, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
+        vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
     }
 
     private static class WhiteState {
@@ -404,7 +419,6 @@ public class CustomHealthBar extends EntityUI {
                     float changePercent = Math.abs(health - currentHealth) / Math.max(1.0f, maxHealth);
 
                     if (health <= 0 && health < currentHealth) {
-                        // 【修复】强制最高优先级触发死亡震动，无视小变化阈值
                         isShaking = true;
                         shakeStartTime = now;
                         float remainingPercent = currentHealth / maxHealth;
