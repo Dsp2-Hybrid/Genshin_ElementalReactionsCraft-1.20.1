@@ -41,11 +41,13 @@ public class CustomHealthBar extends EntityUI {
         BarConfig config = BarConfig.get();
         if (!config.enabled || entity == null) return false;
 
+        MobCategory category = entity.getType().getCategory();
         boolean isValidEntity = entity instanceof Player ||
-                entity.getType().getCategory() == MobCategory.MONSTER ||
-                entity.getType().getCategory() == MobCategory.CREATURE ||
-                entity.getType().getCategory() == MobCategory.WATER_CREATURE ||
-                entity.getType().getCategory() == MobCategory.AMBIENT;
+                category == MobCategory.MONSTER ||
+                category == MobCategory.CREATURE ||
+                category == MobCategory.WATER_CREATURE ||
+                category == MobCategory.AMBIENT ||
+                category == MobCategory.MISC;
 
         if (!isValidEntity) return false;
         if (entity.isInvisibleTo(playerpatch.getOriginal())) return false;
