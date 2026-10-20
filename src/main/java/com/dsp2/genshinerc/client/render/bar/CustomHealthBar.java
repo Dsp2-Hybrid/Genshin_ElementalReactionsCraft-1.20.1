@@ -41,6 +41,11 @@ public class CustomHealthBar extends EntityUI {
         BarConfig config = BarConfig.get();
         if (!config.enabled || entity == null) return false;
 
+        if (entity.getMaxHealth() <= 0.0F) return false;
+        if (entity.getBbWidth() <= 0.0F || entity.getBbHeight() <= 0.0F) return false;
+        if (entity.isInvulnerable() && entity.isSpectator()) return false;
+        if (entity instanceof net.minecraft.world.entity.decoration.ArmorStand) return false;
+
         MobCategory category = entity.getType().getCategory();
         boolean isValidEntity = entity instanceof Player ||
                 category == MobCategory.MONSTER ||
