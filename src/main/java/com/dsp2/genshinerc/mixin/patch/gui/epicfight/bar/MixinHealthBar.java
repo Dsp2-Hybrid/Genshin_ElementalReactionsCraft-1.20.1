@@ -1,23 +1,24 @@
 package com.dsp2.genshinerc.mixin.patch.gui.epicfight.bar;
 
+import com.dsp2.genshinerc.client.render.bar.CustomHealthBar;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import yesman.epicfight.client.gui.HealthBar;
 import yesman.epicfight.client.gui.EntityUI;
+import yesman.epicfight.client.gui.HealthBar;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
-import com.dsp2.genshinerc.client.render.bar.CustomHealthBar;
 
 @Mixin(HealthBar.class)
 public class MixinHealthBar {
 
     static {
-        boolean hasCustomBar = EntityUI.ENTITY_UI_LIST.stream()
+        boolean alreadyRegistered = EntityUI.ENTITY_UI_LIST.stream()
                 .anyMatch(ui -> ui instanceof CustomHealthBar);
-        if (!hasCustomBar) {
+        if (!alreadyRegistered) {
             new CustomHealthBar();
         }
     }

@@ -64,18 +64,25 @@ public class CustomHealthBar extends EntityUI {
         BarConfig config = BarConfig.get();
         Tracker tracker = trackers.computeIfAbsent(entity, k -> new Tracker());
 
+        boolean isPlayer = entity instanceof Player;
+
+        float lengthBonus = isPlayer ? config.playerBarLengthBonus : config.entityBarLengthBonus;
+        float widthBonus = isPlayer ? config.playerBarWidthBonus : config.entityBarWidthBonus;
+        float yOffsetBonus = isPlayer ? config.playerBarYOffsetBonus : config.entityBarYOffsetBonus;
+        float opacityMult = isPlayer ? config.playerBarOpacityMultiplier : config.entityBarOpacityMultiplier;
+
         float entityHeight = Math.max(entity.getBbHeight(), 1.0f);
 
         String entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
         float specificOffset = config.getYOffsetForEntity(entityId);
 
-        float yOffset = entityHeight + config.yOffset + (entityHeight * config.yOffsetHeightFactor) + specificOffset;
+        float yOffset = entityHeight + config.yOffset + (entityHeight * config.yOffsetHeightFactor) + specificOffset + yOffsetBonus;
         Matrix4f matrix = super.getModelViewMatrixAlignedToCamera(poseStack, entity, 0.0F, yOffset, 0.0F, true, partialTicks);
 
         float shakeX = tracker.getShakeOffset(System.currentTimeMillis(), config);
 
-        float length = config.baseLength + (entityHeight * config.heightLengthFactor) + (entity.getBbWidth() * config.bboxLengthFactor);
-        float width = config.baseWidth + (entityHeight * config.heightWidthFactor) + (entity.getBbWidth() * config.bboxWidthFactor);
+        float length = config.baseLength + (entityHeight * config.heightLengthFactor) + (entity.getBbWidth() * config.bboxLengthFactor) + lengthBonus;
+        float width = config.baseWidth + (entityHeight * config.heightWidthFactor) + (entity.getBbWidth() * config.bboxWidthFactor) + widthBonus;
 
         float minX = -0.5F * length + shakeX;
         float maxX = 0.5F * length + shakeX;
@@ -88,12 +95,14 @@ public class CustomHealthBar extends EntityUI {
         float g = awtColor.getGreen() / 255f;
         float b = awtColor.getBlue() / 255f;
 
-        float alpha = tracker.currentAlpha;
+        float alpha = tracker.currentAlpha * opacityMult;
 
         float renderHealthEnd = tracker.visualHealthEnd;
         float renderAbsStart = renderHealthEnd;
         float renderAbsEnd = tracker.visualAbsEnd;
 
+        RenderSystem.setShaderTexture(0, BAR_TEXTURE);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
@@ -386,20 +395,23 @@ public class CustomHealthBar extends EntityUI {
 
                 if (healthChanged) {
                     float changePercent = Math.abs(health - currentHealth) / Math.max(1.0f, maxHealth);
-                    if (changePercent < config.smallChangeThreshold && config.smallChangeEnabled) {
-                        isSmallChange = true;
-                        isSmallChangeActive = true;
-                        lastSmallChangeTime = now;
-                    } else if (health < currentHealth) {
+
+                    if (health <= 0 && health < currentHealth) {
+                        // 【修复】强制最高优先级触发死亡震动，无视小变化阈值
                         isShaking = true;
                         shakeStartTime = now;
-
-                        if (health <= 0) {
-                            float remainingPercent = currentHealth / maxHealth;
-                            float calculatedMagnitude = remainingPercent * config.fatalShakeMultiplier;
-                            shakeMagnitude = Mth.clamp(calculatedMagnitude, config.fatalShakeMinPercent, config.fatalShakeMaxPercent);
+                        float remainingPercent = currentHealth / maxHealth;
+                        float calculatedMagnitude = remainingPercent * config.fatalShakeMultiplier;
+                        shakeMagnitude = Mth.clamp(calculatedMagnitude, config.fatalShakeMinPercent, config.fatalShakeMaxPercent);
+                    } else if (health < currentHealth) {
+                        if (changePercent < config.smallChangeThreshold && config.smallChangeEnabled) {
+                            isSmallChange = true;
+                            isSmallChangeActive = true;
+                            lastSmallChangeTime = now;
                         } else {
-                            shakeMagnitude = changePercent;
+                            isShaking = true;
+                            shakeStartTime = now;
+                            shakeMagnitude = Math.min(changePercent, 1.0f);
                         }
                     }
                 }
@@ -467,7 +479,7 @@ public class CustomHealthBar extends EntityUI {
                     phase = Phase.IDLE;
                 } else {
                     long fadeElapsed = now - deathTime - (long)(config.deathFadeDelay * 1000f);
-                    float progress = Math.min(1.0f, fadeElapsed / (config.fadeOutTime * 1000f));
+                    float progress = Math.min(1.0f, fadeElapsed / (config.deathFadeDelay * 1000f));
                     currentAlpha = 1.0f - progress;
                     phase = Phase.IDLE;
                 }

@@ -1,5 +1,6 @@
-package com.dsp2.genshinerc.client.render.damageindicator.config;
+package com.dsp2.genshinerc.common.config;
 
+import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfig;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;

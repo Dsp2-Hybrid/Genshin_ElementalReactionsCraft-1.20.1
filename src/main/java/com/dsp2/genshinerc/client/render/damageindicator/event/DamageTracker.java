@@ -121,12 +121,25 @@ public class DamageTracker {
     }
 
     private static String trim(float v, int digits) {
-        if (digits <= 0) return String.valueOf(Math.round(v));
+        double value = v;
+        double abs = Math.abs(value);
+        if (digits <= 0) {
+            return String.valueOf(Math.round(value));
+        }
         if (digits == 1) {
-            String s = String.format("%.1f", v);
+            if (abs >= 1000) {
+                return String.valueOf(Math.round(value));
+            }
+            String s = String.format("%.1f", value);
             return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
         }
-        return String.format("%.2f", v);
+        if (abs >= 10000) {
+            return String.valueOf(Math.round(value));
+        }
+        if (abs >= 1000) {
+            return String.format("%.1f", value);
+        }
+        return String.format("%.2f", value);
     }
 
     public static void tickAll() {

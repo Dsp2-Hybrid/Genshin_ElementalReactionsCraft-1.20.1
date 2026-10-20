@@ -16,12 +16,14 @@ import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
+import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -36,6 +38,10 @@ public class BarConfig {
                             .setPath(FMLPaths.CONFIGDIR.get().resolve("genshinerc-healthbar.json5"))
                             .build())
                     .build();
+
+    public static YACLScreen PENDING_LIST_SCREEN = null;
+    public static Screen PENDING_LIST_PARENT = null;
+    public static ListOption<String> PENDING_LIST_OPTION = null;
 
     public static BarConfig get() { return HANDLER.instance(); }
     public static void load() { HANDLER.load(); }
@@ -58,6 +64,16 @@ public class BarConfig {
     @SerialEntry public float heightWidthFactor = 0.0f;
     @SerialEntry public float bboxLengthFactor = 0.40f;
     @SerialEntry public float bboxWidthFactor = 0.0f;
+
+    @SerialEntry public float playerBarLengthBonus = 0f;
+    @SerialEntry public float playerBarWidthBonus = 0f;
+    @SerialEntry public float playerBarYOffsetBonus = 0f;
+    @SerialEntry public float playerBarOpacityMultiplier = 1f;
+
+    @SerialEntry public float entityBarLengthBonus = 0f;
+    @SerialEntry public float entityBarWidthBonus = 0f;
+    @SerialEntry public float entityBarYOffsetBonus = 0f;
+    @SerialEntry public float entityBarOpacityMultiplier = 1f;
 
     @SerialEntry public String enemyColor = "#FF4444";
     @SerialEntry public String allyColor = "#44FF44";
@@ -84,8 +100,9 @@ public class BarConfig {
     @SerialEntry public float deathFadeDelay = 3.0f;
     @SerialEntry public float fadeInTime = 0.25f;
     @SerialEntry public float fadeOutTime = 0.4f;
+    @SerialEntry public float deathFadeOutTime = 0.60f;
 
-    @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.45"));
+    @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
     public float getYOffsetForEntity(String entityKey) {
         if (entityYOffsets != null && !entityYOffsets.isEmpty()) {
@@ -100,6 +117,36 @@ public class BarConfig {
             }
         }
         return 0f;
+    }
+
+    public static boolean hasInvalidEntityYOffset(List<String> list) {
+        if (list == null || list.isEmpty()) return false;
+        for (String pair : list) {
+            if (pair == null || pair.trim().isEmpty()) continue;
+
+            String[] parts = pair.trim().split("\\s+");
+            if (parts.length != 2) return true;
+
+            String keyStr = parts[0];
+            ResourceLocation rl = ResourceLocation.tryParse(keyStr);
+            if (rl == null) return true;
+
+            if (!ForgeRegistries.ENTITY_TYPES.containsKey(rl)) {
+                return true;
+            }
+
+            String numStr = parts[1];
+            if (numStr.contains("e") || numStr.contains("E")) return true;
+            try {
+                float val = Float.parseFloat(numStr);
+                if (val < -10.0f || val > 10.0f) {
+                    return true;
+                }
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void registerDefaultYOffsets(Map<String, Float> defaults) {
@@ -164,6 +211,14 @@ public class BarConfig {
                 .option(floatOpt("bbox_length_factor", 0.40f, () -> c.bboxLengthFactor, v -> c.bboxLengthFactor = v, 0.0f, 1.0f))
                 .option(floatOpt("height_width_factor", 0.0f, () -> c.heightWidthFactor, v -> c.heightWidthFactor = v, 0.0f, 0.25f))
                 .option(floatOpt("bbox_width_factor", 0.0f, () -> c.bboxWidthFactor, v -> c.bboxWidthFactor = v, 0.0f, 0.25f))
+                .option(floatOpt("player_bar_length_bonus", 0f, () -> c.playerBarLengthBonus, v -> c.playerBarLengthBonus = v, -1f, 1f))
+                .option(floatOpt("player_bar_width_bonus", 0f, () -> c.playerBarWidthBonus, v -> c.playerBarWidthBonus = v, -0.25f, 0.25f))
+                .option(floatOpt("player_bar_y_offset_bonus", 0f, () -> c.playerBarYOffsetBonus, v -> c.playerBarYOffsetBonus = v, -1.5f, 1.5f))
+                .option(floatOpt("player_bar_opacity_multiplier", 1f, () -> c.playerBarOpacityMultiplier, v -> c.playerBarOpacityMultiplier = v, 0f, 1f))
+                .option(floatOpt("entity_bar_length_bonus", 0f, () -> c.entityBarLengthBonus, v -> c.entityBarLengthBonus = v, -1f, 1f))
+                .option(floatOpt("entity_bar_width_bonus", 0f, () -> c.entityBarWidthBonus, v -> c.entityBarWidthBonus = v, -0.25f, 0.25f))
+                .option(floatOpt("entity_bar_y_offset_bonus", 0f, () -> c.entityBarYOffsetBonus, v -> c.entityBarYOffsetBonus = v, -1.5f, 1.5f))
+                .option(floatOpt("entity_bar_opacity_multiplier", 1f, () -> c.entityBarOpacityMultiplier, v -> c.entityBarOpacityMultiplier = v, 0f, 1f))
                 .option(floatOpt("player_overlay_shrink_time", 1.35f, () -> c.playerOverlayShrinkTime, v -> c.playerOverlayShrinkTime = v, 0f, 6f))
                 .option(floatOpt("mob_overlay_shrink_time", 1.25f, () -> c.mobOverlayShrinkTime, v -> c.mobOverlayShrinkTime = v, 0f, 3f))
                 .option(enumOpt("white_easing", EasingType.class, EasingType.EASE_OUT_CUBIC, () -> c.whiteEasing, v -> c.whiteEasing = v))
@@ -179,9 +234,9 @@ public class BarConfig {
                 .option(percentOpt("fatal_shake_min_percent", 0.60f, () -> c.fatalShakeMinPercent, v -> c.fatalShakeMinPercent = v, 0.35f, 0.70f))
                 .option(percentOpt("fatal_shake_max_percent", 1.00f, () -> c.fatalShakeMaxPercent, v -> c.fatalShakeMaxPercent = v, 0.75f, 1.65f))
                 .option(floatOpt("hurt_display_time", 3.0f, () -> c.hurtDisplayTime, v -> c.hurtDisplayTime = v, 0.1f, 10f))
-                .option(floatOpt("death_fade_delay", 3.0f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0f, 5f))
                 .option(floatOpt("fade_in_time", 0.25f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 1f))
                 .option(floatOpt("fade_out_time", 0.4f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 2f))
+                .option(floatOpt("death_fade_out_time", 0.60f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
                 .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
                 .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
                 .option(ButtonOption.createBuilder()
@@ -194,23 +249,33 @@ public class BarConfig {
 
     public static Screen createOffsetScreen(Screen parent) {
         BarConfig c = get();
-        return YetAnotherConfigLib.createBuilder()
+        ListOption<String> listOption = ListOption.<String>createBuilder()
+                .name(t(P("entity_y_offsets")))
+                .description(OptionDescription.of(td(P("entity_y_offsets"))))
+                .binding(List.of("minecraft:witch 0.60"), () -> c.entityYOffsets, v -> c.entityYOffsets = new ArrayList<>(v))
+                .controller(StringControllerBuilder::create)
+                .initial("minecraft:creeper 0.5")
+                .build();
+
+        YACLScreen screen = (YACLScreen) YetAnotherConfigLib.createBuilder()
                 .title(t(P("entity_y_offsets")))
                 .category(ConfigCategory.createBuilder()
                         .name(t(P("entity_y_offsets")))
-                        .option(ListOption.<String>createBuilder()
-                                .name(t(P("entity_y_offsets")))
-                                .description(OptionDescription.of(td(P("entity_y_offsets"))))
-                                .binding(List.of("minecraft:witch 0.45"), () -> c.entityYOffsets, v -> c.entityYOffsets = new ArrayList<>(v))
-                                .controller(StringControllerBuilder::create)
-                                .initial("minecraft:creeper 0.5")
-                                .build())
+                        .option(listOption)
                         .build())
                 .save(() -> {
-                    BarConfig.save();
+                    if (!hasInvalidEntityYOffset(listOption.pendingValue())) {
+                        BarConfig.save();
+                    }
                 })
                 .build()
                 .generateScreen(parent);
+
+        PENDING_LIST_SCREEN = screen;
+        PENDING_LIST_PARENT = parent;
+        PENDING_LIST_OPTION = listOption;
+
+        return screen;
     }
 
     private static Option<Boolean> boolOpt(String key, boolean def, java.util.function.Supplier<Boolean> g, java.util.function.Consumer<Boolean> s) {

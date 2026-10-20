@@ -9,8 +9,8 @@
     "patch.gui.yacl.YACLScreenActionMixin",
     "patch.gui.epicfight.fixguimodelbyef.MixinScreen",
     "patch.gui.epicfight.fixguimodelbyef.MixinPatchedLivingEntityRenderer",
-    "patch.gui.epicfight.bar.MixinHealthBar"
-
+    "patch.gui.epicfight.bar.MixinHealthBar",
+    "patch.gui.yacl.YACLListFormatErrorScreenEventCallbackMixin"
 
 
   ],

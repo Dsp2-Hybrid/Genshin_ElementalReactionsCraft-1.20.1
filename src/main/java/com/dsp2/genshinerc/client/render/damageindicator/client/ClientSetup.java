@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.client.render.damageindicator.client;
 
-import com.dsp2.genshinerc.client.render.damageindicator.config.ConfigSelectScreen;
+import com.dsp2.genshinerc.common.config.ConfigSelectScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

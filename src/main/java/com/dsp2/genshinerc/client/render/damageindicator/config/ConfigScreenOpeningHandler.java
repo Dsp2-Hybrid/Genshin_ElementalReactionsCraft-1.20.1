@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.client.render.damageindicator.config;
 
+import com.dsp2.genshinerc.common.config.ConfigSelectScreen;
 import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
