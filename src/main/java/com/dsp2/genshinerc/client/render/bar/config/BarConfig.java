@@ -50,6 +50,7 @@ public class BarConfig {
     public enum PlayerMode { NONE, ON_CHANGE, ALWAYS }
     public enum MobMode { NONE, ALWAYS, ALWAYS_WHEN_NOT_FULLHP, ON_HURT }
     public enum EasingType { EASE_IN_CUBIC, EASE_OUT_CUBIC, EASE_IN_OUT_CUBIC, LINEAR, SINE }
+    public enum BuffDirection { RIGHT_TO_LEFT, LEFT_TO_RIGHT }
 
     @SerialEntry public boolean enabled = true;
     @SerialEntry public PlayerMode playerMode = PlayerMode.ON_CHANGE;
@@ -106,6 +107,7 @@ public class BarConfig {
     @SerialEntry public float fadeOutTime = 0.4f;
     @SerialEntry public float deathFadeOutTime = 0.60f;
 
+    @SerialEntry public BuffDirection buffDirection = BuffDirection.RIGHT_TO_LEFT;
     @SerialEntry public int hudOffsetX = 10;
     @SerialEntry public int hudOffsetY = 10;
     @SerialEntry public int buffSpacing = 22;
@@ -235,6 +237,8 @@ public class BarConfig {
                 .option(floatOpt("entity_bar_width_bonus", 0f, () -> c.entityBarWidthBonus, v -> c.entityBarWidthBonus = v, -0.25f, 0.25f))
                 .option(floatOpt("entity_bar_y_offset_bonus", 0f, () -> c.entityBarYOffsetBonus, v -> c.entityBarYOffsetBonus = v, -1.5f, 1.5f))
                 .option(floatOpt("entity_bar_opacity_multiplier", 1f, () -> c.entityBarOpacityMultiplier, v -> c.entityBarOpacityMultiplier = v, 0f, 1f))
+                .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
+                .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
                 .option(floatOpt("player_overlay_shrink_time", 1.35f, () -> c.playerOverlayShrinkTime, v -> c.playerOverlayShrinkTime = v, 0f, 6f))
                 .option(floatOpt("mob_overlay_shrink_time", 1.25f, () -> c.mobOverlayShrinkTime, v -> c.mobOverlayShrinkTime = v, 0f, 3f))
                 .option(enumOpt("white_easing", EasingType.class, EasingType.EASE_OUT_CUBIC, () -> c.whiteEasing, v -> c.whiteEasing = v))
@@ -254,9 +258,11 @@ public class BarConfig {
                 .option(percentOpt("fatal_shake_min_percent", 0.60f, () -> c.fatalShakeMinPercent, v -> c.fatalShakeMinPercent = v, 0.35f, 0.70f))
                 .option(percentOpt("fatal_shake_max_percent", 1.00f, () -> c.fatalShakeMaxPercent, v -> c.fatalShakeMaxPercent = v, 0.75f, 1.65f))
                 .option(floatOpt("hurt_display_time", 3.0f, () -> c.hurtDisplayTime, v -> c.hurtDisplayTime = v, 0.1f, 10f))
+                .option(floatOpt("death_fade_delay", 3.0f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0.0f, 10f))
                 .option(floatOpt("fade_in_time", 0.25f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 1f))
                 .option(floatOpt("fade_out_time", 0.4f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 2f))
                 .option(floatOpt("death_fade_out_time", 0.60f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
+                .option(enumOpt("buff_direction", BuffDirection.class, BuffDirection.RIGHT_TO_LEFT, () -> c.buffDirection, v -> c.buffDirection = v))
                 .option(intOpt("hud_offset_x", 10, () -> c.hudOffsetX, v -> c.hudOffsetX = v, 0, 100))
                 .option(intOpt("hud_offset_y", 10, () -> c.hudOffsetY, v -> c.hudOffsetY = v, 0, 100))
                 .option(intOpt("buff_spacing", 22, () -> c.buffSpacing, v -> c.buffSpacing = v, 10, 50))
@@ -266,8 +272,6 @@ public class BarConfig {
                 .option(intOpt("element_box_size", 20, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10, 50))
                 .option(intOpt("element_spacing", 2, () -> c.elementSpacing, v -> c.elementSpacing = v, 0, 10))
                 .option(intOpt("element_offset_y", -50, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100))
-                .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
-                .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))
                         .description(OptionDescription.of(td(P("entity_y_offsets"))))

@@ -36,29 +36,34 @@ public class StatusBar {
 
         BarConfig config = BarConfig.get();
         GuiGraphics graphics = event.getGuiGraphics();
-        int screenWidth = mc.getWindow().getGuiScaledWidth();
-        int screenHeight = mc.getWindow().getGuiScaledHeight();
+        int screenW = mc.getWindow().getGuiScaledWidth();
+        int screenH = mc.getWindow().getGuiScaledHeight();
 
-        renderBuffs(graphics, target, config, screenWidth, screenHeight);
-        renderLevel(graphics, target, config, screenWidth, screenHeight);
-        renderElements(graphics, target, config, screenWidth, screenHeight);
+        boolean isLeftToRight = config.buffDirection == BarConfig.BuffDirection.LEFT_TO_RIGHT;
+
+        int baseX = isLeftToRight ? config.hudOffsetX : (screenW - config.hudOffsetX);
+        int baseY = screenH - config.hudOffsetY;
+
+        renderBuffs(graphics, target, config, baseX, baseY, isLeftToRight);
+        renderLevelAndElements(graphics, target, config, baseX, baseY, isLeftToRight);
     }
 
-    private static void renderBuffs(GuiGraphics graphics, LivingEntity target, BarConfig config, int screenW, int screenH) {
+    private static void renderBuffs(GuiGraphics graphics, LivingEntity target, BarConfig config, int baseX, int baseY, boolean isLeftToRight) {
         Collection<MobEffectInstance> effects = target.getActiveEffects();
         if (effects.isEmpty()) return;
 
-        int startX = screenW - config.hudOffsetX;
-        int startY = screenH - config.hudOffsetY;
-
+        int size = 24;
         int count = 0;
+
         for (MobEffectInstance effect : effects) {
             if (count >= config.maxBuffs) break;
 
-            int x = startX - (count * config.buffSpacing) - 24;
-            int y = startY - 24;
+            int x = isLeftToRight
+                    ? baseX + (count * config.buffSpacing)
+                    : baseX - size - (count * config.buffSpacing);
+            int y = baseY - size;
 
-            graphics.blit(InventoryMenu.BLOCK_ATLAS, x, y, 141, 166, 24, 24);
+            graphics.blit(InventoryMenu.BLOCK_ATLAS, x, y, 141, 166, size, size);
 
             var sprite = Minecraft.getInstance().getMobEffectTextures().get(effect.getEffect());
             graphics.blit(x + 3, y + 3, 0, 18, 18, sprite);
@@ -67,21 +72,20 @@ public class StatusBar {
         }
     }
 
-    private static void renderLevel(GuiGraphics graphics, LivingEntity target, BarConfig config, int screenW, int screenH) {
-        int level = EntityLevelManager.getLevel(target);
-        if (level <= 0) return;
-
+    private static void renderLevelAndElements(GuiGraphics graphics, LivingEntity target, BarConfig config, int baseX, int baseY, boolean isLeftToRight) {
         Minecraft mc = Minecraft.getInstance();
-        String text = "Lv. " + level;
 
-        int baseX = screenW - config.hudOffsetX - 60;
-        int x = baseX + config.levelOffsetX;
-        int y = screenH - config.hudOffsetY + config.levelOffsetY;
+        int maxWidth = config.maxBuffs * config.buffSpacing;
+        int centerX = isLeftToRight ? baseX + (maxWidth / 2) : baseX - (maxWidth / 2);
 
-        graphics.drawString(mc.font, text, x, y, 0xFFAA00, true);
-    }
+        int level = EntityLevelManager.getLevel(target);
+        if (level > 0) {
+            String text = "Lv. " + level;
+            int x = centerX + config.levelOffsetX - (mc.font.width(text) / 2);
+            int y = baseY + config.levelOffsetY;
+            graphics.drawString(mc.font, text, x, y, 0xFFAA00, true);
+        }
 
-    private static void renderElements(GuiGraphics graphics, LivingEntity target, BarConfig config, int screenW, int screenH) {
         List<ResourceLocation> elements = ElementStatusAPI.getElements(target);
         if (elements.isEmpty()) return;
 
@@ -90,10 +94,8 @@ public class StatusBar {
         int spacing = config.elementSpacing;
 
         int totalWidth = count * boxSize + (count - 1) * spacing;
-
-        int centerX = screenW - config.hudOffsetX - 40;
         int startX = centerX - (totalWidth / 2);
-        int startY = screenH - config.hudOffsetY + config.elementOffsetY;
+        int startY = baseY + config.elementOffsetY;
 
         for (int i = 0; i < count; i++) {
             int x = startX + i * (boxSize + spacing);
@@ -102,7 +104,7 @@ public class StatusBar {
 
             ResourceLocation icon = elements.get(i);
             RenderSystem.enableBlend();
-            graphics.blit(icon, x + 2, startY + 2, 0, 0, boxSize - 4, boxSize - 4, boxSize - 4, boxSize - 4);
+            graphics.blit(icon, x, startY, 0, 0, boxSize, boxSize, boxSize, boxSize);
         }
     }
 }

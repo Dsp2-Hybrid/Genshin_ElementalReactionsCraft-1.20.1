@@ -278,5 +278,24 @@
   "genshinerc.bar.config.small_change_use_shader_mode": "Shader Compatibility Mode",
   "genshinerc.bar.config.small_change_use_shader_mode.desc": "When shaders are detected, the rendering pipeline overrides alpha. Forces instant flash and disables fades.",
   "genshinerc.bar.config.small_change_shader_duration": "Shader Flash Duration",
-  "genshinerc.bar.config.small_change_shader_duration.desc": "How long the flash remains fully opaque in Shader Compatibility Mode. Unit: seconds."
+  "genshinerc.bar.config.small_change_shader_duration.desc": "How long the flash remains fully opaque in Shader Compatibility Mode. Unit: seconds.",
+
+  "genshinerc.bar.config.buff_spacing": "Buff Spacing",
+  "genshinerc.bar.config.buff_spacing.desc": "Distance between buff icons.",
+  "genshinerc.bar.config.max_buffs": "Max Buffs",
+  "genshinerc.bar.config.max_buffs.desc": "Maximum buffs to display.",
+  "genshinerc.bar.config.hud_offset_x": "HUD Offset X",
+  "genshinerc.bar.config.hud_offset_x.desc": "Horizontal offset of the status panel.",
+  "genshinerc.bar.config.hud_offset_y": "HUD Offset Y",
+  "genshinerc.bar.config.hud_offset_y.desc": "Vertical offset of the status panel.",
+  "genshinerc.bar.config.level_offset_x": "Level Offset X",
+  "genshinerc.bar.config.level_offset_x.desc": "Horizontal offset of the level text.",
+  "genshinerc.bar.config.level_offset_y": "Level Offset Y",
+  "genshinerc.bar.config.level_offset_y.desc": "Vertical offset of the level text.",
+  "genshinerc.bar.config.element_box_size": "Element Box Size",
+  "genshinerc.bar.config.element_box_size.desc": "Size of the element boxes.",
+  "genshinerc.bar.config.element_spacing": "Element Spacing",
+  "genshinerc.bar.config.element_spacing.desc": "Distance between element boxes.",
+  "genshinerc.bar.config.element_offset_y": "Element Offset Y",
+  "genshinerc.bar.config.element_offset_y.desc": "Vertical offset of the element boxes."
 }

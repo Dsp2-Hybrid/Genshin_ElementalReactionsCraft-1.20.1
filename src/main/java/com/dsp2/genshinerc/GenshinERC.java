@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc;
 
 import com.dsp2.genshinerc.client.render.bar.CustomHealthBar;
+import com.dsp2.genshinerc.client.render.bar.StatusBar;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.config.ConfigInitCore;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,5 +18,6 @@ public class GenshinERC {
         IEventBus modEventBus = context.getModEventBus();
         context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         ConfigInitCore.init();
+        MinecraftForge.EVENT_BUS.register(StatusBar.class);
     }
 }

@@ -283,5 +283,24 @@
   "genshinerc.bar.config.small_change_use_shader_mode": "光影兼容模式",
   "genshinerc.bar.config.small_change_use_shader_mode.desc": "检测到光影时，启用此模式，因为光影底层会覆盖不透明度计算，将强制使用瞬间闪白，并禁用淡入淡出效果。",
   "genshinerc.bar.config.small_change_shader_duration": "光影闪白持续时间",
-  "genshinerc.bar.config.small_change_shader_duration.desc": "在光影兼容模式下，受击闪白保持完全不透明的持续时间，单位：秒。"
+  "genshinerc.bar.config.small_change_shader_duration.desc": "在光影兼容模式下，受击闪白保持完全不透明的持续时间，单位：秒。",
+
+  "genshinerc.bar.config.buff_spacing": "Buff图标间距",
+  "genshinerc.bar.config.buff_spacing.desc": "Buff图标之间的间隔距离。",
+  "genshinerc.bar.config.max_buffs": "最大Buff数量",
+  "genshinerc.bar.config.max_buffs.desc": "允许显示的最大Buff数量。",
+  "genshinerc.bar.config.hud_offset_x": "HUD横向偏移",
+  "genshinerc.bar.config.hud_offset_x.desc": "状态面板的横向偏移。",
+  "genshinerc.bar.config.hud_offset_y": "HUD纵向偏移",
+  "genshinerc.bar.config.hud_offset_y.desc": "状态面板的纵向偏移。",
+  "genshinerc.bar.config.level_offset_x": "等级横向偏移",
+  "genshinerc.bar.config.level_offset_x.desc": "等级文字的横向偏移。",
+  "genshinerc.bar.config.level_offset_y": "等级纵向偏移",
+  "genshinerc.bar.config.level_offset_y.desc": "等级文字的纵向偏移。",
+  "genshinerc.bar.config.element_box_size": "元素方框大小",
+  "genshinerc.bar.config.element_box_size.desc": "元素图标容器的大小。",
+  "genshinerc.bar.config.element_spacing": "元素方框间距",
+  "genshinerc.bar.config.element_spacing.desc": "元素图标容器之间的固定间距。",
+  "genshinerc.bar.config.element_offset_y": "元素纵向偏移",
+  "genshinerc.bar.config.element_offset_y.desc": "元素容器在血条上方的纵向偏移。"
 }
