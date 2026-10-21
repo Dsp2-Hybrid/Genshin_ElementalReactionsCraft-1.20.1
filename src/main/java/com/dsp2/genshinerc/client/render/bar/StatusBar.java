@@ -60,13 +60,13 @@ public class StatusBar {
 
             if (config.buffRenderBackground) {
                 drawTexturedQuad(matrix, buffers, INVENTORY_TEXTURE, x, y, x + buffSize, y + buffSize,
-                        141f/256f, 166f/256f, 165f/256f, 190f/256f, 1f, 1f, 1f, bgAlpha);
+                        141f/256f, 166f/256f, 165f/256f, 190f/256f, 1f, 1f, 1f, bgAlpha, config.buffOffsetZ);
             }
 
             TextureAtlasSprite sprite = Minecraft.getInstance().getMobEffectTextures().get(effect.getEffect());
             if (sprite != null) {
                 drawTexturedQuad(matrix, buffers, sprite.atlasLocation(), x + 0.04f, y + 0.04f, x + buffSize - 0.04f, y + buffSize - 0.04f,
-                        sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), 1f, 1f, 1f, iconAlpha);
+                        sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), 1f, 1f, 1f, iconAlpha, config.buffOffsetZ);
             }
             index++;
         }
@@ -104,8 +104,8 @@ public class StatusBar {
 
             int mainAlpha = (int)(globalAlpha * 255);
             int shadowAlpha = (int)(mainAlpha * config.levelShadowAlpha);
-            int mainColorInt = (mainAlpha << 24) | mainColor.getRGB() & 0xFFFFFF;
-            int shadowColorInt = (shadowAlpha << 24) | shadowColor.getRGB() & 0xFFFFFF;
+            int mainColorInt = (mainAlpha << 24) | (mainColor.getRGB() & 0xFFFFFF);
+            int shadowColorInt = (shadowAlpha << 24) | (shadowColor.getRGB() & 0xFFFFFF);
 
             PoseStack shadowPose = new PoseStack();
             shadowPose.last().pose().set(textMatrix);
@@ -133,17 +133,17 @@ public class StatusBar {
             for (int i = 0; i < count; i++) {
                 float x = startX + i * (boxSize + spacing);
                 ResourceLocation icon = ElementManager.getCurrentFrame(elements.get(i));
-                drawTexturedQuad(matrix, buffers, icon, x, startY, x + boxSize, startY + boxSize, 0, 0, 1, 1, 1f, 1f, 1f, globalAlpha);
+                drawTexturedQuad(matrix, buffers, icon, x, startY, x + boxSize, startY + boxSize, 0, 0, 1, 1, 1f, 1f, 1f, globalAlpha, config.elementOffsetZ);
             }
         }
     }
 
-    private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a) {
+    private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a, float z) {
         VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(tex));
         int rInt = (int)(r * 255), gInt = (int)(g * 255), bInt = (int)(b * 255), aInt = (int)(a * 255);
-        vc.vertex(matrix, x1, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x1, y1, z).color(rInt, gInt, bInt, aInt).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x2, y1, z).color(rInt, gInt, bInt, aInt).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x2, y2, z).color(rInt, gInt, bInt, aInt).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x1, y2, z).color(rInt, gInt, bInt, aInt).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
     }
 }

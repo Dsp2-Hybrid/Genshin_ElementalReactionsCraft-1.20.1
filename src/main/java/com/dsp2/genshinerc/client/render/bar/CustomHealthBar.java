@@ -143,17 +143,28 @@ public class CustomHealthBar extends EntityUI {
         float renderAbsStart = renderHealthEnd;
         float renderAbsEnd = tracker.visualAbsEnd;
 
+
         RenderSystem.setShaderTexture(0, BAR_TEXTURE);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
-
-        float mix = config.hudColorMix;
-        drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1,
-                Mth.lerp(mix, 1.0f, r), Mth.lerp(mix, 1.0f, g), Mth.lerp(mix, 1.0f, b), alpha);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, 1.0f, 1.0f, 1.0f, alpha);
+        float mix = config.hudColorMix;
+        float bgR = Mth.lerp(mix, 1.0f, r);
+        float bgG = Mth.lerp(mix, 1.0f, g);
+        float bgB = Mth.lerp(mix, 1.0f, b);
+        drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, bgR, bgG, bgB, alpha);
+        if (renderHealthEnd > 0.001f) {
+            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, r, g, b, alpha);
+        }
+        if (renderAbsEnd > renderAbsStart + 0.001f) {
+            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * renderAbsStart, minY, minX + length * renderAbsEnd, maxY, renderAbsStart, 0, renderAbsEnd, 1, 1.0f, 0.9f, 0.2f, alpha);
+        }
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+
 
         if (renderHealthEnd > 0.001f) {
             drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, r, g, b, alpha);

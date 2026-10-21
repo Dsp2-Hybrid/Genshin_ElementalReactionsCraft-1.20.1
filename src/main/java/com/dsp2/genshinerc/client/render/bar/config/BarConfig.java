@@ -133,6 +133,8 @@ public class BarConfig {
     @SerialEntry public String levelColorOrange = "#FFAA00";
     @SerialEntry public String levelColorRed = "#FF5555";
     @SerialEntry public String levelColorDarkRed = "#AA0000";
+    @SerialEntry public float buffOffsetZ = 0.0f;
+    @SerialEntry public float elementOffsetZ = 0.0f;
 
     @SerialEntry public int elementBoxSize = 20;
     @SerialEntry public int elementSpacing = 2;
@@ -266,7 +268,6 @@ public class BarConfig {
                 .option(percentOpt("fatal_shake_min_percent", 0.60f, () -> c.fatalShakeMinPercent, v -> c.fatalShakeMinPercent = v, 0.35f, 0.70f))
                 .option(percentOpt("fatal_shake_max_percent", 1.00f, () -> c.fatalShakeMaxPercent, v -> c.fatalShakeMaxPercent = v, 0.75f, 1.65f))
                 .option(floatOpt("hurt_display_time", 3.0f, () -> c.hurtDisplayTime, v -> c.hurtDisplayTime = v, 0.1f, 10f))
-                .option(floatOpt("death_fade_delay", 3.0f, () -> c.deathFadeDelay, v -> c.deathFadeDelay = v, 0.0f, 10f))
                 .option(floatOpt("fade_in_time", 0.25f, () -> c.fadeInTime, v -> c.fadeInTime = v, 0f, 1f))
                 .option(floatOpt("fade_out_time", 0.4f, () -> c.fadeOutTime, v -> c.fadeOutTime = v, 0f, 2f))
                 .option(floatOpt("death_fade_out_time", 0.45f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
@@ -303,6 +304,8 @@ public class BarConfig {
                 .option(intOpt("element_offset_y", -50, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100))
                 .option(intOpt("element_offset_x", 0, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100))
                 .option(floatOpt("element_scale", 1.0f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 3.0f))
+                .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
+                .option(floatOpt("element_offset_z", 0.0f, () -> c.elementOffsetZ, v -> c.elementOffsetZ = v, -1f, 1f))
 
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))

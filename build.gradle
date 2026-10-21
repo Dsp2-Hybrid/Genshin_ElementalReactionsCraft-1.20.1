@@ -91,11 +91,12 @@ dependencies {
     implementation fg.deobf("curse.maven:epic-fight-indestructible-915201:6915161")
     implementation fg.deobf("maven.modrinth:architectury-api:9.2.14+forge")
     implementation fg.deobf("maven.modrinth:En8uHTOK:9cBh3Vh8")
+
     implementation fg.deobf("curse.maven:yacl-667299:6336646")
     implementation fg.deobf("maven.modrinth:nU0bVIaL:94dtOLgZ")
     implementation fg.deobf("curse.maven:epic-fight-avalon-1268823:7619938")
     implementation fg.deobf("curse.maven:epicfight-nightfall-1307848:8693642")
-    implementation fg.deobf("curse.maven:epicfight-sword-light-modifications-1358920:7121705")
+    implementation fg.deobf("maven.modrinth:FxmeaUaC:MbRMbYsr")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
