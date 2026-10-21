@@ -48,11 +48,9 @@ public class StatusBar {
                     rightX - buffSize - (index * buffSpacing);
             float y = bottomY - buffSize;
 
-            // 独立不透明度
             float iconAlpha = globalAlpha * config.buffOpacity;
             float bgAlpha = globalAlpha * config.buffBackgroundAlpha;
 
-            // 自定义闪烁频率：剩余时间小于200tick时，根据频率进行闪烁
             boolean blink = effect.endsWithin(200) && (effect.getDuration() % config.buffBlinkRate < config.buffBlinkRate / 2);
             if (blink) {
                 iconAlpha *= 0.5f;
@@ -74,30 +72,28 @@ public class StatusBar {
 
         float centerX = rightX - (hudWidth / 2.0f);
 
-        // 修复等级渲染逻辑：玩家不渲染，其他实体 >= 0 都渲染
         if (!(entity instanceof Player)) {
             int level = EntityLevelManager.getLevel(entity);
             String text = "Lv. " + level;
             Minecraft mc = Minecraft.getInstance();
 
-            poseStack.pushPose();
             float scale = config.levelScale;
 
-            // 使用配置的 X/Y 偏移
+            Matrix4f textMatrix = new Matrix4f(matrix);
+
             float textX = centerX + (config.levelOffsetX / 100.0f) - (mc.font.width(text) * scale / 2.0f);
             float textY = bottomY - buffSize - 0.2f + (config.levelOffsetY / 100.0f);
 
-            poseStack.translate(textX, textY, 0);
-            poseStack.scale(-scale, -scale, scale);
+            textMatrix.translate(textX, textY, 0);
+            textMatrix.scale(scale, -scale, scale); // 适配 MC 文字向下的坐标系
+
             int alphaInt = (int)(globalAlpha * 255);
-
             int shadowColor = (alphaInt << 24) | 0x000000;
-            mc.font.drawInBatch(text, 1, 1, shadowColor, false, poseStack.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
-
             int color = (alphaInt << 24) | 0xFFAA00;
-            mc.font.drawInBatch(text, 0, 0, color, false, poseStack.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
 
-            poseStack.popPose();
+            // 使用矩阵直接绘制
+            mc.font.drawInBatch(text, 1, 1, shadowColor, false, textMatrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+            mc.font.drawInBatch(text, 0, 0, color, false, textMatrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
         }
 
         List<ResourceLocation> elements = ElementStatusAPI.getElements(entity);

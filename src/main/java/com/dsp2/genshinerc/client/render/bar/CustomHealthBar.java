@@ -34,7 +34,6 @@ public class CustomHealthBar extends EntityUI {
 
     private final Map<LivingEntity, Tracker> trackers = new HashMap<>();
 
-    // 缓存光影检测状态，避免每帧反射消耗性能
     private static long lastShaderCheckTime = 0L;
     private static boolean cachedShaderState = false;
 
@@ -42,7 +41,6 @@ public class CustomHealthBar extends EntityUI {
         super();
     }
 
-    // 底层光影检测
     public static boolean isShaderPackEnabled() {
         long now = System.currentTimeMillis();
         if (now - lastShaderCheckTime < 2000L) {
@@ -51,7 +49,6 @@ public class CustomHealthBar extends EntityUI {
         lastShaderCheckTime = now;
 
         try {
-            // 优先检测 Iris (Oculus 等光影前置基于 Iris)
             Class<?> irisApiClass = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
             Method getInstanceMethod = irisApiClass.getMethod("getInstance");
             Object instance = getInstanceMethod.invoke(null);
@@ -61,7 +58,6 @@ public class CustomHealthBar extends EntityUI {
         } catch (Throwable ignored) {}
 
         try {
-            // 其次检测 OptiFine
             Class<?> optifineConfig = Class.forName("net.optifine.Config");
             Method isShaders = optifineConfig.getMethod("isShaders");
             cachedShaderState = (Boolean) isShaders.invoke(null);
@@ -203,14 +199,12 @@ public class CustomHealthBar extends EntityUI {
             boolean shouldDraw = false;
 
             if (isShaderPackEnabled() && config.smallChangeUseShaderMode) {
-                // 光影模式逻辑
                 float shaderDurationMs = config.smallChangeShaderDuration * 1000f;
                 if (elapsed < shaderDurationMs) {
                     smallAlpha = 1.0f;
                     shouldDraw = true;
                 }
             } else {
-                // 原版逻辑：按时间轴走淡入 -> 全白 -> 淡出
                 float totalMs = config.smallChangeDuration * 1000f;
                 float fadeInMs = config.smallChangeFadeIn * 1000f;
                 float fadeOutMs = config.smallChangeFadeOut * 1000f;
@@ -218,7 +212,6 @@ public class CustomHealthBar extends EntityUI {
                 if (elapsed < totalMs) {
                     shouldDraw = true;
                     if (totalMs < fadeInMs + fadeOutMs) {
-                        // 如果时间不足以覆盖淡入和淡出，直接纯淡出
                         smallAlpha = 1.0f - (elapsed / totalMs);
                     } else {
                         if (elapsed < fadeInMs) {
