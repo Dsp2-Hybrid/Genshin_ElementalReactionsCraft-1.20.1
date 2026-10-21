@@ -93,6 +93,7 @@ public class StatusBar {
             Minecraft mc = Minecraft.getInstance();
 
             float scale = config.levelScale;
+
             Matrix4f textMatrix = new Matrix4f(matrix);
 
             float baseX = centerX + (config.levelOffsetX / 100.0f);
@@ -107,17 +108,15 @@ public class StatusBar {
             int mainColorInt = (mainAlpha << 24) | (mainColor.getRGB() & 0xFFFFFF);
             int shadowColorInt = (shadowAlpha << 24) | (shadowColor.getRGB() & 0xFFFFFF);
 
-            PoseStack shadowPose = new PoseStack();
-            shadowPose.last().pose().set(textMatrix);
-            shadowPose.translate(textX + config.levelShadowOffsetX, textY + config.levelShadowOffsetY, baseZ + config.levelShadowOffsetZ);
-            shadowPose.scale(-scale, -scale, scale);
-            mc.font.drawInBatch(text, 0, 0, shadowColorInt, false, shadowPose.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+            Matrix4f shadowMatrix = new Matrix4f(textMatrix);
+            shadowMatrix.translate(textX + config.levelShadowOffsetX, textY + config.levelShadowOffsetY, baseZ + config.levelShadowOffsetZ);
+            shadowMatrix.scale(-scale, -scale, scale);
+            mc.font.drawInBatch(text, 0, 0, shadowColorInt, false, shadowMatrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
 
-            PoseStack mainPose = new PoseStack();
-            mainPose.last().pose().set(textMatrix);
-            mainPose.translate(textX, textY, baseZ);
-            mainPose.scale(-scale, -scale, scale);
-            mc.font.drawInBatch(text, 0, 0, mainColorInt, false, mainPose.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+            Matrix4f mainMatrix = new Matrix4f(textMatrix);
+            mainMatrix.translate(textX, textY, baseZ);
+            mainMatrix.scale(-scale, -scale, scale);
+            mc.font.drawInBatch(text, 0, 0, mainColorInt, false, mainMatrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
         }
 
         List<ElementType> elements = ElementManager.getElements(entity);

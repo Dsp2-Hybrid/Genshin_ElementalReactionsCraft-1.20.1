@@ -42,24 +42,33 @@ public class ElementManager {
 
     public static ResourceLocation getCurrentFrame(ElementType type) {
         if (!type.isAnimated()) {
-            return ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/" + type.getStaticPath());
+            return ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/hud/" + type.getStaticPath());
         }
 
         List<ResourceLocation> frames = ANIMATION_CACHE.computeIfAbsent(type.getAnimFolder(), folder -> {
             List<ResourceLocation> list = new ArrayList<>();
             try {
-                Minecraft.getInstance().getResourceManager().listResources("textures/gui/hud/" + folder, rl -> rl.getPath().endsWith(".png"))
+                Minecraft.getInstance().getResourceManager().listResources("textures/hud/" + folder, rl -> rl.getPath().endsWith(".png"))
                         .forEach((rl, res) -> list.add(rl));
-                list.sort(Comparator.comparing(ResourceLocation::toString));
+
+                list.sort(Comparator.comparing(rl -> {
+                    String path = rl.getPath();
+                    String numStr = path.substring(path.length() - 9, path.length() - 4);
+                    try {
+                        return Integer.parseInt(numStr);
+                    } catch (NumberFormatException e) {
+                        return 0;
+                    }
+                }));
             } catch (Exception ignored) {}
             return list;
         });
 
         if (frames.isEmpty()) {
-            return ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/" + type.getStaticPath());
+            return ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/hud/" + type.getStaticPath());
         }
 
-        int index = (int) ((System.currentTimeMillis() / 1000.0 * 24) % frames.size());
+        int index = (int) ((System.currentTimeMillis() / 41.66) % frames.size());
         return frames.get(index);
     }
 }

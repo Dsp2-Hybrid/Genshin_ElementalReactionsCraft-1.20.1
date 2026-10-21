@@ -143,19 +143,13 @@ public class CustomHealthBar extends EntityUI {
         float renderAbsStart = renderHealthEnd;
         float renderAbsEnd = tracker.visualAbsEnd;
 
-
-        RenderSystem.setShaderTexture(0, BAR_TEXTURE);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
+        //BAR MAIN
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, 1.0f, 1.0f, 1.0f, alpha);
         float mix = config.hudColorMix;
-        float bgR = Mth.lerp(mix, 1.0f, r);
-        float bgG = Mth.lerp(mix, 1.0f, g);
-        float bgB = Mth.lerp(mix, 1.0f, b);
+        float bgR = Mth.lerp(mix, 0.15f, r * 0.3f);
+        float bgG = Mth.lerp(mix, 0.15f, g * 0.3f);
+        float bgB = Mth.lerp(mix, 0.15f, b * 0.3f);
         drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, bgR, bgG, bgB, alpha);
         if (renderHealthEnd > 0.001f) {
             drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, r, g, b, alpha);
