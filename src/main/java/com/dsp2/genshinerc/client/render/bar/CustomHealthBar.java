@@ -144,14 +144,16 @@ public class CustomHealthBar extends EntityUI {
         float renderAbsEnd = tracker.visualAbsEnd;
 
         RenderSystem.setShaderTexture(0, BAR_TEXTURE);
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
 
-        drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, 1.0f, 1.0f, 1.0f, alpha);
+        float mix = config.hudColorMix;
+        drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1,
+                Mth.lerp(mix, 1.0f, r), Mth.lerp(mix, 1.0f, g), Mth.lerp(mix, 1.0f, b), alpha);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         if (renderHealthEnd > 0.001f) {
             drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, r, g, b, alpha);
@@ -235,7 +237,9 @@ public class CustomHealthBar extends EntityUI {
                 tracker.isSmallChangeActive = false;
             }
         }
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
+
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();

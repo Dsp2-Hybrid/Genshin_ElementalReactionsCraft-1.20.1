@@ -47,10 +47,6 @@ public class GuiRenderHelper {
         }
     }
 
-    /**
-     * 获取原版渲染器。
-     * 使用原始类型 (raw type) 中转，绕过 Java 泛型 CAP 检查。
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static EntityRenderer<Entity> getVanillaRenderer(Entity entity) {
         if (vanillaRenderers == null || vanillaPlayerRenderers == null) {

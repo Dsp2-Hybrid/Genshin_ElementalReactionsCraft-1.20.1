@@ -95,6 +95,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:nU0bVIaL:94dtOLgZ")
     implementation fg.deobf("curse.maven:epic-fight-avalon-1268823:7619938")
     implementation fg.deobf("curse.maven:epicfight-nightfall-1307848:8693642")
+    implementation fg.deobf("curse.maven:epicfight-sword-light-modifications-1358920:7121705")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }

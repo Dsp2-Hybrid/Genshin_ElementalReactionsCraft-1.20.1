@@ -1,7 +1,8 @@
 package com.dsp2.genshinerc.client.render.bar;
 
+import com.dsp2.genshinerc.client.render.bar.api.ElementManager;
+import com.dsp2.genshinerc.client.render.bar.api.ElementType;
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
-import com.dsp2.genshinerc.client.render.bar.api.ElementStatusAPI;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -16,8 +17,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.InventoryMenu;
 import org.joml.Matrix4f;
 
+import java.awt.Color;
 import java.util.Collection;
 import java.util.List;
 
@@ -43,9 +46,7 @@ public class StatusBar {
         for (MobEffectInstance effect : effects) {
             if (index >= config.maxBuffs) break;
 
-            float x = isLeftToRight ?
-                    rightX - hudWidth + (index * buffSpacing) :
-                    rightX - buffSize - (index * buffSpacing);
+            float x = isLeftToRight ? rightX - hudWidth + (index * buffSpacing) : rightX - buffSize - (index * buffSpacing);
             float y = bottomY - buffSize;
 
             float iconAlpha = globalAlpha * config.buffOpacity;
@@ -74,45 +75,65 @@ public class StatusBar {
 
         if (!(entity instanceof Player)) {
             int level = EntityLevelManager.getLevel(entity);
+            int playerLevel = Minecraft.getInstance().player != null ? EntityLevelManager.getPlayerLevel(Minecraft.getInstance().player) : 0;
+
+            int diff = level - playerLevel;
+            String hex = config.levelColorWhite;
+            if (diff <= -5) hex = config.levelColorWhite;
+            else if (diff <= 3) hex = config.levelColorGreen;
+            else if (diff <= 8) hex = config.levelColorYellow;
+            else if (diff <= 12) hex = config.levelColorOrange;
+            else if (diff <= 17) hex = config.levelColorRed;
+            else hex = config.levelColorDarkRed;
+
+            Color mainColor = BarConfig.toAwt(hex);
+            Color shadowColor = BarConfig.toAwt(config.levelShadowColor);
+
             String text = "Lv. " + level;
             Minecraft mc = Minecraft.getInstance();
 
             float scale = config.levelScale;
-
             Matrix4f textMatrix = new Matrix4f(matrix);
 
-            float textX = centerX + (config.levelOffsetX / 100.0f) - (mc.font.width(text) * scale / 2.0f);
-            float textY = bottomY - buffSize - 0.2f + (config.levelOffsetY / 100.0f);
+            float baseX = centerX + (config.levelOffsetX / 100.0f);
+            float baseY = bottomY - buffSize - 0.15f + (config.levelOffsetY / 100.0f);
+            float baseZ = config.levelOffsetZ;
 
-            textMatrix.translate(textX, textY, 0);
-            textMatrix.scale(scale, -scale, scale); // 适配 MC 文字向下的坐标系
+            float textX = baseX - (mc.font.width(text) * scale / 2.0f);
+            float textY = baseY + (mc.font.lineHeight * scale / 2.0f);
 
-            int alphaInt = (int)(globalAlpha * 255);
-            int shadowColor = (alphaInt << 24) | 0x000000;
-            int color = (alphaInt << 24) | 0xFFAA00;
+            int mainAlpha = (int)(globalAlpha * 255);
+            int shadowAlpha = (int)(mainAlpha * config.levelShadowAlpha);
+            int mainColorInt = (mainAlpha << 24) | mainColor.getRGB() & 0xFFFFFF;
+            int shadowColorInt = (shadowAlpha << 24) | shadowColor.getRGB() & 0xFFFFFF;
 
-            // 使用矩阵直接绘制
-            mc.font.drawInBatch(text, 1, 1, shadowColor, false, textMatrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
-            mc.font.drawInBatch(text, 0, 0, color, false, textMatrix, buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+            PoseStack shadowPose = new PoseStack();
+            shadowPose.last().pose().set(textMatrix);
+            shadowPose.translate(textX + config.levelShadowOffsetX, textY + config.levelShadowOffsetY, baseZ + config.levelShadowOffsetZ);
+            shadowPose.scale(-scale, -scale, scale);
+            mc.font.drawInBatch(text, 0, 0, shadowColorInt, false, shadowPose.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
+
+            PoseStack mainPose = new PoseStack();
+            mainPose.last().pose().set(textMatrix);
+            mainPose.translate(textX, textY, baseZ);
+            mainPose.scale(-scale, -scale, scale);
+            mc.font.drawInBatch(text, 0, 0, mainColorInt, false, mainPose.last().pose(), buffers, Font.DisplayMode.NORMAL, 0, LightTexture.FULL_BRIGHT);
         }
 
-        List<ResourceLocation> elements = ElementStatusAPI.getElements(entity);
+        List<ElementType> elements = ElementManager.getElements(entity);
         if (!elements.isEmpty()) {
-            int count = Math.min(elements.size(), 3);
-            float boxSize = config.elementBoxSize / 100.0f;
-            float spacing = config.elementSpacing / 100.0f;
+            int count = elements.size();
+            float boxSize = (config.elementBoxSize / 100.0f) * config.elementScale;
+            float spacing = (config.elementSpacing / 100.0f) * config.elementScale;
             float totalWidth = count * boxSize + (count - 1) * spacing;
 
-            float startX = centerX - (totalWidth / 2.0f);
+            float startX = centerX + (config.elementOffsetX / 100.0f) - (totalWidth / 2.0f);
             float startY = bottomY + (config.elementOffsetY / 100.0f);
 
             for (int i = 0; i < count; i++) {
                 float x = startX + i * (boxSize + spacing);
-
-                drawTexturedQuad(matrix, buffers, FILL_TEXTURE, x, startY, x + boxSize, startY + boxSize, 0, 0, 1, 1, 0f, 0f, 0f, globalAlpha * 0.5f);
-
-                ResourceLocation icon = elements.get(i);
-                drawTexturedQuad(matrix, buffers, icon, x + 0.01f, startY + 0.01f, x + boxSize - 0.01f, startY + boxSize - 0.01f, 0, 0, 1, 1, 1f, 1f, 1f, globalAlpha);
+                ResourceLocation icon = ElementManager.getCurrentFrame(elements.get(i));
+                drawTexturedQuad(matrix, buffers, icon, x, startY, x + boxSize, startY + boxSize, 0, 0, 1, 1, 1f, 1f, 1f, globalAlpha);
             }
         }
     }
