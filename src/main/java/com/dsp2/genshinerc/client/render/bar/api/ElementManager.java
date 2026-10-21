@@ -53,12 +53,14 @@ public class ElementManager {
 
                 list.sort(Comparator.comparing(rl -> {
                     String path = rl.getPath();
-                    String numStr = path.substring(path.length() - 9, path.length() - 4);
-                    try {
-                        return Integer.parseInt(numStr);
-                    } catch (NumberFormatException e) {
-                        return 0;
+                    String fileName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
+                    int lastUnderscore = fileName.lastIndexOf('_');
+                    if (lastUnderscore != -1 && fileName.length() >= lastUnderscore + 6) {
+                        try {
+                            return Integer.parseInt(fileName.substring(lastUnderscore + 1));
+                        } catch (NumberFormatException ignored) {}
                     }
+                    return 0;
                 }));
             } catch (Exception ignored) {}
             return list;

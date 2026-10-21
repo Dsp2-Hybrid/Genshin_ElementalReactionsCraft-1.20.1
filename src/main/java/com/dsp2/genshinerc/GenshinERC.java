@@ -26,6 +26,7 @@ public class GenshinERC {
         modEventBus.addListener(this::onCommonSetup);
     }
 
+    //Debug_HPATK++
     private void onCommonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             try {

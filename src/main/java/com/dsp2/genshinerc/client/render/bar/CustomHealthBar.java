@@ -32,6 +32,10 @@ public class CustomHealthBar extends EntityUI {
     private static final ResourceLocation BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar.png");
     private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar2.png");
 
+    private static final float TEX_HEIGHT = 32.0f;
+    private static final float V_TOP = 14.0f / TEX_HEIGHT;
+    private static final float V_BOTTOM = 24.0f / TEX_HEIGHT;
+
     private final Map<LivingEntity, Tracker> trackers = new HashMap<>();
 
     private static long lastShaderCheckTime = 0L;
@@ -43,9 +47,7 @@ public class CustomHealthBar extends EntityUI {
 
     public static boolean isShaderPackEnabled() {
         long now = System.currentTimeMillis();
-        if (now - lastShaderCheckTime < 2000L) {
-            return cachedShaderState;
-        }
+        if (now - lastShaderCheckTime < 2000L) return cachedShaderState;
         lastShaderCheckTime = now;
 
         try {
@@ -77,9 +79,7 @@ public class CustomHealthBar extends EntityUI {
         if (entity.getBbWidth() <= 0.0F || entity.getBbHeight() <= 0.0F) return false;
         if (entity instanceof ArmorStand) return false;
 
-        if (entitypatch == null && !(entity instanceof Player)) {
-            return false;
-        }
+        if (entitypatch == null && !(entity instanceof Player)) return false;
 
         MobCategory category = entity.getType().getCategory();
         boolean isValidEntity = entity instanceof Player ||
@@ -107,14 +107,12 @@ public class CustomHealthBar extends EntityUI {
         Tracker tracker = trackers.computeIfAbsent(entity, k -> new Tracker());
 
         boolean isPlayer = entity instanceof Player;
-
         float lengthBonus = isPlayer ? config.playerBarLengthBonus : config.entityBarLengthBonus;
         float widthBonus = isPlayer ? config.playerBarWidthBonus : config.entityBarWidthBonus;
         float yOffsetBonus = isPlayer ? config.playerBarYOffsetBonus : config.entityBarYOffsetBonus;
         float opacityMult = isPlayer ? config.playerBarOpacityMultiplier : config.entityBarOpacityMultiplier;
 
         float entityHeight = Math.max(entity.getBbHeight(), 1.0f);
-
         String entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
         float specificOffset = config.getYOffsetForEntity(entityId);
 
@@ -128,8 +126,14 @@ public class CustomHealthBar extends EntityUI {
 
         float minX = -0.5F * length + shakeX;
         float maxX = 0.5F * length + shakeX;
-        float minY = -0.5F * width;
-        float maxY = 0.5F * width;
+        // Scale up the overall physical height to make the frame prominent
+        float scaledWidth = width * 5.5f;
+        float minY = -0.5F * scaledWidth;
+        float maxY = 0.5F * scaledWidth;
+
+        // Adjust the inner bar Y bounds to perfectly fit the recessed track
+        float innerMinY = minY + (6.0f / 32.0f) * scaledWidth;
+        float innerMaxY = maxY - (12.0f / 32.0f) * scaledWidth;
 
         boolean isAlly = !(entity instanceof Monster);
         Color awtColor = isAlly ? BarConfig.toAwt(config.allyColor) : BarConfig.toAwt(config.enemyColor);
@@ -143,36 +147,41 @@ public class CustomHealthBar extends EntityUI {
         float renderAbsStart = renderHealthEnd;
         float renderAbsEnd = tracker.visualAbsEnd;
 
-        //BAR MAIN
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableCull();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+
+        // 1. Draw Outer Frame (Full size, using minY and maxY)
         drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, 1.0f, 1.0f, 1.0f, alpha);
-        float mix = config.hudColorMix;
-        float bgR = Mth.lerp(mix, 0.15f, r * 0.3f);
-        float bgG = Mth.lerp(mix, 0.15f, g * 0.3f);
-        float bgB = Mth.lerp(mix, 0.15f, b * 0.3f);
-        drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, bgR, bgG, bgB, alpha);
+
+        // 2. Draw Empty Track Background (Using innerMinY and innerMaxY)
+        float emptyStart = Math.max(renderHealthEnd, renderAbsEnd);
+        if (emptyStart < 0.999f) {
+            float bgR = r * 0.2f;
+            float bgG = g * 0.2f;
+            float bgB = b * 0.2f;
+            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * emptyStart, innerMinY, maxX, innerMaxY, emptyStart, V_TOP, 1.0f, V_BOTTOM, bgR, bgG, bgB, alpha);
+        }
+
+        // 3. Draw HP Bar (Using innerMinY and innerMaxY)
         if (renderHealthEnd > 0.001f) {
-            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, r, g, b, alpha);
+            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * renderHealthEnd, innerMaxY, 0, V_TOP, renderHealthEnd, V_BOTTOM, r, g, b, alpha);
         }
+
+        // 4. Draw Absorption Bar (Using innerMinY and innerMaxY)
         if (renderAbsEnd > renderAbsStart + 0.001f) {
-            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * renderAbsStart, minY, minX + length * renderAbsEnd, maxY, renderAbsStart, 0, renderAbsEnd, 1, 1.0f, 0.9f, 0.2f, alpha);
-        }
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-
-        if (renderHealthEnd > 0.001f) {
-            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * renderHealthEnd, maxY, 0, 0, renderHealthEnd, 1, r, g, b, alpha);
+            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * renderAbsStart, innerMinY, minX + length * renderAbsEnd, innerMaxY, renderAbsStart, V_TOP, renderAbsEnd, V_BOTTOM, 1.0f, 0.9f, 0.2f, alpha);
         }
 
-        if (renderAbsEnd > renderAbsStart + 0.001f) {
-            drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * renderAbsStart, minY, minX + length * renderAbsEnd, maxY, renderAbsStart, 0, renderAbsEnd, 1, 1.0f, 0.9f, 0.2f, alpha);
-        }
-
+        // 5. Draw Damage Overlays (Ghost bars and flash)
         if (tracker.hpWhite.oldActive && tracker.hpWhite.oldAlpha > 0.01f) {
             float start = Math.min(tracker.hpWhite.oldStart, tracker.hpWhite.oldEnd);
             float end = Math.max(tracker.hpWhite.oldStart, tracker.hpWhite.oldEnd);
             if (end - start > 0.001f) {
-                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, minY, minX + length * end, maxY, start, 0, end, 1, 1.0f, 1.0f, 1.0f, tracker.hpWhite.oldAlpha * alpha);
+                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, innerMinY, minX + length * end, innerMaxY, start, V_TOP, end, V_BOTTOM, 1.0f, 1.0f, 1.0f, tracker.hpWhite.oldAlpha * alpha);
             }
         }
 
@@ -180,7 +189,7 @@ public class CustomHealthBar extends EntityUI {
             float start = Math.min(tracker.hpWhite.startOverlay, tracker.hpWhite.endOverlay);
             float end = Math.max(tracker.hpWhite.startOverlay, tracker.hpWhite.endOverlay);
             if (end - start > 0.001f) {
-                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, minY, minX + length * end, maxY, start, 0, end, 1, 1.0f, 1.0f, 1.0f, tracker.hpWhite.alpha * alpha);
+                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, innerMinY, minX + length * end, innerMaxY, start, V_TOP, end, V_BOTTOM, 1.0f, 1.0f, 1.0f, tracker.hpWhite.alpha * alpha);
             }
         }
 
@@ -188,7 +197,7 @@ public class CustomHealthBar extends EntityUI {
             float start = Math.min(tracker.absWhite.oldStart, tracker.absWhite.oldEnd);
             float end = Math.max(tracker.absWhite.oldStart, tracker.absWhite.oldEnd);
             if (end - start > 0.001f) {
-                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, minY, minX + length * end, maxY, start, 0, end, 1, 1.0f, 1.0f, 1.0f, tracker.absWhite.oldAlpha * alpha);
+                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, innerMinY, minX + length * end, innerMaxY, start, V_TOP, end, V_BOTTOM, 1.0f, 1.0f, 1.0f, tracker.absWhite.oldAlpha * alpha);
             }
         }
 
@@ -196,10 +205,11 @@ public class CustomHealthBar extends EntityUI {
             float start = Math.min(tracker.absWhite.startOverlay, tracker.absWhite.endOverlay);
             float end = Math.max(tracker.absWhite.startOverlay, tracker.absWhite.endOverlay);
             if (end - start > 0.001f) {
-                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, minY, minX + length * end, maxY, start, 0, end, 1, 1.0f, 1.0f, 1.0f, tracker.absWhite.alpha * alpha);
+                drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * start, innerMinY, minX + length * end, innerMaxY, start, V_TOP, end, V_BOTTOM, 1.0f, 1.0f, 1.0f, tracker.absWhite.alpha * alpha);
             }
         }
 
+        // 6. Draw High-Frequency Flash (Instant 100% opacity, fade out only)
         if (tracker.isSmallChangeActive) {
             long elapsed = System.currentTimeMillis() - tracker.lastSmallChangeTime;
             float smallAlpha = 0f;
@@ -213,21 +223,16 @@ public class CustomHealthBar extends EntityUI {
                 }
             } else {
                 float totalMs = config.smallChangeDuration * 1000f;
-                float fadeInMs = config.smallChangeFadeIn * 1000f;
                 float fadeOutMs = config.smallChangeFadeOut * 1000f;
 
                 if (elapsed < totalMs) {
                     shouldDraw = true;
-                    if (totalMs < fadeInMs + fadeOutMs) {
-                        smallAlpha = 1.0f - (elapsed / totalMs);
+                    if (totalMs < fadeOutMs) {
+                        smallAlpha = 1.0f - ((float) elapsed / totalMs);
+                    } else if (elapsed > totalMs - fadeOutMs) {
+                        smallAlpha = (totalMs - elapsed) / fadeOutMs;
                     } else {
-                        if (elapsed < fadeInMs) {
-                            smallAlpha = fadeInMs > 0 ? (elapsed / fadeInMs) : 1.0f;
-                        } else if (elapsed < totalMs - fadeOutMs) {
-                            smallAlpha = 1.0f;
-                        } else {
-                            smallAlpha = fadeOutMs > 0 ? (totalMs - elapsed) / fadeOutMs : 0f;
-                        }
+                        smallAlpha = 1.0f;
                     }
                 }
             }
@@ -236,13 +241,15 @@ public class CustomHealthBar extends EntityUI {
                 smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
                 float maxHealthEnd = Math.max(tracker.smallChangeWidth, 0.001f);
                 if (maxHealthEnd > 0.001f) {
-                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, minY, minX + length * maxHealthEnd, maxY, 0, 0, maxHealthEnd, 1, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * maxHealthEnd, innerMaxY, 0, V_TOP, maxHealthEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
                 }
             } else {
                 tracker.isSmallChangeActive = false;
             }
         }
+
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+
         StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
 
         RenderSystem.depthMask(true);
