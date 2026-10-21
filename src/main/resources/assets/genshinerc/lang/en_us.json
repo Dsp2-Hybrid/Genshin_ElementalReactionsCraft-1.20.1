@@ -284,7 +284,7 @@
   "genshinerc.bar.config.hud_offset_x": "Status Panel Screen Margin X",
   "genshinerc.bar.config.hud_offset_x.desc": "Distance from the entire status panel (buffs, level, elements) to the left/right screen edge.",
   "genshinerc.bar.config.hud_offset_y": "Status Panel Screen Margin Y",
-  "genshinerc.bar.config.hud_offset_y.desc": "Distance from the entire status panel to the bottom of the screen. Higher values move it up.",
+  "genshinerc.bar.config.hud_offset_y.desc": "Distance from the entire status panel to the bottom of the screen. Higher values move it down.",
   "genshinerc.bar.config.buff_spacing": "Buff Icon Spacing",
   "genshinerc.bar.config.buff_spacing.desc": "Horizontal pixel gap between each buff icon.",
   "genshinerc.bar.config.max_buffs": "Max Buff Display Count",

@@ -288,7 +288,7 @@
   "genshinerc.bar.config.hud_offset_x": "状态栏屏幕横向边距",
   "genshinerc.bar.config.hud_offset_x.desc": "整个状态面板（包含Buff、等级、元素）距离屏幕左/右边缘的距离。调大能让图标离屏幕边缘更远。",
   "genshinerc.bar.config.hud_offset_y": "状态栏屏幕纵向边距",
-  "genshinerc.bar.config.hud_offset_y.desc": "整个状态面板距离屏幕底部的距离。调大能让图标整体向上移动。",
+  "genshinerc.bar.config.hud_offset_y.desc": "整个状态面板距离屏幕底部的距离。调大能让图标整体向下移动。",
   "genshinerc.bar.config.buff_spacing": "状态图标间距",
   "genshinerc.bar.config.buff_spacing.desc": "每个 Buff 图标之间的横向间隔像素。",
   "genshinerc.bar.config.max_buffs": "最大状态图标显示数量",

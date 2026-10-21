@@ -79,7 +79,8 @@ public class CustomHealthBar extends EntityUI {
         if (entity.getBbWidth() <= 0.0F || entity.getBbHeight() <= 0.0F) return false;
         if (entity instanceof ArmorStand) return false;
 
-        if (entitypatch == null && !(entity instanceof Player)) return false;
+        // Allow dead entities to render even if entitypatch is null (Epic Fight unloads it on death)
+        if (entitypatch == null && !(entity instanceof Player) && entity.isAlive()) return false;
 
         MobCategory category = entity.getType().getCategory();
         boolean isValidEntity = entity instanceof Player ||
@@ -90,7 +91,9 @@ public class CustomHealthBar extends EntityUI {
                 category == MobCategory.MISC;
 
         if (!isValidEntity) return false;
-        if (entity.isInvisibleTo(playerpatch.getOriginal())) return false;
+
+        // Skip invisibility check if dead to ensure death fade works
+        if (entity.isAlive() && entity.isInvisibleTo(playerpatch.getOriginal())) return false;
 
         Minecraft mc = Minecraft.getInstance();
         if (!(entity instanceof Player) && mc.getCameraEntity() != null && entity.distanceToSqr(mc.getCameraEntity()) > config.maxDistance * config.maxDistance) return false;
@@ -203,35 +206,44 @@ public class CustomHealthBar extends EntityUI {
         }
 
         if (tracker.isSmallChangeActive) {
-            long elapsed = System.currentTimeMillis() - tracker.lastSmallChangeTime;
+            long now = System.currentTimeMillis();
+            long timeSinceLastChange = now - tracker.lastHealthChangeTime;
+            boolean isStillUltraHighFreq = (timeSinceLastChange < 100L);
+
             float smallAlpha = 0f;
             boolean shouldDraw = false;
 
-            if (isShaderPackEnabled() && config.smallChangeUseShaderMode) {
-                float shaderDurationMs = config.smallChangeShaderDuration * 1000f;
-                float fadeOutMs = config.smallChangeFadeOut * 1000f;
-                float totalMs = shaderDurationMs + fadeOutMs;
-
-                if (elapsed < totalMs) {
-                    shouldDraw = true;
-                    if (elapsed > shaderDurationMs) {
-                        smallAlpha = 1.0f - ((float)(elapsed - shaderDurationMs) / fadeOutMs);
-                    } else {
-                        smallAlpha = 1.0f;
-                    }
-                }
+            if (isStillUltraHighFreq) {
+                smallAlpha = 1.0f;
+                shouldDraw = true;
             } else {
-                float totalMs = config.smallChangeDuration * 1000f;
-                float fadeOutMs = config.smallChangeFadeOut * 1000f;
+                long elapsed = now - tracker.lastSmallChangeTime;
+                if (isShaderPackEnabled() && config.smallChangeUseShaderMode) {
+                    float shaderDurationMs = config.smallChangeShaderDuration * 1000f;
+                    float fadeOutMs = config.smallChangeFadeOut * 1000f;
+                    float totalMs = shaderDurationMs + fadeOutMs;
 
-                if (elapsed < totalMs) {
-                    shouldDraw = true;
-                    if (totalMs < fadeOutMs) {
-                        smallAlpha = 1.0f - ((float) elapsed / totalMs);
-                    } else if (elapsed > totalMs - fadeOutMs) {
-                        smallAlpha = (totalMs - elapsed) / fadeOutMs;
-                    } else {
-                        smallAlpha = 1.0f;
+                    if (elapsed < totalMs) {
+                        shouldDraw = true;
+                        if (elapsed > shaderDurationMs) {
+                            smallAlpha = 1.0f - ((float)(elapsed - shaderDurationMs) / fadeOutMs);
+                        } else {
+                            smallAlpha = 1.0f;
+                        }
+                    }
+                } else {
+                    float totalMs = config.smallChangeDuration * 1000f;
+                    float fadeOutMs = config.smallChangeFadeOut * 1000f;
+
+                    if (elapsed < totalMs) {
+                        shouldDraw = true;
+                        if (totalMs < fadeOutMs) {
+                            smallAlpha = 1.0f - ((float) elapsed / totalMs);
+                        } else if (elapsed > totalMs - fadeOutMs) {
+                            smallAlpha = (totalMs - elapsed) / fadeOutMs;
+                        } else {
+                            smallAlpha = 1.0f;
+                        }
                     }
                 }
             }
@@ -306,18 +318,13 @@ public class CustomHealthBar extends EntityUI {
                 isHealing = exactTargetScale > currentVisualScale;
                 baseScale = currentVisualScale;
 
-                if (isHealing) {
-                    startOverlay = baseScale;
-                    endOverlay = baseScale + maxWidth;
-                } else {
-                    startOverlay = baseScale - maxWidth;
-                    endOverlay = baseScale;
-                }
+                startOverlay = baseScale;
+                endOverlay = baseScale;
 
                 animStart = now;
                 active = true;
-                extending = false;
-                shrinking = true;
+                extending = true;
+                shrinking = false;
                 alpha = 1.0f;
             }
         }
@@ -413,6 +420,7 @@ public class CustomHealthBar extends EntityUI {
 
         public boolean isSmallChangeActive = false;
         public long lastSmallChangeTime = 0L;
+        public long lastHealthChangeTime = 0L;
         public float smallChangeWidth = 1.0f;
 
         public boolean isShaking = false;
@@ -421,7 +429,6 @@ public class CustomHealthBar extends EntityUI {
 
         private boolean isDead = false;
         private long deathTime = 0;
-        private long lastHealthChangeTime = 0;
 
         public enum Phase { IDLE, FADING_IN, HOLDING, FADING_OUT }
         private Phase phase = Phase.IDLE;
@@ -486,6 +493,7 @@ public class CustomHealthBar extends EntityUI {
             boolean maxHealthChanged = Math.abs(maxHealth - lastMaxHealth) > 0.001f;
 
             if (healthChanged || absorptionChanged || maxHealthChanged) {
+                long oldLastChangeTime = lastHealthChangeTime;
                 lastHealthChangeTime = now;
                 boolean isSmallChange = false;
 
@@ -495,7 +503,15 @@ public class CustomHealthBar extends EntityUI {
                     float maxChange = Math.max(hChange, aChange);
                     float changePercent = maxChange / Math.max(1.0f, maxHealth);
 
-                    if (health <= 0 && health < currentHealth) {
+                    boolean isUltraHighFrequency = (now - oldLastChangeTime < 100L);
+
+                    if (isUltraHighFrequency) {
+                        isSmallChange = true;
+                        isSmallChangeActive = true;
+                        lastSmallChangeTime = now;
+                        // Only cover the current visual length, not the whole bar
+                        smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
+                    } else if (health <= 0 && health < currentHealth) {
                         isShaking = true;
                         shakeStartTime = now;
                         float remainingPercent = currentHealth / maxHealth;
@@ -569,19 +585,14 @@ public class CustomHealthBar extends EntityUI {
 
             if (isDead) {
                 long elapsedSinceDeath = now - deathTime;
-                float delayMs = config.deathFadeDelay * 1000f;
                 float fadeMs = config.deathFadeOutTime * 1000f;
 
-                if (elapsedSinceDeath < delayMs) {
-                    currentAlpha = 1.0f;
+                if (fadeMs <= 0 || elapsedSinceDeath >= fadeMs) {
+                    currentAlpha = 0f;
                 } else {
-                    float fadeElapsed = elapsedSinceDeath - delayMs;
-                    if (fadeMs <= 0 || fadeElapsed >= fadeMs) {
-                        currentAlpha = 0f;
-                    } else {
-                        currentAlpha = 1.0f - (fadeElapsed / fadeMs);
-                    }
+                    currentAlpha = 1.0f - ((float)elapsedSinceDeath / fadeMs);
                 }
+
                 phase = Phase.IDLE;
                 return;
             }
