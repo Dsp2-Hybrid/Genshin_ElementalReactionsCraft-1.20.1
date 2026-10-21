@@ -349,5 +349,9 @@
   "genshinerc.bar.config.buff_offset_z": "状态图标Z轴偏移",
   "genshinerc.bar.config.buff_offset_z.desc": "控制状态图标的深度偏移，用于解决渲染被遮挡或Z闪烁的问题。",
   "genshinerc.bar.config.element_offset_z": "元素图标Z轴偏移",
-  "genshinerc.bar.config.element_offset_z.desc": "控制元素图标的深度偏移，用于解决渲染被遮挡或Z闪烁的问题。"
+  "genshinerc.bar.config.element_offset_z.desc": "控制元素图标的深度偏移，用于解决渲染被遮挡或Z闪烁的问题。",
+  "genshinerc.bar.config.buff_single_scale": "Buff图标单缩放",
+  "genshinerc.bar.config.buff_single_scale.desc": "控制单个Buff图标的相对大小。",
+  "genshinerc.bar.config.buff_list_scale": "Buff列表总缩放",
+  "genshinerc.bar.config.buff_list_scale.desc": "控制整个Buff列表的整体大小，锚点固定在右下角。"
 }

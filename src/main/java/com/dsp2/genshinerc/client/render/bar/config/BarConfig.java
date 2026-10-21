@@ -116,6 +116,8 @@ public class BarConfig {
     @SerialEntry public float buffBackgroundAlpha = 0.5f;
     @SerialEntry public float buffOpacity = 1.0f;
     @SerialEntry public int buffBlinkRate = 20;
+    @SerialEntry public float buffSingleScale = 1.0f;
+    @SerialEntry public float buffListScale = 1.0f;
 
     @SerialEntry public int levelOffsetX = -20;
     @SerialEntry public int levelOffsetY = -30;
@@ -273,6 +275,8 @@ public class BarConfig {
                 .option(enumOpt("buff_direction", BuffDirection.class, BuffDirection.RIGHT_TO_LEFT, () -> c.buffDirection, v -> c.buffDirection = v))
                 .option(intOpt("hud_offset_x", 10, () -> c.hudOffsetX, v -> c.hudOffsetX = v, 0, 100))
                 .option(intOpt("hud_offset_y", 10, () -> c.hudOffsetY, v -> c.hudOffsetY = v, 0, 100))
+                .option(floatOpt("buff_single_scale", 1.0f, () -> c.buffSingleScale, v -> c.buffSingleScale = v, 0.5f, 3.0f))
+                .option(floatOpt("buff_list_scale", 1.0f, () -> c.buffListScale, v -> c.buffListScale = v, 0.5f, 3.0f))
                 .option(intOpt("buff_spacing", 22, () -> c.buffSpacing, v -> c.buffSpacing = v, 10, 50))
                 .option(intOpt("max_buffs", 5, () -> c.maxBuffs, v -> c.maxBuffs = v, 1, 20))
                 .option(boolOpt("buff_render_background", true, () -> c.buffRenderBackground, v -> c.buffRenderBackground = v))

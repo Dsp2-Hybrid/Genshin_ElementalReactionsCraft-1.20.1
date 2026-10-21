@@ -342,5 +342,9 @@
   "genshinerc.bar.config.buff_offset_z": "Buff Z Offset",
   "genshinerc.bar.config.buff_offset_z.desc": "Depth offset for buff icons to fix Z-fighting or occlusion.",
   "genshinerc.bar.config.element_offset_z": "Element Z Offset",
-  "genshinerc.bar.config.element_offset_z.desc": "Depth offset for element icons to fix Z-fighting or occlusion."
+  "genshinerc.bar.config.element_offset_z.desc": "Depth offset for element icons to fix Z-fighting or occlusion.",
+  "genshinerc.bar.config.buff_single_scale": "Buff Single Scale",
+  "genshinerc.bar.config.buff_single_scale.desc": "Controls the relative scale of a single buff icon.",
+  "genshinerc.bar.config.buff_list_scale": "Buff List Scale",
+  "genshinerc.bar.config.buff_list_scale.desc": "Controls the overall scale of the entire buff list, anchored at the bottom-right."
 }

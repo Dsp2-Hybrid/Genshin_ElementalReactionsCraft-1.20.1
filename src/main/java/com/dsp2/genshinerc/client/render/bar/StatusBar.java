@@ -18,7 +18,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.InventoryMenu;
 import org.joml.Matrix4f;
 
 import java.awt.Color;
@@ -35,16 +34,33 @@ public class StatusBar {
 
         Collection<MobEffectInstance> effects = entity.getActiveEffects();
         int buffCount = Math.min(effects.size(), config.maxBuffs);
-        float buffSize = 0.35f;
-        float buffSpacing = config.buffSpacing / 100.0f;
-        float hudWidth = buffCount * buffSpacing;
+
+        float singleScale = config.buffSingleScale;
+        float listScale = config.buffListScale;
+
+        // Apply the single icon scale to the base size and spacing
+        float baseSize = 0.35f * singleScale;
+        float baseSpacing = (config.buffSpacing / 100.0f) * singleScale;
+
+        // Calculate total width based on single-scaled sizes
+        float totalWidth = buffCount * baseSpacing;
+
+        // Apply the total list scale to the physical rendered size and spacing
+        float renderSize = baseSize * listScale;
+        float renderSpacing = baseSpacing * listScale;
+        float renderWidth = totalWidth * listScale;
+
         boolean isLeftToRight = config.buffDirection == BarConfig.BuffDirection.LEFT_TO_RIGHT;
 
         int index = 0;
         for (MobEffectInstance effect : effects) {
             if (index >= config.maxBuffs) break;
-            float x = isLeftToRight ? rightX - hudWidth + (index * buffSpacing) : rightX - buffSize - (index * buffSpacing);
-            float y = bottomY - buffSize;
+
+            // Calculate X and Y based on the right-bottom anchor
+            float x = isLeftToRight ?
+                    rightX - renderWidth + (index * renderSpacing) :
+                    rightX - renderSize - (index * renderSpacing);
+            float y = bottomY - renderSize;
 
             float iconAlpha = globalAlpha * config.buffOpacity;
             float bgAlpha = globalAlpha * config.buffBackgroundAlpha;
@@ -55,19 +71,21 @@ public class StatusBar {
             }
 
             if (config.buffRenderBackground) {
-                drawTexturedQuad(matrix, buffers, INVENTORY_TEXTURE, x, y, x + buffSize, y + buffSize,
+                drawTexturedQuad(matrix, buffers, INVENTORY_TEXTURE, x, y, x + renderSize, y + renderSize,
                         141f/256f, 166f/256f, 165f/256f, 190f/256f, 1f, 1f, 1f, bgAlpha, config.buffOffsetZ + 0.1f);
             }
 
             TextureAtlasSprite sprite = Minecraft.getInstance().getMobEffectTextures().get(effect.getEffect());
             if (sprite != null) {
-                drawTexturedQuad(matrix, buffers, sprite.atlasLocation(), x + 0.04f, y + 0.04f, x + buffSize - 0.04f, y + buffSize - 0.04f,
+                // Pad proportionally based on the scaled size
+                float pad = renderSize * 0.1f;
+                drawTexturedQuad(matrix, buffers, sprite.atlasLocation(), x + pad, y + pad, x + renderSize - pad, y + renderSize - pad,
                         sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), 1f, 1f, 1f, iconAlpha, config.buffOffsetZ + 0.1f);
             }
             index++;
         }
 
-        float centerX = rightX - (hudWidth / 2.0f);
+        float centerX = rightX - (renderWidth / 2.0f);
         float topY = bottomY + 0.125f;
 
         RenderSystem.disableDepthTest();
@@ -117,8 +135,8 @@ public class StatusBar {
             int count = elements.size();
             float boxSize = (config.elementBoxSize / 100.0f) * config.elementScale;
             float spacing = (config.elementSpacing / 100.0f) * config.elementScale;
-            float totalWidth = count * boxSize + (count - 1) * spacing;
-            float startX = centerX + (config.elementOffsetX / 100.0f) - (totalWidth / 2.0f);
+            float elementTotalWidth = count * boxSize + (count - 1) * spacing;
+            float startX = centerX + (config.elementOffsetX / 100.0f) - (elementTotalWidth / 2.0f);
             float startY = topY + 0.3f + (config.elementOffsetY / 100.0f);
 
             for (int i = 0; i < count; i++) {

@@ -126,12 +126,10 @@ public class CustomHealthBar extends EntityUI {
 
         float minX = -0.5F * length + shakeX;
         float maxX = 0.5F * length + shakeX;
-        // Scale up the overall physical height to make the frame prominent
         float scaledWidth = width * 5.5f;
         float minY = -0.5F * scaledWidth;
         float maxY = 0.5F * scaledWidth;
 
-        // Adjust the inner bar Y bounds to perfectly fit the recessed track
         float innerMinY = minY + (6.0f / 32.0f) * scaledWidth;
         float innerMaxY = maxY - (12.0f / 32.0f) * scaledWidth;
 
@@ -154,10 +152,8 @@ public class CustomHealthBar extends EntityUI {
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
 
-        // 1. Draw Outer Frame (Full size, using minY and maxY)
         drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, 1.0f, 1.0f, 1.0f, alpha);
 
-        // 2. Draw Empty Track Background (Using innerMinY and innerMaxY)
         float emptyStart = Math.max(renderHealthEnd, renderAbsEnd);
         if (emptyStart < 0.999f) {
             float bgR = r * 0.2f;
@@ -166,17 +162,14 @@ public class CustomHealthBar extends EntityUI {
             drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * emptyStart, innerMinY, maxX, innerMaxY, emptyStart, V_TOP, 1.0f, V_BOTTOM, bgR, bgG, bgB, alpha);
         }
 
-        // 3. Draw HP Bar (Using innerMinY and innerMaxY)
         if (renderHealthEnd > 0.001f) {
             drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * renderHealthEnd, innerMaxY, 0, V_TOP, renderHealthEnd, V_BOTTOM, r, g, b, alpha);
         }
 
-        // 4. Draw Absorption Bar (Using innerMinY and innerMaxY)
         if (renderAbsEnd > renderAbsStart + 0.001f) {
             drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * renderAbsStart, innerMinY, minX + length * renderAbsEnd, innerMaxY, renderAbsStart, V_TOP, renderAbsEnd, V_BOTTOM, 1.0f, 0.9f, 0.2f, alpha);
         }
 
-        // 5. Draw Damage Overlays (Ghost bars and flash)
         if (tracker.hpWhite.oldActive && tracker.hpWhite.oldAlpha > 0.01f) {
             float start = Math.min(tracker.hpWhite.oldStart, tracker.hpWhite.oldEnd);
             float end = Math.max(tracker.hpWhite.oldStart, tracker.hpWhite.oldEnd);
@@ -209,7 +202,6 @@ public class CustomHealthBar extends EntityUI {
             }
         }
 
-        // 6. Draw High-Frequency Flash (Instant 100% opacity, fade out only)
         if (tracker.isSmallChangeActive) {
             long elapsed = System.currentTimeMillis() - tracker.lastSmallChangeTime;
             float smallAlpha = 0f;
@@ -217,9 +209,16 @@ public class CustomHealthBar extends EntityUI {
 
             if (isShaderPackEnabled() && config.smallChangeUseShaderMode) {
                 float shaderDurationMs = config.smallChangeShaderDuration * 1000f;
-                if (elapsed < shaderDurationMs) {
-                    smallAlpha = 1.0f;
+                float fadeOutMs = config.smallChangeFadeOut * 1000f;
+                float totalMs = shaderDurationMs + fadeOutMs;
+
+                if (elapsed < totalMs) {
                     shouldDraw = true;
+                    if (elapsed > shaderDurationMs) {
+                        smallAlpha = 1.0f - ((float)(elapsed - shaderDurationMs) / fadeOutMs);
+                    } else {
+                        smallAlpha = 1.0f;
+                    }
                 }
             } else {
                 float totalMs = config.smallChangeDuration * 1000f;
@@ -307,13 +306,18 @@ public class CustomHealthBar extends EntityUI {
                 isHealing = exactTargetScale > currentVisualScale;
                 baseScale = currentVisualScale;
 
-                startOverlay = baseScale;
-                endOverlay = baseScale;
+                if (isHealing) {
+                    startOverlay = baseScale;
+                    endOverlay = baseScale + maxWidth;
+                } else {
+                    startOverlay = baseScale - maxWidth;
+                    endOverlay = baseScale;
+                }
 
                 animStart = now;
                 active = true;
-                extending = true;
-                shrinking = false;
+                extending = false;
+                shrinking = true;
                 alpha = 1.0f;
             }
         }
@@ -374,9 +378,11 @@ public class CustomHealthBar extends EntityUI {
                         endOverlay = baseScale - (maxWidth * eased);
                     }
 
-                    float fadeStartMs = dynamicDuration - (fadeTimeSec * 1000f);
+                    float actualFadeTimeMs = Math.max(1f, fadeTimeSec * 1000f);
+                    float fadeStartMs = dynamicDuration - actualFadeTimeMs;
+
                     if (shrinkElapsed > fadeStartMs) {
-                        alpha = 1.0f - (shrinkElapsed - fadeStartMs) / (fadeTimeSec * 1000f);
+                        alpha = 1.0f - (shrinkElapsed - fadeStartMs) / actualFadeTimeMs;
                         if (alpha < 0) alpha = 0;
                     } else {
                         alpha = 1.0f;
@@ -500,8 +506,6 @@ public class CustomHealthBar extends EntityUI {
                         isSmallChangeActive = true;
                         lastSmallChangeTime = now;
                         smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
-                        hpWhite.interrupt(now);
-                        absWhite.interrupt(now);
                     } else if (health < currentHealth) {
                         isShaking = true;
                         shakeStartTime = now;
@@ -564,15 +568,21 @@ public class CustomHealthBar extends EntityUI {
             }
 
             if (isDead) {
-                if (now - deathTime < config.deathFadeDelay * 1000f) {
+                long elapsedSinceDeath = now - deathTime;
+                float delayMs = config.deathFadeDelay * 1000f;
+                float fadeMs = config.deathFadeOutTime * 1000f;
+
+                if (elapsedSinceDeath < delayMs) {
                     currentAlpha = 1.0f;
-                    phase = Phase.IDLE;
                 } else {
-                    long fadeElapsed = now - deathTime - (long) (config.deathFadeDelay * 1000f);
-                    float progress = Math.min(1.0f, fadeElapsed / (config.deathFadeDelay * 1000f));
-                    currentAlpha = 1.0f - progress;
-                    phase = Phase.IDLE;
+                    float fadeElapsed = elapsedSinceDeath - delayMs;
+                    if (fadeMs <= 0 || fadeElapsed >= fadeMs) {
+                        currentAlpha = 0f;
+                    } else {
+                        currentAlpha = 1.0f - (fadeElapsed / fadeMs);
+                    }
                 }
+                phase = Phase.IDLE;
                 return;
             }
 
