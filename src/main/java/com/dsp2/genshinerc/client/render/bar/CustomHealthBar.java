@@ -250,9 +250,9 @@ public class CustomHealthBar extends EntityUI {
 
             if (shouldDraw) {
                 smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
-                float maxHealthEnd = Math.max(tracker.smallChangeWidth, 0.001f);
-                if (maxHealthEnd > 0.001f) {
-                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * maxHealthEnd, innerMaxY, 0, V_TOP, maxHealthEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
+                float liveEnd = Math.max(renderHealthEnd, renderAbsEnd);
+                if (liveEnd > 0.001f) {
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY, 0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
                 }
             } else {
                 tracker.isSmallChangeActive = false;
@@ -509,7 +509,6 @@ public class CustomHealthBar extends EntityUI {
                         isSmallChange = true;
                         isSmallChangeActive = true;
                         lastSmallChangeTime = now;
-                        // Only cover the current visual length, not the whole bar
                         smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
                     } else if (health <= 0 && health < currentHealth) {
                         isShaking = true;
