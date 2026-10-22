@@ -159,9 +159,12 @@ public class CustomHealthBar extends EntityUI {
 
         float emptyStart = Math.max(renderHealthEnd, renderAbsEnd);
         if (emptyStart < 0.999f) {
-            float bgR = r * 0.2f;
-            float bgG = g * 0.2f;
-            float bgB = b * 0.2f;
+            // Use hudColorMix to blend between pure black (0.0) and a darkened faction color (1.0)
+            float mix = config.hudColorMix;
+            float bgR = Mth.lerp(mix, 0.0f, r * 0.25f);
+            float bgG = Mth.lerp(mix, 0.0f, g * 0.25f);
+            float bgB = Mth.lerp(mix, 0.0f, b * 0.25f);
+
             drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX + length * emptyStart, innerMinY, maxX, innerMaxY, emptyStart, V_TOP, 1.0f, V_BOTTOM, bgR, bgG, bgB, alpha);
         }
 
@@ -262,7 +265,6 @@ public class CustomHealthBar extends EntityUI {
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
-
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();

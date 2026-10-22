@@ -284,8 +284,8 @@ public class BarConfig {
                 .option(percentOpt("buff_opacity", 1.0f, () -> c.buffOpacity, v -> c.buffOpacity = v, 0.0f, 1.0f))
                 .option(intOpt("buff_blink_rate", 20, () -> c.buffBlinkRate, v -> c.buffBlinkRate = v, 10, 60))
 
-                .option(intOpt("level_offset_x", -20, () -> c.levelOffsetX, v -> c.levelOffsetX = v, -100, 100))
-                .option(intOpt("level_offset_y", -30, () -> c.levelOffsetY, v -> c.levelOffsetY = v, -100, 100))
+                .option(intOpt("level_offset_x", -20, () -> c.levelOffsetX, v -> c.levelOffsetX = v, -1000, 1000))
+                .option(intOpt("level_offset_y", -30, () -> c.levelOffsetY, v -> c.levelOffsetY = v, -1000, 1000))
                 .option(floatOpt("level_offset_z", 0f, () -> c.levelOffsetZ, v -> c.levelOffsetZ = v, -1f, 1f))
                 .option(floatOpt("level_scale", 0.025f, () -> c.levelScale, v -> c.levelScale = v, 0.01f, 0.1f))
                 .option(floatOpt("level_shadow_offset_x", 0.01f, () -> c.levelShadowOffsetX, v -> c.levelShadowOffsetX = v, -0.05f, 0.05f))
