@@ -2,13 +2,15 @@ package com.dsp2.genshinerc.client.render.bar;
 
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,6 +38,8 @@ public class CustomHealthBar extends EntityUI {
     private static final float V_TOP = 14.0f / TEX_HEIGHT;
     private static final float V_BOTTOM = 24.0f / TEX_HEIGHT;
 
+    private static final Map<ResourceLocation, RenderType> BAR_RENDER_TYPES = new HashMap<>();
+
     private final Map<LivingEntity, Tracker> trackers = new HashMap<>();
 
     private static long lastShaderCheckTime = 0L;
@@ -43,6 +47,64 @@ public class CustomHealthBar extends EntityUI {
 
     public CustomHealthBar() {
         super();
+    }
+
+    private static class RenderStateAccess extends RenderStateShard {
+
+        private RenderStateAccess(String name, Runnable setupState, Runnable clearState) {
+            super(name, setupState, clearState);
+        }
+
+        public static ShaderStateShard getShader() {
+            return POSITION_COLOR_TEX_LIGHTMAP_SHADER;
+        }
+
+        public static TransparencyStateShard getTransparency() {
+            return TRANSLUCENT_TRANSPARENCY;
+        }
+
+        public static DepthTestStateShard getDepthTest() {
+            return NO_DEPTH_TEST;
+        }
+
+        public static WriteMaskStateShard getWriteMask() {
+            return COLOR_WRITE;
+        }
+
+        public static CullStateShard getCull() {
+            return NO_CULL;
+        }
+
+        public static LightmapStateShard getLightmap() {
+            return LIGHTMAP;
+        }
+
+        public static RenderType createBarRenderType(String name, ResourceLocation texture) {
+            return RenderType.create(
+                    name,
+                    DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
+                    VertexFormat.Mode.QUADS,
+                    256,
+                    false,
+                    false,
+                    RenderType.CompositeState.builder()
+                            .setShaderState(getShader())
+                            .setTextureState(new TextureStateShard(texture, false, false))
+                            .setTransparencyState(getTransparency())
+                            .setDepthTestState(getDepthTest())
+                            .setWriteMaskState(getWriteMask())
+                            .setCullState(getCull())
+                            .setLightmapState(getLightmap())
+                            .createCompositeState(false)
+            );
+        }
+    }
+
+    private static RenderType getBarRenderType(ResourceLocation tex) {
+        return BAR_RENDER_TYPES.computeIfAbsent(tex, t -> RenderStateAccess.createBarRenderType(
+                "genshinerc_hp_bar_" + t.getNamespace() + "_" + t.getPath().replace('/', '_').replace('.', '_').replace('-', '_'),
+                t
+        ));
     }
 
     public static boolean isShaderPackEnabled() {
@@ -79,7 +141,6 @@ public class CustomHealthBar extends EntityUI {
         if (entity.getBbWidth() <= 0.0F || entity.getBbHeight() <= 0.0F) return false;
         if (entity instanceof ArmorStand) return false;
 
-        // Allow dead entities to render even if entitypatch is null (Epic Fight unloads it on death)
         if (entitypatch == null && !(entity instanceof Player) && entity.isAlive()) return false;
 
         MobCategory category = entity.getType().getCategory();
@@ -92,7 +153,6 @@ public class CustomHealthBar extends EntityUI {
 
         if (!isValidEntity) return false;
 
-        // Skip invisibility check if dead to ensure death fade works
         if (entity.isAlive() && entity.isInvisibleTo(playerpatch.getOriginal())) return false;
 
         Minecraft mc = Minecraft.getInstance();
@@ -151,15 +211,11 @@ public class CustomHealthBar extends EntityUI {
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
 
         drawTexturedQuad(matrix, buffers, FRAME_TEXTURE, minX, minY, maxX, maxY, 0, 0, 1, 1, 1.0f, 1.0f, 1.0f, alpha);
 
         float emptyStart = Math.max(renderHealthEnd, renderAbsEnd);
         if (emptyStart < 0.999f) {
-            // Use hudColorMix to blend between pure black (0.0) and a darkened faction color (1.0)
             float mix = config.hudColorMix;
             float bgR = Mth.lerp(mix, 0.0f, r * 0.25f);
             float bgG = Mth.lerp(mix, 0.0f, g * 0.25f);
@@ -265,23 +321,20 @@ public class CustomHealthBar extends EntityUI {
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
-        RenderSystem.depthMask(true);
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableCull();
         RenderSystem.disableBlend();
     }
 
     private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a) {
-        VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(tex));
+        VertexConsumer vc = buffers.getBuffer(getBarRenderType(tex));
         int rInt = (int)(r * 255);
         int gInt = (int)(g * 255);
         int bInt = (int)(b * 255);
         int aInt = (int)(a * 255);
 
-        vc.vertex(matrix, x1, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        vc.vertex(matrix, x1, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v2).uv2(LightTexture.FULL_BRIGHT).endVertex();
+        vc.vertex(matrix, x2, y1, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v2).uv2(LightTexture.FULL_BRIGHT).endVertex();
+        vc.vertex(matrix, x2, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u2, v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
+        vc.vertex(matrix, x1, y2, 0.0F).color(rInt, gInt, bInt, aInt).uv(u1, v1).uv2(LightTexture.FULL_BRIGHT).endVertex();
     }
 
     private static class WhiteState {
