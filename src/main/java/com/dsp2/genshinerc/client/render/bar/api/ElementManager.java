@@ -1,7 +1,7 @@
 package com.dsp2.genshinerc.client.render.bar.api;
 
-import com.dsp2.genshinerc.common.network.GenshinNetwork;
-import com.dsp2.genshinerc.common.network.SyncElementsPacket;
+import com.dsp2.genshinerc.common.network.GenshinercNetwork;
+import com.dsp2.genshinerc.common.network.sync.packet.SyncElementsPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
@@ -56,7 +56,7 @@ public class ElementManager {
 
     private static void sync(LivingEntity entity, List<ElementType> list) {
         if (!entity.level().isClientSide()) {
-            GenshinNetwork.CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity),
+            GenshinercNetwork.CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity),
                     new SyncElementsPacket(entity.getId(), list));
         }
     }

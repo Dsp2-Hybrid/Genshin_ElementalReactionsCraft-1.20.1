@@ -119,7 +119,7 @@ public class BarConfig {
     @SerialEntry public float buffListScale = 0.75f;
 
     @SerialEntry public int levelOffsetX = 0;
-    @SerialEntry public int levelOffsetY = 30;
+    @SerialEntry public int levelOffsetY = 44;
     @SerialEntry public float levelOffsetZ = 0f;
     @SerialEntry public float levelScale = 0.020f;
 
@@ -139,11 +139,11 @@ public class BarConfig {
     @SerialEntry public float buffOffsetZ = 0.0f;
     @SerialEntry public float elementOffsetZ = 0.0f;
 
-    @SerialEntry public int elementBoxSize = 20;
-    @SerialEntry public int elementSpacing = 2;
-    @SerialEntry public int elementOffsetY = -50;
-    @SerialEntry public int elementOffsetX = 0;
-    @SerialEntry public float elementScale = 1.0f;
+    @SerialEntry public float elementBoxSize = 30.0f;
+    @SerialEntry public float elementSpacing = 0.0f;
+    @SerialEntry public int elementOffsetY = 19;
+    @SerialEntry public int elementOffsetX = 4;
+    @SerialEntry public float elementScale = 1.50f;
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -275,7 +275,7 @@ public class BarConfig {
                 .option(floatOpt("death_fade_out_time", 0.45f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
 
                 .option(enumOpt("buff_direction", BuffDirection.class, BuffDirection.RIGHT_TO_LEFT, () -> c.buffDirection, v -> c.buffDirection = v))
-                .option(intOpt("hud_offset_x", 0, () -> c.hudBuffOffsetX, v -> c.hudBuffOffsetX = v, -100, 100))
+                .option(intOpt("hud_offset_x", -4, () -> c.hudBuffOffsetX, v -> c.hudBuffOffsetX = v, -100, 100))
                 .option(intOpt("hud_offset_y", 0, () -> c.hudBuffOffsetY, v -> c.hudBuffOffsetY = v, -100, 100))
                 .option(floatOpt("buff_single_scale", 0.50f, () -> c.buffSingleScale, v -> c.buffSingleScale = v, 0.25f, 3.00f))
                 .option(floatOpt("buff_list_scale", 0.75f, () -> c.buffListScale, v -> c.buffListScale = v, 0.25f, 3.00f))
@@ -286,8 +286,8 @@ public class BarConfig {
                 .option(percentOpt("buff_opacity", 0.70f, () -> c.buffOpacity, v -> c.buffOpacity = v, 0.0f, 1.0f))
                 .option(intOpt("buff_blink_rate", 10, () -> c.buffBlinkRate, v -> c.buffBlinkRate = v, 3, 60))
 
-                .option(intOpt("level_offset_x", 0, () -> c.levelOffsetX, v -> c.levelOffsetX = v, -100, 100))
-                .option(intOpt("level_offset_y", 30, () -> c.levelOffsetY, v -> c.levelOffsetY = v, -100, 100))
+                .option(intOpt("level_offset_x", 0, () -> c.levelOffsetX, v -> c.levelOffsetX = v, -50, 50))
+                .option(intOpt("level_offset_y", 44, () -> c.levelOffsetY, v -> c.levelOffsetY = v, -100, 100))
                 .option(floatOpt("level_offset_z", 0f, () -> c.levelOffsetZ, v -> c.levelOffsetZ = v, -1f, 1f))
                 .option(floatOptCustomStep("level_scale", 0.020f, () -> c.levelScale, v -> c.levelScale = v, 0.005f, 0.075f, 0.001f, "%.3f"))
 
@@ -305,11 +305,11 @@ public class BarConfig {
                 .option(colorOpt("level_color_red", new Color(0xFF5555), () -> toAwt(c.levelColorRed), v -> c.levelColorRed = fromAwt(v)))
                 .option(colorOpt("level_color_dark_red", new Color(0xAA0000), () -> toAwt(c.levelColorDarkRed), v -> c.levelColorDarkRed = fromAwt(v)))
 
-                .option(intOpt("element_box_size", 20, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10, 50))
-                .option(intOpt("element_spacing", 2, () -> c.elementSpacing, v -> c.elementSpacing = v, 0, 20))
-                .option(intOpt("element_offset_y", -50, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100, 1))
-                .option(intOpt("element_offset_x", 0, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100, 1))
-                .option(floatOpt("element_scale", 1.0f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 3.0f))
+                .option(floatOptCustomStep("element_box_size", 30.0f, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10.0f, 70.0f, 0.1f, "%.1f"))
+                .option(floatOptCustomStep("element_spacing", 0.0f, () -> c.elementSpacing, v -> c.elementSpacing = v, -5.0f, 15.0f, 0.1f, "%.1f"))
+                .option(intOpt("element_offset_y", 19, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100, 1))
+                .option(intOpt("element_offset_x", 4, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100, 1))
+                .option(floatOpt("element_scale", 1.50f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 3.0f))
                 .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
                 .option(floatOpt("element_offset_z", 0.0f, () -> c.elementOffsetZ, v -> c.elementOffsetZ = v, -1f, 1f))
 

@@ -4,7 +4,7 @@ import com.dsp2.genshinerc.client.render.bar.StatusBar;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.config.ConfigInitCore;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
-import com.dsp2.genshinerc.common.network.GenshinNetwork;
+import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -26,7 +26,7 @@ public class GenshinERC {
         MinecraftForge.EVENT_BUS.register(EntityLevelManager.class);
 
         //Network
-        GenshinNetwork.register();
+        GenshinercNetwork.register();
 
         modEventBus.addListener(this::onCommonSetup);
     }

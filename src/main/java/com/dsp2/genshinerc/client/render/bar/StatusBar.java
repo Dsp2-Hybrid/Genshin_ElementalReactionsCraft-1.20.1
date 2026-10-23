@@ -15,11 +15,12 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -27,14 +28,11 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-
-@SuppressWarnings({"deprecation", "removal"})
 public class StatusBar {
 
+    private static final ResourceLocation INVENTORY_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/inventory.png");
 
-    private static final ResourceLocation INVENTORY_TEXTURE = new ResourceLocation("minecraft", "textures/gui/container/inventory.png");
-
-    public static void renderHUD(LivingEntity entity, Matrix4f matrix, PoseStack poseStack, MultiBufferSource buffers, BarConfig config, float maxX, float minY, float yOffset, float globalAlpha) {
+    public static void renderHUD(LivingEntity entity, Matrix4f matrix, PoseStack poseStack, MultiBufferSource buffers, BarConfig config, float maxX, float minY, float globalAlpha) {
         float hudX = config.hudBuffOffsetX / 100.0f;
         float hudY = config.hudBuffOffsetY / 100.0f;
 
@@ -43,6 +41,7 @@ public class StatusBar {
 
         Collection<MobEffectInstance> activeEffects = entity.getActiveEffects();
         List<MobEffectInstance> sortedEffects = new ArrayList<>(activeEffects);
+
         sortedEffects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
         int buffCount = Math.min(sortedEffects.size(), config.maxBuffs);
 
@@ -60,7 +59,12 @@ public class StatusBar {
         for (int i = 0; i < buffCount; i++) {
             MobEffectInstance effect = sortedEffects.get(i);
 
-            float x = isLeftToRight ? rightX - renderWidth + (i * renderSpacing) : rightX - renderSize - (buffCount - 1 - i) * renderSpacing;
+            float x;
+            if (isLeftToRight) {
+                x = rightX - renderWidth + (i * renderSpacing);
+            } else {
+                x = rightX - renderSize - (buffCount - 1 - i) * renderSpacing;
+            }
             float y = bottomY - renderSize;
 
             float iconAlpha = globalAlpha * config.buffOpacity;
@@ -122,12 +126,18 @@ public class StatusBar {
 
             int mainColorInt = (mainAlpha << 24) | (mainColor.getRGB() & 0xFFFFFF);
 
-            float textX = hudX + (config.levelOffsetX / 100.0f);
-            float textY = hudY + (config.levelOffsetY / 100.0f);
-            float textZ = config.levelOffsetZ + 0.2f;
+            float entityHeight = Math.max(entity.getBbHeight(), 1.0f);
+            String entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
+            float specificOffset = config.getYOffsetForEntity(entityId);
+            float yOffset = entityHeight + config.yOffset + (entityHeight * config.yOffsetHeightFactor) + specificOffset + config.entityBarYOffsetBonus;
 
             poseStack.pushPose();
-            poseStack.translate(textX, textY, textZ);
+            poseStack.translate(0.0f, yOffset + minY, 0.0f);
+
+            Quaternionf cameraRotation = mc.gameRenderer.getMainCamera().rotation();
+            poseStack.mulPose(cameraRotation);
+
+            poseStack.translate(config.levelOffsetX / 100.0f, config.levelOffsetY / 100.0f, config.levelOffsetZ);
             poseStack.scale(-scale, -scale, scale);
 
             if (config.levelShadowEnabled) {
@@ -158,33 +168,19 @@ public class StatusBar {
 
                 ResourceLocation icon = ElementManager.getCurrentFrame(elements.get(i));
 
-                poseStack.pushPose();
-                poseStack.last().pose().set(matrix);
-                poseStack.translate(iconCenterX, iconCenterY, config.elementOffsetZ + 0.2f);
+                Matrix4f iconMatrix = new Matrix4f(matrix);
+                iconMatrix.translate(iconCenterX, iconCenterY, config.elementOffsetZ + 0.2f);
 
                 float halfSize = boxSize / 2.0f;
-                drawIconSeeThrough(poseStack.last().pose(), buffers, icon,
-                        -halfSize, -halfSize, halfSize, halfSize, 0, globalAlpha);
-
-                poseStack.popPose();
+                drawTexturedQuad(iconMatrix, buffers, icon,
+                        -halfSize, -halfSize, halfSize, halfSize,
+                        0, 0, 1, 1, 1f, 1f, 1f, globalAlpha, 0);
             }
         }
 
         RenderSystem.enableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
-    }
-
-    private static void drawIconSeeThrough(Matrix4f m, MultiBufferSource buffers, ResourceLocation tex,
-                                           float x1, float y1, float x2, float y2, float z, float alpha) {
-        VertexConsumer vc = buffers.getBuffer(RenderType.textSeeThrough(tex));
-        int a = (int) (Mth.clamp(alpha, 0f, 1f) * 255);
-        int light = LightTexture.FULL_BRIGHT;
-
-        vc.vertex(m, x1, y1, z).color(255, 255, 255, a).uv(0, 1).uv2(light).endVertex();
-        vc.vertex(m, x2, y1, z).color(255, 255, 255, a).uv(1, 1).uv2(light).endVertex();
-        vc.vertex(m, x2, y2, z).color(255, 255, 255, a).uv(1, 0).uv2(light).endVertex();
-        vc.vertex(m, x1, y2, z).color(255, 255, 255, a).uv(0, 0).uv2(light).endVertex();
     }
 
     private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a, float z) {
