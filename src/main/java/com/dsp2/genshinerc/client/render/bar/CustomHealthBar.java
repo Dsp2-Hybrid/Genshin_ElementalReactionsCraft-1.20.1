@@ -264,7 +264,7 @@ public class CustomHealthBar extends EntityUI {
 
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-        StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
+        StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, yOffset, alpha);
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();

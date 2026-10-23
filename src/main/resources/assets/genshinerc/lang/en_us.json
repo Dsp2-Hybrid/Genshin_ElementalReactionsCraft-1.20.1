@@ -346,5 +346,9 @@
   "genshinerc.bar.config.buff_single_scale": "Buff Single Scale",
   "genshinerc.bar.config.buff_single_scale.desc": "Controls the relative scale of a single buff icon.",
   "genshinerc.bar.config.buff_list_scale": "Buff List Scale",
-  "genshinerc.bar.config.buff_list_scale.desc": "Controls the overall scale of the entire buff list, anchored at the bottom-right."
+  "genshinerc.bar.config.buff_list_scale.desc": "Controls the overall scale of the entire buff list, anchored at the bottom-right.",
+  "genshinerc.bar.config.level_shadow_enabled": "Enable Level Shadow",
+  "genshinerc.bar.config.level_shadow_enabled.desc": "Toggle whether the level text shadow is rendered.",
+  "genshinerc.bar.config.level_shadow_brightness": "Level Shadow Brightness",
+  "genshinerc.bar.config.level_shadow_brightness.desc": "0 = pure text color, 1 = pure black, values in between blend smoothly."
 }

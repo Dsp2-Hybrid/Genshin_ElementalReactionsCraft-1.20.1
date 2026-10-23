@@ -21,20 +21,28 @@ import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 public class StatusBar {
 
     private static final ResourceLocation INVENTORY_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/inventory.png");
 
-    public static void renderHUD(LivingEntity entity, Matrix4f matrix, PoseStack poseStack, MultiBufferSource buffers, BarConfig config, float maxX, float minY, float globalAlpha) {
-        // Anchor buffs to the bottom-right of the bar
-        float rightX = maxX + (config.hudOffsetX / 100.0f);
-        float bottomY = minY - (config.hudOffsetY / 100.0f);
+    public static void renderHUD(LivingEntity entity, Matrix4f matrix, PoseStack poseStack, MultiBufferSource buffers, BarConfig config, float maxX, float minY, float yOffset, float globalAlpha) {
+        float hudX = config.hudOffsetX / 100.0f;
+        float hudY = config.hudOffsetY / 100.0f;
 
-        Collection<MobEffectInstance> effects = entity.getActiveEffects();
-        int buffCount = Math.min(effects.size(), config.maxBuffs);
+        float rightX = maxX + hudX;
+        float bottomY = minY - hudY;
+
+        Collection<MobEffectInstance> activeEffects = entity.getActiveEffects();
+        List<MobEffectInstance> sortedEffects = new ArrayList<>(activeEffects);
+
+        // Sort by duration descending (longest duration = newest = index 0)
+        sortedEffects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
+        int buffCount = Math.min(sortedEffects.size(), config.maxBuffs);
 
         float singleScale = config.buffSingleScale;
         float listScale = config.buffListScale;
@@ -47,28 +55,25 @@ public class StatusBar {
 
         boolean isLeftToRight = config.buffDirection == BarConfig.BuffDirection.LEFT_TO_RIGHT;
 
-        int index = 0;
-        for (MobEffectInstance effect : effects) {
-            if (index >= config.maxBuffs) break;
+        for (int i = 0; i < buffCount; i++) {
+            MobEffectInstance effect = sortedEffects.get(i);
 
-            float x = isLeftToRight ?
-                    rightX - renderWidth + (index * renderSpacing) :
-                    rightX - renderSize - (index * renderSpacing);
+            float x;
+            if (isLeftToRight) {
+                x = rightX - renderWidth + (i * renderSpacing);
+            } else {
+                x = rightX - renderSize - (buffCount - 1 - i) * renderSpacing;
+            }
             float y = bottomY - renderSize;
 
             float iconAlpha = globalAlpha * config.buffOpacity;
             float bgAlpha = globalAlpha * config.buffBackgroundAlpha;
 
-            // Sync with vanilla: starts blinking when duration < 200 ticks (10 seconds)
-            if (effect.endsWithin(200)) {
-                int remaining = effect.getDuration();
-                float progress = (200f - remaining) / 200f;
-                float speedMultiplier = 1.0f + progress * 2.0f;
-                float cycleTicks = Math.max(1f, config.buffBlinkRate) / speedMultiplier;
-                float phase = (remaining % cycleTicks) / cycleTicks;
-
-                // Smooth cosine wave for opacity: fades to 50% and back to 100%
-                float blinkFactor = 0.5f + 0.5f * (float)Math.cos(phase * Math.PI * 2.0);
+            int remaining = effect.getDuration();
+            if (remaining < 200) {
+                float elapsed = 200f - remaining;
+                float phase = (elapsed + (elapsed * elapsed) / 200f) * config.buffBlinkRate * 0.05f;
+                float blinkFactor = 0.5f + 0.5f * (float)Math.cos(phase);
                 iconAlpha *= blinkFactor;
                 bgAlpha *= blinkFactor;
             }
@@ -84,16 +89,15 @@ public class StatusBar {
                 drawTexturedQuad(matrix, buffers, sprite.atlasLocation(), x + pad, y + pad, x + renderSize - pad, y + renderSize - pad,
                         sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), 1f, 1f, 1f, iconAlpha, config.buffOffsetZ + 0.1f);
             }
-            index++;
         }
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
+        RenderSystem.disableCull();
 
         Minecraft mc = Minecraft.getInstance();
 
-        // Render Level Text
         if (!(entity instanceof Player)) {
             int level = EntityLevelManager.getLevel(entity);
             int playerLevel = mc.player != null ? EntityLevelManager.getPlayerLevel(mc.player) : 0;
@@ -107,34 +111,40 @@ public class StatusBar {
             else hex = config.levelColorDarkRed;
 
             Color mainColor = BarConfig.toAwt(hex);
-            Color shadowColor = BarConfig.toAwt(config.levelShadowColor);
             String text = "Lv. " + level;
             float scale = config.levelScale;
 
-            // Relative offsets strictly from the bar's center (matrix origin)
-            float offsetX = (config.levelOffsetX / 100.0f);
-            float offsetY = (config.levelOffsetY / 100.0f);
-            float offsetZ = config.levelOffsetZ + 0.2f;
-
             int mainAlpha = (int)(globalAlpha * 255);
             int shadowAlpha = (int)(mainAlpha * config.levelShadowAlpha);
+
+            float shadowMultiplier = 1.0f - config.levelShadowBrightness;
+            int shadowR = (int)(mainColor.getRed() * shadowMultiplier);
+            int shadowG = (int)(mainColor.getGreen() * shadowMultiplier);
+            int shadowB = (int)(mainColor.getBlue() * shadowMultiplier);
+            int shadowColorInt = (shadowAlpha << 24) | (shadowR << 16) | (shadowG << 8) | shadowB;
+
             int mainColorInt = (mainAlpha << 24) | (mainColor.getRGB() & 0xFFFFFF);
-            int shadowColorInt = (shadowAlpha << 24) | (shadowColor.getRGB() & 0xFFFFFF);
 
-            // Use a fresh PoseStack to isolate from external transformations
-            PoseStack textPose = new PoseStack();
-            textPose.last().pose().set(matrix);
-            textPose.translate(offsetX, offsetY, offsetZ);
-            textPose.scale(-scale, -scale, scale);
+            // Apply global HUD offsets + specific text offsets
+            float textX = hudX + (config.levelOffsetX / 100.0f);
+            float textY = hudY + (config.levelOffsetY / 100.0f);
+            float textZ = config.levelOffsetZ + 0.2f;
 
-            mc.font.drawInBatch(text, -mc.font.width(text) / 2.0f + config.levelShadowOffsetX, config.levelShadowOffsetY,
-                    shadowColorInt, false, textPose.last().pose(), buffers, Font.DisplayMode.SEE_THROUGH, 0, LightTexture.FULL_BRIGHT);
+            poseStack.pushPose();
+            poseStack.translate(textX, textY, textZ);
+            poseStack.scale(-scale, -scale, scale);
+
+            if (config.levelShadowEnabled) {
+                mc.font.drawInBatch(text, -mc.font.width(text) / 2.0f + config.levelShadowOffsetX, config.levelShadowOffsetY,
+                        shadowColorInt, false, poseStack.last().pose(), buffers, Font.DisplayMode.SEE_THROUGH, 0, LightTexture.FULL_BRIGHT);
+            }
 
             mc.font.drawInBatch(text, -mc.font.width(text) / 2.0f, 0,
-                    mainColorInt, false, textPose.last().pose(), buffers, Font.DisplayMode.SEE_THROUGH, 0, LightTexture.FULL_BRIGHT);
+                    mainColorInt, false, poseStack.last().pose(), buffers, Font.DisplayMode.SEE_THROUGH, 0, LightTexture.FULL_BRIGHT);
+
+            poseStack.popPose();
         }
 
-        // Render Element Icons
         List<ElementType> elements = ElementManager.getElements(entity);
         if (!elements.isEmpty()) {
             int count = elements.size();
@@ -142,9 +152,9 @@ public class StatusBar {
             float spacing = (config.elementSpacing / 100.0f) * config.elementScale;
             float elementTotalWidth = count * boxSize + (count - 1) * spacing;
 
-            // Relative offsets from the bar's center
-            float startX = (config.elementOffsetX / 100.0f) - (elementTotalWidth / 2.0f);
-            float startY = 0.3f + (config.elementOffsetY / 100.0f);
+            // Apply global HUD offsets + specific element offsets
+            float startX = hudX + (config.elementOffsetX / 100.0f) - (elementTotalWidth / 2.0f);
+            float startY = hudY + (config.elementOffsetY / 100.0f);
 
             for (int i = 0; i < count; i++) {
                 float x = startX + i * (boxSize + spacing);
@@ -153,17 +163,17 @@ public class StatusBar {
 
                 ResourceLocation icon = ElementManager.getCurrentFrame(elements.get(i));
 
-                PoseStack iconPose = new PoseStack();
-                iconPose.last().pose().set(matrix);
-                iconPose.translate(iconCenterX, iconCenterY, config.elementOffsetZ + 0.2f);
+                Matrix4f iconMatrix = new Matrix4f(matrix);
+                iconMatrix.translate(iconCenterX, iconCenterY, config.elementOffsetZ + 0.2f);
 
                 float halfSize = boxSize / 2.0f;
-                drawTexturedQuad(iconPose.last().pose(), buffers, icon,
+                drawTexturedQuad(iconMatrix, buffers, icon,
                         -halfSize, -halfSize, halfSize, halfSize,
                         0, 0, 1, 1, 1f, 1f, 1f, globalAlpha, 0);
             }
         }
 
+        RenderSystem.enableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
     }

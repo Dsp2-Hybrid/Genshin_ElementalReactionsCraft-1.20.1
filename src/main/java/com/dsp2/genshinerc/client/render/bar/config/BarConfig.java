@@ -78,7 +78,7 @@ public class BarConfig {
 
     @SerialEntry public String enemyColor = "#FF4444";
     @SerialEntry public String allyColor = "#44FF44";
-    @SerialEntry public float hudColorMix = 1.0f;
+    @SerialEntry public float hudColorMix = 0.90f;
 
     @SerialEntry public float playerOverlayShrinkTime = 1.35f;
     @SerialEntry public float mobOverlayShrinkTime = 1.25f;
@@ -108,26 +108,29 @@ public class BarConfig {
     @SerialEntry public float deathFadeOutTime = 0.45f;
 
     @SerialEntry public BuffDirection buffDirection = BuffDirection.RIGHT_TO_LEFT;
-    @SerialEntry public int hudOffsetX = 10;
-    @SerialEntry public int hudOffsetY = 10;
-    @SerialEntry public int buffSpacing = 22;
-    @SerialEntry public int maxBuffs = 5;
+    @SerialEntry public int hudOffsetX = 0;
+    @SerialEntry public int hudOffsetY = 0;
+    @SerialEntry public float buffSpacing = 37.0f;
+    @SerialEntry public int maxBuffs = 7;
     @SerialEntry public boolean buffRenderBackground = true;
-    @SerialEntry public float buffBackgroundAlpha = 0.5f;
-    @SerialEntry public float buffOpacity = 1.0f;
-    @SerialEntry public int buffBlinkRate = 20;
-    @SerialEntry public float buffSingleScale = 1.0f;
-    @SerialEntry public float buffListScale = 1.0f;
+    @SerialEntry public float buffBackgroundAlpha = 0.50f;
+    @SerialEntry public float buffOpacity = 0.70f;
+    @SerialEntry public int buffBlinkRate = 10;
+    @SerialEntry public float buffSingleScale = 0.50f;
+    @SerialEntry public float buffListScale = 0.75f;
 
-    @SerialEntry public int levelOffsetX = -20;
-    @SerialEntry public int levelOffsetY = -30;
+    @SerialEntry public int levelOffsetX = 0;
+    @SerialEntry public int levelOffsetY = 30;
     @SerialEntry public float levelOffsetZ = 0f;
-    @SerialEntry public float levelScale = 0.025f;
+    @SerialEntry public float levelScale = 0.020f;
+
+    @SerialEntry public boolean levelShadowEnabled = false;
+    @SerialEntry public float levelShadowBrightness = 0.5f;
     @SerialEntry public float levelShadowOffsetX = 0.01f;
     @SerialEntry public float levelShadowOffsetY = 0.01f;
-    @SerialEntry public float levelShadowOffsetZ = 0.01f;
-    @SerialEntry public String levelShadowColor = "#000000";
+    @SerialEntry public float levelShadowOffsetZ = 0.0f;
     @SerialEntry public float levelShadowAlpha = 0.5f;
+
     @SerialEntry public String levelColorWhite = "#FFFFFF";
     @SerialEntry public String levelColorGreen = "#55FF55";
     @SerialEntry public String levelColorYellow = "#FFFF55";
@@ -249,7 +252,7 @@ public class BarConfig {
                 .option(floatOpt("entity_bar_opacity_multiplier", 1f, () -> c.entityBarOpacityMultiplier, v -> c.entityBarOpacityMultiplier = v, 0f, 1f))
                 .option(colorOpt("enemy_color", new Color(0xFF4444), () -> toAwt(c.enemyColor), v -> c.enemyColor = fromAwt(v)))
                 .option(colorOpt("ally_color", new Color(0x44FF44), () -> toAwt(c.allyColor), v -> c.allyColor = fromAwt(v)))
-                .option(percentOpt("hud_color_mix", 1.0f, () -> c.hudColorMix, v -> c.hudColorMix = v, 0.0f, 1.0f))
+                .option(percentOpt("hud_color_mix", 0.90f, () -> c.hudColorMix, v -> c.hudColorMix = v, 0.0f, 1.0f))
                 .option(floatOpt("player_overlay_shrink_time", 1.35f, () -> c.playerOverlayShrinkTime, v -> c.playerOverlayShrinkTime = v, 0f, 6f))
                 .option(floatOpt("mob_overlay_shrink_time", 1.25f, () -> c.mobOverlayShrinkTime, v -> c.mobOverlayShrinkTime = v, 0f, 3f))
                 .option(enumOpt("white_easing", EasingType.class, EasingType.EASE_OUT_CUBIC, () -> c.whiteEasing, v -> c.whiteEasing = v))
@@ -273,26 +276,28 @@ public class BarConfig {
                 .option(floatOpt("death_fade_out_time", 0.45f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
 
                 .option(enumOpt("buff_direction", BuffDirection.class, BuffDirection.RIGHT_TO_LEFT, () -> c.buffDirection, v -> c.buffDirection = v))
-                .option(intOpt("hud_offset_x", 10, () -> c.hudOffsetX, v -> c.hudOffsetX = v, 0, 100))
-                .option(intOpt("hud_offset_y", 10, () -> c.hudOffsetY, v -> c.hudOffsetY = v, 0, 100))
-                .option(floatOpt("buff_single_scale", 1.0f, () -> c.buffSingleScale, v -> c.buffSingleScale = v, 0.5f, 3.0f))
-                .option(floatOpt("buff_list_scale", 1.0f, () -> c.buffListScale, v -> c.buffListScale = v, 0.5f, 3.0f))
-                .option(intOpt("buff_spacing", 22, () -> c.buffSpacing, v -> c.buffSpacing = v, 10, 50))
-                .option(intOpt("max_buffs", 5, () -> c.maxBuffs, v -> c.maxBuffs = v, 1, 20))
+                .option(intOpt("hud_offset_x", 0, () -> c.hudOffsetX, v -> c.hudOffsetX = v, -100, 100))
+                .option(intOpt("hud_offset_y", 0, () -> c.hudOffsetY, v -> c.hudOffsetY = v, -100, 100))
+                .option(floatOpt("buff_single_scale", 0.50f, () -> c.buffSingleScale, v -> c.buffSingleScale = v, 0.25f, 3.00f))
+                .option(floatOpt("buff_list_scale", 0.75f, () -> c.buffListScale, v -> c.buffListScale = v, 0.25f, 3.00f))
+                .option(floatOptCustomStep("buff_spacing", 37.0f, () -> c.buffSpacing, v -> c.buffSpacing = v, 10.0f, 80.0f, 0.1f, "%.1f"))
+                .option(intOpt("max_buffs", 7, () -> c.maxBuffs, v -> c.maxBuffs = v, 1, 20))
                 .option(boolOpt("buff_render_background", true, () -> c.buffRenderBackground, v -> c.buffRenderBackground = v))
-                .option(percentOpt("buff_background_alpha", 0.5f, () -> c.buffBackgroundAlpha, v -> c.buffBackgroundAlpha = v, 0.0f, 1.0f))
-                .option(percentOpt("buff_opacity", 1.0f, () -> c.buffOpacity, v -> c.buffOpacity = v, 0.0f, 1.0f))
-                .option(intOpt("buff_blink_rate", 20, () -> c.buffBlinkRate, v -> c.buffBlinkRate = v, 10, 60))
+                .option(percentOpt("buff_background_alpha", 0.50f, () -> c.buffBackgroundAlpha, v -> c.buffBackgroundAlpha = v, 0.0f, 1.0f))
+                .option(percentOpt("buff_opacity", 0.70f, () -> c.buffOpacity, v -> c.buffOpacity = v, 0.0f, 1.0f))
+                .option(intOpt("buff_blink_rate", 10, () -> c.buffBlinkRate, v -> c.buffBlinkRate = v, 3, 60))
 
-                .option(intOpt("level_offset_x", -20, () -> c.levelOffsetX, v -> c.levelOffsetX = v, -1000, 1000))
-                .option(intOpt("level_offset_y", -30, () -> c.levelOffsetY, v -> c.levelOffsetY = v, -1000, 1000))
+                .option(intOpt("level_offset_x", 0, () -> c.levelOffsetX, v -> c.levelOffsetX = v, -100, 100))
+                .option(intOpt("level_offset_y", 30, () -> c.levelOffsetY, v -> c.levelOffsetY = v, -100, 100))
                 .option(floatOpt("level_offset_z", 0f, () -> c.levelOffsetZ, v -> c.levelOffsetZ = v, -1f, 1f))
-                .option(floatOpt("level_scale", 0.025f, () -> c.levelScale, v -> c.levelScale = v, 0.01f, 0.1f))
+                .option(floatOptCustomStep("level_scale", 0.020f, () -> c.levelScale, v -> c.levelScale = v, 0.005f, 0.075f, 0.001f, "%.3f"))
+
+                .option(boolOpt("level_shadow_enabled", false, () -> c.levelShadowEnabled, v -> c.levelShadowEnabled = v))
+                .option(percentOpt("level_shadow_brightness", 0.5f, () -> c.levelShadowBrightness, v -> c.levelShadowBrightness = v, 0.0f, 1.0f))
+                .option(percentOpt("level_shadow_alpha", 0.5f, () -> c.levelShadowAlpha, v -> c.levelShadowAlpha = v, 0f, 1f))
                 .option(floatOpt("level_shadow_offset_x", 0.01f, () -> c.levelShadowOffsetX, v -> c.levelShadowOffsetX = v, -0.05f, 0.05f))
                 .option(floatOpt("level_shadow_offset_y", 0.01f, () -> c.levelShadowOffsetY, v -> c.levelShadowOffsetY = v, -0.05f, 0.05f))
-                .option(floatOpt("level_shadow_offset_z", 0.01f, () -> c.levelShadowOffsetZ, v -> c.levelShadowOffsetZ = v, -0.05f, 0.05f))
-                .option(colorOpt("level_shadow_color", new Color(0x000000), () -> toAwt(c.levelShadowColor), v -> c.levelShadowColor = fromAwt(v)))
-                .option(percentOpt("level_shadow_alpha", 0.5f, () -> c.levelShadowAlpha, v -> c.levelShadowAlpha = v, 0f, 1f))
+                .option(floatOpt("level_shadow_offset_z", 0.0f, () -> c.levelShadowOffsetZ, v -> c.levelShadowOffsetZ = v, -0.05f, 0.05f))
 
                 .option(colorOpt("level_color_white", new Color(0xFFFFFF), () -> toAwt(c.levelColorWhite), v -> c.levelColorWhite = fromAwt(v)))
                 .option(colorOpt("level_color_green", new Color(0x55FF55), () -> toAwt(c.levelColorGreen), v -> c.levelColorGreen = fromAwt(v)))
@@ -303,8 +308,8 @@ public class BarConfig {
 
                 .option(intOpt("element_box_size", 20, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10, 50))
                 .option(intOpt("element_spacing", 2, () -> c.elementSpacing, v -> c.elementSpacing = v, 0, 20))
-                .option(intOpt("element_offset_y", -50, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100))
-                .option(intOpt("element_offset_x", 0, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100))
+                .option(intOpt("element_offset_y", -50, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100, 1))
+                .option(intOpt("element_offset_x", 0, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100, 1))
                 .option(floatOpt("element_scale", 1.0f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 3.0f))
                 .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
                 .option(floatOpt("element_offset_z", 0.0f, () -> c.elementOffsetZ, v -> c.elementOffsetZ = v, -1f, 1f))
@@ -348,18 +353,31 @@ public class BarConfig {
     private static Option<Boolean> boolOpt(String key, boolean def, java.util.function.Supplier<Boolean> g, java.util.function.Consumer<Boolean> s) {
         return Option.<Boolean>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(TickBoxControllerBuilder::create).build();
     }
+
     private static Option<Float> floatOpt(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max) {
-        return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(0.01f).formatValue(v -> Component.literal(String.format("%.2f", v)))).build();
+        return floatOptCustomStep(key, def, g, s, min, max, 0.01f, "%.2f");
     }
+
+    private static Option<Float> floatOptCustomStep(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max, float step, String format) {
+        return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(step).formatValue(v -> Component.literal(String.format(format, v)))).build();
+    }
+
     private static Option<Float> percentOpt(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max) {
         return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(0.01f).formatValue(v -> Component.literal(String.format("%.0f%%", v * 100f)))).build();
     }
-    private static Option<Integer> intOpt(String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max) {
-        return Option.<Integer>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(1)).build();
+
+    private static Option<Integer> intOpt(String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max, int step) {
+        return Option.<Integer>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(step)).build();
     }
+
+    private static Option<Integer> intOpt(String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max) {
+        return intOpt(key, def, g, s, min, max, 1);
+    }
+
     private static Option<Color> colorOpt(String key, Color def, java.util.function.Supplier<Color> g, java.util.function.Consumer<Color> s) {
         return Option.<Color>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(ColorControllerBuilder::create).build();
     }
+
     private static <T extends Enum<T>> Option<T> enumOpt(String key, Class<T> enumClass, T def, java.util.function.Supplier<T> g, java.util.function.Consumer<T> s) {
         return Option.<T>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> EnumControllerBuilder.create(opt).enumClass(enumClass)).build();
     }
