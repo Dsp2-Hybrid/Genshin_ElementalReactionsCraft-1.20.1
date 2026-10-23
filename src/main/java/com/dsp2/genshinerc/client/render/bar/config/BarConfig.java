@@ -350,7 +350,8 @@ public class BarConfig {
     }
 
     private static Option<Boolean> boolOpt(String key, boolean def, java.util.function.Supplier<Boolean> g, java.util.function.Consumer<Boolean> s) {
-        return Option.<Boolean>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(TickBoxControllerBuilder::create).build();
+        return Option.<Boolean>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key))))
+                .binding(def, g, s).controller(TickBoxControllerBuilder::create).build();
     }
 
     private static Option<Float> floatOpt(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max) {
@@ -358,15 +359,20 @@ public class BarConfig {
     }
 
     private static Option<Float> floatOptCustomStep(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max, float step, String format) {
-        return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(step).formatValue(v -> Component.literal(String.format(format, v)))).build();
+        return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s)
+                .controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(step)
+                .formatValue(v -> Component.literal(String.format(format, v)))).build();
     }
 
     private static Option<Float> percentOpt(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max) {
-        return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(0.01f).formatValue(v -> Component.literal(String.format("%.0f%%", v * 100f)))).build();
+        return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).
+                controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(0.01f).
+                formatValue(v -> Component.literal(String.format("%.0f%%", v * 100f)))).build();
     }
 
     private static Option<Integer> intOpt(String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max, int step) {
-        return Option.<Integer>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(step)).build();
+        return Option.<Integer>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).
+                binding(def, g, s).controller(opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(step)).build();
     }
 
     private static Option<Integer> intOpt(String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max) {
@@ -374,11 +380,13 @@ public class BarConfig {
     }
 
     private static Option<Color> colorOpt(String key, Color def, java.util.function.Supplier<Color> g, java.util.function.Consumer<Color> s) {
-        return Option.<Color>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(ColorControllerBuilder::create).build();
+        return Option.<Color>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).
+                binding(def, g, s).controller(ColorControllerBuilder::create).build();
     }
 
     private static <T extends Enum<T>> Option<T> enumOpt(String key, Class<T> enumClass, T def, java.util.function.Supplier<T> g, java.util.function.Consumer<T> s) {
-        return Option.<T>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).controller(opt -> EnumControllerBuilder.create(opt).enumClass(enumClass)).build();
+        return Option.<T>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).
+                controller(opt -> EnumControllerBuilder.create(opt).enumClass(enumClass)).build();
     }
 
     public static Color toAwt(String hex) {
