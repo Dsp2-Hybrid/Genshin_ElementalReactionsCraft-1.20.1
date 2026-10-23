@@ -102,16 +102,15 @@ public class BarConfig {
     @SerialEntry public float fatalShakeMaxPercent = 1.00f;
 
     @SerialEntry public float hurtDisplayTime = 3.0f;
-    @SerialEntry public float deathFadeDelay = 3.0f;
     @SerialEntry public float fadeInTime = 0.25f;
     @SerialEntry public float fadeOutTime = 0.4f;
     @SerialEntry public float deathFadeOutTime = 0.45f;
 
     @SerialEntry public BuffDirection buffDirection = BuffDirection.RIGHT_TO_LEFT;
-    @SerialEntry public int hudOffsetX = 0;
-    @SerialEntry public int hudOffsetY = 0;
+    @SerialEntry public int hudBuffOffsetX = -4;
+    @SerialEntry public int hudBuffOffsetY = 0;
     @SerialEntry public float buffSpacing = 37.0f;
-    @SerialEntry public int maxBuffs = 7;
+    @SerialEntry public int maxBuffs = 8;
     @SerialEntry public boolean buffRenderBackground = true;
     @SerialEntry public float buffBackgroundAlpha = 0.50f;
     @SerialEntry public float buffOpacity = 0.70f;
@@ -276,12 +275,12 @@ public class BarConfig {
                 .option(floatOpt("death_fade_out_time", 0.45f, () -> c.deathFadeOutTime, v -> c.deathFadeOutTime = v, 0.10f, 2.00f))
 
                 .option(enumOpt("buff_direction", BuffDirection.class, BuffDirection.RIGHT_TO_LEFT, () -> c.buffDirection, v -> c.buffDirection = v))
-                .option(intOpt("hud_offset_x", 0, () -> c.hudOffsetX, v -> c.hudOffsetX = v, -100, 100))
-                .option(intOpt("hud_offset_y", 0, () -> c.hudOffsetY, v -> c.hudOffsetY = v, -100, 100))
+                .option(intOpt("hud_offset_x", 0, () -> c.hudBuffOffsetX, v -> c.hudBuffOffsetX = v, -100, 100))
+                .option(intOpt("hud_offset_y", 0, () -> c.hudBuffOffsetY, v -> c.hudBuffOffsetY = v, -100, 100))
                 .option(floatOpt("buff_single_scale", 0.50f, () -> c.buffSingleScale, v -> c.buffSingleScale = v, 0.25f, 3.00f))
                 .option(floatOpt("buff_list_scale", 0.75f, () -> c.buffListScale, v -> c.buffListScale = v, 0.25f, 3.00f))
                 .option(floatOptCustomStep("buff_spacing", 37.0f, () -> c.buffSpacing, v -> c.buffSpacing = v, 10.0f, 80.0f, 0.1f, "%.1f"))
-                .option(intOpt("max_buffs", 7, () -> c.maxBuffs, v -> c.maxBuffs = v, 1, 20))
+                .option(intOpt("max_buffs", 8, () -> c.maxBuffs, v -> c.maxBuffs = v, 1, 20))
                 .option(boolOpt("buff_render_background", true, () -> c.buffRenderBackground, v -> c.buffRenderBackground = v))
                 .option(percentOpt("buff_background_alpha", 0.50f, () -> c.buffBackgroundAlpha, v -> c.buffBackgroundAlpha = v, 0.0f, 1.0f))
                 .option(percentOpt("buff_opacity", 0.70f, () -> c.buffOpacity, v -> c.buffOpacity = v, 0.0f, 1.0f))

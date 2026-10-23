@@ -31,8 +31,8 @@ public class StatusBar {
     private static final ResourceLocation INVENTORY_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/inventory.png");
 
     public static void renderHUD(LivingEntity entity, Matrix4f matrix, PoseStack poseStack, MultiBufferSource buffers, BarConfig config, float maxX, float minY, float yOffset, float globalAlpha) {
-        float hudX = config.hudOffsetX / 100.0f;
-        float hudY = config.hudOffsetY / 100.0f;
+        float hudX = config.hudBuffOffsetX / 100.0f;
+        float hudY = config.hudBuffOffsetY / 100.0f;
 
         float rightX = maxX + hudX;
         float bottomY = minY - hudY;
@@ -40,7 +40,6 @@ public class StatusBar {
         Collection<MobEffectInstance> activeEffects = entity.getActiveEffects();
         List<MobEffectInstance> sortedEffects = new ArrayList<>(activeEffects);
 
-        // Sort by duration descending (longest duration = newest = index 0)
         sortedEffects.sort(Comparator.comparingInt(MobEffectInstance::getDuration).reversed());
         int buffCount = Math.min(sortedEffects.size(), config.maxBuffs);
 
@@ -70,9 +69,9 @@ public class StatusBar {
             float bgAlpha = globalAlpha * config.buffBackgroundAlpha;
 
             int remaining = effect.getDuration();
-            if (remaining < 200) {
-                float elapsed = 200f - remaining;
-                float phase = (elapsed + (elapsed * elapsed) / 200f) * config.buffBlinkRate * 0.05f;
+            if (remaining < 100) {
+                float elapsed = 100f - remaining;
+                float phase = elapsed * config.buffBlinkRate * 0.05f * (1.0f + elapsed / 100f);
                 float blinkFactor = 0.5f + 0.5f * (float)Math.cos(phase);
                 iconAlpha *= blinkFactor;
                 bgAlpha *= blinkFactor;
@@ -125,7 +124,6 @@ public class StatusBar {
 
             int mainColorInt = (mainAlpha << 24) | (mainColor.getRGB() & 0xFFFFFF);
 
-            // Apply global HUD offsets + specific text offsets
             float textX = hudX + (config.levelOffsetX / 100.0f);
             float textY = hudY + (config.levelOffsetY / 100.0f);
             float textZ = config.levelOffsetZ + 0.2f;
@@ -152,7 +150,6 @@ public class StatusBar {
             float spacing = (config.elementSpacing / 100.0f) * config.elementScale;
             float elementTotalWidth = count * boxSize + (count - 1) * spacing;
 
-            // Apply global HUD offsets + specific element offsets
             float startX = hudX + (config.elementOffsetX / 100.0f) - (elementTotalWidth / 2.0f);
             float startY = hudY + (config.elementOffsetY / 100.0f);
 
