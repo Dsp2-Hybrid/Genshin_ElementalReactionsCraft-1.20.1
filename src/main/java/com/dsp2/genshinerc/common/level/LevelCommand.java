@@ -32,10 +32,10 @@ public class LevelCommand {
                             Entity target = findTarget(context.getSource());
                             if (target instanceof LivingEntity living && !(living instanceof Player)) {
                                 EntityLevelManager.setLevel(living, level);
-                                context.getSource().sendSuccess(() -> Component.literal("已将 " + living.getName().getString() + " 等级设置为: " + level), false);
+                                context.getSource().sendSuccess(() -> Component.literal("Set level of " + living.getName().getString() + " to: " + level), false);
                                 return 1;
                             }
-                            context.getSource().sendFailure(Component.literal("没有找到有效目标（不能是玩家）！"));
+                            context.getSource().sendFailure(Component.literal("No valid target found (cannot be player)!"));
                             return 0;
                         })
                 )
@@ -46,7 +46,7 @@ public class LevelCommand {
                         .executes(context -> {
                             if (context.getSource().getPlayer() != null) {
                                 EntityLevelManager.setPlayerLevel(context.getSource().getPlayerOrException(), IntegerArgumentType.getInteger(context, "level"));
-                                context.getSource().sendSuccess(() -> Component.literal("玩家流动等级已更新"), false);
+                                context.getSource().sendSuccess(() -> Component.literal("Player flowing level updated"), false);
                                 return 1;
                             }
                             return 0;
@@ -63,7 +63,7 @@ public class LevelCommand {
                                 if (id == 1) ElementManager.addElement(living, ElementType.PYRO);
                                 else if (id == 2) ElementManager.addElement(living, ElementType.BURNING);
                                 else if (id == 3) ElementManager.addElement(living, ElementType.FROZEN);
-                                context.getSource().sendSuccess(() -> Component.literal("已添加元素状态"), false);
+                                context.getSource().sendSuccess(() -> Component.literal("Added element ID: " + id), false);
                                 return 1;
                             }
                             return 0;
@@ -76,7 +76,7 @@ public class LevelCommand {
                     Entity target = findTarget(context.getSource());
                     if (target instanceof LivingEntity living) {
                         ElementManager.clearElements(living);
-                        context.getSource().sendSuccess(() -> Component.literal("已清除目标所有元素"), false);
+                        context.getSource().sendSuccess(() -> Component.literal("Cleared all elements on target"), false);
                         return 1;
                     }
                     return 0;
