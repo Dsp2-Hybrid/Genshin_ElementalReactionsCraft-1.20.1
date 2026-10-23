@@ -47,4 +47,4 @@ desktop.ini
 *.swp
 *~
 
-libs/
+/libs/
