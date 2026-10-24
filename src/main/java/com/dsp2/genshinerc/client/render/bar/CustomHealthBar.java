@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.client.render.bar;
 
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.hud.DeferredHudRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -19,6 +20,7 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import yesman.epicfight.client.gui.EntityUI;
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
@@ -68,7 +70,7 @@ public class CustomHealthBar extends EntityUI {
         }
 
         public static WriteMaskStateShard getWriteMask() {
-            return  COLOR_DEPTH_WRITE;
+            return COLOR_WRITE;
         }
 
         public static CullStateShard getCull() {
@@ -141,6 +143,10 @@ public class CustomHealthBar extends EntityUI {
         if (entity.getBbWidth() <= 0.0F || entity.getBbHeight() <= 0.0F) return false;
         if (entity instanceof ArmorStand) return false;
 
+        if (entity == Minecraft.getInstance().player && Minecraft.getInstance().options.getCameraType().isFirstPerson()) {
+            return false;
+        }
+
         MobCategory category = entity.getType().getCategory();
         boolean isValidEntity = entity instanceof Player ||
                 category == MobCategory.MONSTER ||
@@ -155,6 +161,7 @@ public class CustomHealthBar extends EntityUI {
             net.minecraft.client.player.LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null && entity.isInvisibleTo(localPlayer)) return false;
         }
+
         Minecraft mc = Minecraft.getInstance();
         if (!(entity instanceof Player) && mc.getCameraEntity() != null && entity.distanceToSqr(mc.getCameraEntity()) > config.maxDistance * config.maxDistance) return false;
 
@@ -166,6 +173,23 @@ public class CustomHealthBar extends EntityUI {
 
     @Override
     public void draw(LivingEntity entity, LivingEntityPatch<?> entitypatch, LocalPlayerPatch playerpatch, PoseStack poseStack, MultiBufferSource buffers, float partialTicks) {
+        if (Minecraft.getInstance().screen != null) {
+            drawNow(entity, poseStack, buffers, partialTicks);
+            return;
+        }
+
+        Matrix4f pose = new Matrix4f(poseStack.last().pose());
+        Matrix3f normal = new Matrix3f(poseStack.last().normal());
+
+        DeferredHudRenderer.submit(deferred -> {
+            PoseStack replay = new PoseStack();
+            replay.last().pose().set(pose);
+            replay.last().normal().set(normal);
+            drawNow(entity, replay, deferred, partialTicks);
+        });
+    }
+
+    private void drawNow(LivingEntity entity, PoseStack poseStack, MultiBufferSource buffers, float partialTicks) {
         BarConfig config = BarConfig.get();
         Tracker tracker = trackers.computeIfAbsent(entity, k -> new Tracker());
 

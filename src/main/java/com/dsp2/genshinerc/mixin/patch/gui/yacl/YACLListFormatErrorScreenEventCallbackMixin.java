@@ -19,7 +19,6 @@ public class YACLListFormatErrorScreenEventCallbackMixin {
             return false;
         }
 
-        // 强制取消焦点，强制 YACL 将输入框的内容立刻同步到 pendingValue
         self.setFocused(null);
 
         return BarConfig.hasInvalidEntityYOffset(BarConfig.PENDING_LIST_OPTION.pendingValue());
