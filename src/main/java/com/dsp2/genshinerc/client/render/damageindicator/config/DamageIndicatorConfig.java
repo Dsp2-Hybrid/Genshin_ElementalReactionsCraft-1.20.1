@@ -28,7 +28,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public double zOffset = -0.01;
     @SerialEntry public double particleMinSpacing = 0.30;
     @SerialEntry public int numberFormat = 1;
-    @SerialEntry public int lifeTime = 16;
+    @SerialEntry public int lifeTime = 18;
     @SerialEntry public double velocityMultiplier = 0.20;
     @SerialEntry public double gravityStrength = -0.15;
     @SerialEntry public boolean randomVelocityXZ = true;
@@ -54,7 +54,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public int lifeShrinkStartTick = 4;
     @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_OUT;
     @SerialEntry public boolean lifeFadeEnabled = true;
-    @SerialEntry public int lifeFadeStartTick = 6;
+    @SerialEntry public int lifeFadeStartTick = 8;
     @SerialEntry public EasingWrapper lifeFadeEasing = EasingWrapper.EASE_OUT;
     @SerialEntry public boolean birthScaleEnabled = true;
     @SerialEntry public int birthScaleDuration = 4;
@@ -185,7 +185,7 @@ public class DamageIndicatorConfig {
                 .option(dblOpt(false, "z_offset", -0.01, () -> c.zOffset, v -> c.zOffset = v, -0.15, 0.15))
                 .option(dblOpt(false, "particle_min_spacing", 0.30, () -> c.particleMinSpacing, v -> c.particleMinSpacing = v, 0.00, 2.00))
                 .option(enumOpt(false, "number_format", NumberFormat.ONE_DECIMAL, () -> NumberFormat.fromInt(c.numberFormat), v -> c.numberFormat = v.ordinal()))
-                .option(intOpt(false, "life_time", 16, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
+                .option(intOpt(false, "life_time", 18, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(false, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
                 .option(dblOpt(false, "gravity_strength", -0.15, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
                 .option(boolOpt(false, "random_velocity_xz", true, () -> c.randomVelocityXZ, v -> c.randomVelocityXZ = v))
@@ -211,7 +211,7 @@ public class DamageIndicatorConfig {
                 .option(intOpt(false, "life_shrink_start_tick", 4, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
                 .option(easingOpt(false, "life_shrink_easing", EasingWrapper.EASE_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))
                 .option(boolOpt(false, "life_fade_enabled", true, () -> c.lifeFadeEnabled, v -> c.lifeFadeEnabled = v))
-                .option(intOpt(false, "life_fade_start_tick", 6, () -> c.lifeFadeStartTick, v -> c.lifeFadeStartTick = v, 1, 30))
+                .option(intOpt(false, "life_fade_start_tick", 8, () -> c.lifeFadeStartTick, v -> c.lifeFadeStartTick = v, 1, 30))
                 .option(easingOpt(false, "life_fade_easing", EasingWrapper.EASE_OUT, () -> c.lifeFadeEasing, v -> c.lifeFadeEasing = v))
                 .option(boolOpt(false, "birth_scale_enabled", true, () -> c.birthScaleEnabled, v -> c.birthScaleEnabled = v))
                 .option(intOpt(false, "birth_scale_duration", 4, () -> c.birthScaleDuration, v -> c.birthScaleDuration = v, 1, 20))

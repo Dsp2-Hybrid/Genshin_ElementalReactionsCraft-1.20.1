@@ -68,7 +68,7 @@ public class CustomHealthBar extends EntityUI {
         }
 
         public static WriteMaskStateShard getWriteMask() {
-            return COLOR_WRITE;
+            return  COLOR_DEPTH_WRITE;
         }
 
         public static CullStateShard getCull() {
@@ -141,8 +141,6 @@ public class CustomHealthBar extends EntityUI {
         if (entity.getBbWidth() <= 0.0F || entity.getBbHeight() <= 0.0F) return false;
         if (entity instanceof ArmorStand) return false;
 
-        if (entitypatch == null && !(entity instanceof Player) && entity.isAlive()) return false;
-
         MobCategory category = entity.getType().getCategory();
         boolean isValidEntity = entity instanceof Player ||
                 category == MobCategory.MONSTER ||
@@ -153,8 +151,10 @@ public class CustomHealthBar extends EntityUI {
 
         if (!isValidEntity) return false;
 
-        if (entity.isAlive() && entity.isInvisibleTo(playerpatch.getOriginal())) return false;
-
+        if (entity.isAlive()) {
+            net.minecraft.client.player.LocalPlayer localPlayer = Minecraft.getInstance().player;
+            if (localPlayer != null && entity.isInvisibleTo(localPlayer)) return false;
+        }
         Minecraft mc = Minecraft.getInstance();
         if (!(entity instanceof Player) && mc.getCameraEntity() != null && entity.distanceToSqr(mc.getCameraEntity()) > config.maxDistance * config.maxDistance) return false;
 
