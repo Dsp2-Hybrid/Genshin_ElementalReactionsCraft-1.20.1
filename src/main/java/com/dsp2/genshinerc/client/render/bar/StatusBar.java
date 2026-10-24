@@ -1,18 +1,14 @@
 package com.dsp2.genshinerc.client.render.bar;
 
-import com.dsp2.genshinerc.client.render.bar.api.ElementManager;
-import com.dsp2.genshinerc.client.render.bar.api.ElementType;
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.element.ElementHudRenderer;
+import com.dsp2.genshinerc.client.render.hud.HudDraw;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -80,22 +76,17 @@ public class StatusBar {
             }
 
             if (config.buffRenderBackground) {
-                drawTexturedQuad(matrix, buffers, INVENTORY_TEXTURE, x, y, x + renderSize, y + renderSize,
-                        141f/256f, 166f/256f, 165f/256f, 190f/256f, 1f, 1f, 1f, bgAlpha, config.buffOffsetZ + 0.1f);
+                HudDraw.quad(matrix, buffers, INVENTORY_TEXTURE, x, y, x + renderSize, y + renderSize,
+                        141f/256f, 166f/256f, 165f/256f, 190f/256f, config.buffOffsetZ + 0.1f, 0xFFFFFF, bgAlpha);
             }
 
             TextureAtlasSprite sprite = Minecraft.getInstance().getMobEffectTextures().get(effect.getEffect());
             if (sprite != null) {
                 float pad = renderSize * 0.1f;
-                drawTexturedQuad(matrix, buffers, sprite.atlasLocation(), x + pad, y + pad, x + renderSize - pad, y + renderSize - pad,
-                        sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), 1f, 1f, 1f, iconAlpha, config.buffOffsetZ + 0.1f);
+                HudDraw.quad(matrix, buffers, sprite.atlasLocation(), x + pad, y + pad, x + renderSize - pad, y + renderSize - pad,
+                        sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(), config.buffOffsetZ + 0.1f, 0xFFFFFF, iconAlpha);
             }
         }
-
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.enableBlend();
-        RenderSystem.disableCull();
 
         Minecraft mc = Minecraft.getInstance();
 
@@ -151,44 +142,6 @@ public class StatusBar {
             poseStack.popPose();
         }
 
-        List<ElementType> elements = ElementManager.getElements(entity);
-        if (!elements.isEmpty()) {
-            int count = elements.size();
-            float boxSize = (config.elementBoxSize / 100.0f) * config.elementScale;
-            float spacing = (config.elementSpacing / 100.0f) * config.elementScale;
-            float elementTotalWidth = count * boxSize + (count - 1) * spacing;
-
-            float startX = hudX + (config.elementOffsetX / 100.0f) - (elementTotalWidth / 2.0f);
-            float startY = hudY + (config.elementOffsetY / 100.0f);
-
-            for (int i = 0; i < count; i++) {
-                float x = startX + i * (boxSize + spacing);
-                float iconCenterX = x + boxSize / 2.0f;
-                float iconCenterY = startY + boxSize / 2.0f;
-
-                ResourceLocation icon = ElementManager.getCurrentFrame(elements.get(i));
-
-                Matrix4f iconMatrix = new Matrix4f(matrix);
-                iconMatrix.translate(iconCenterX, iconCenterY, config.elementOffsetZ + 0.2f);
-
-                float halfSize = boxSize / 2.0f;
-                drawTexturedQuad(iconMatrix, buffers, icon,
-                        -halfSize, -halfSize, halfSize, halfSize,
-                        0, 0, 1, 1, 1f, 1f, 1f, globalAlpha, 0);
-            }
-        }
-
-        RenderSystem.enableCull();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-    }
-
-    private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a, float z) {
-        VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(tex));
-        int rInt = (int)(r * 255), gInt = (int)(g * 255), bInt = (int)(b * 255), aInt = (int)(a * 255);
-        vc.vertex(matrix, x1, y1, z).color(rInt, gInt, bInt, aInt).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y1, z).color(rInt, gInt, bInt, aInt).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x2, y2, z).color(rInt, gInt, bInt, aInt).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-        vc.vertex(matrix, x1, y2, z).color(rInt, gInt, bInt, aInt).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+        ElementHudRenderer.render(entity, matrix, buffers, config, hudX, hudY, globalAlpha);
     }
 }

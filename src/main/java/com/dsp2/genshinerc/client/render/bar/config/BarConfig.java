@@ -144,6 +144,22 @@ public class BarConfig {
     @SerialEntry public int elementOffsetY = 19;
     @SerialEntry public int elementOffsetX = 4;
     @SerialEntry public float elementScale = 1.50f;
+    @SerialEntry public float elementMinOpacity = 0.50f;
+    @SerialEntry public float elementGaugeWidth = 80.0f;
+    @SerialEntry public float elementGaugeHeight = 8.0f;
+    @SerialEntry public float elementGaugeGap = 4.0f;
+    @SerialEntry public float elementGaugeBgBrightness = 0.35f;
+    @SerialEntry public float elementGaugeBgAlpha = 0.80f;
+    @SerialEntry public float elementGaugeAnimTime = 0.30f;
+    @SerialEntry public float elementLowGaugeThreshold = 0.40f;
+    @SerialEntry public float elementFlickerMinAlpha = 0.25f;
+    @SerialEntry public float elementFlickerMinHz = 1.5f;
+    @SerialEntry public float elementFlickerMaxHz = 8.0f;
+    @SerialEntry public float elementFlashInTime = 0.08f;
+    @SerialEntry public float elementFlashHoldTime = 0.06f;
+    @SerialEntry public float elementFlashOutTime = 0.35f;
+    @SerialEntry public float elementGhostFadeTime = 0.40f;
+    @SerialEntry public float elementSlotSlideSpeed = 12.0f;
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -312,6 +328,22 @@ public class BarConfig {
                 .option(floatOpt("element_scale", 1.50f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 3.0f))
                 .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
                 .option(floatOpt("element_offset_z", 0.0f, () -> c.elementOffsetZ, v -> c.elementOffsetZ = v, -1f, 1f))
+                .option(percentOpt("element_min_opacity", 0.50f, () -> c.elementMinOpacity, v -> c.elementMinOpacity = v, 0f, 1f))
+                .option(floatOptCustomStep("element_gauge_width", 80f, () -> c.elementGaugeWidth, v -> c.elementGaugeWidth = v, 20f, 150f, 1f, "%.0f"))
+                .option(floatOptCustomStep("element_gauge_height", 8f, () -> c.elementGaugeHeight, v -> c.elementGaugeHeight = v, 2f, 30f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("element_gauge_gap", 4f, () -> c.elementGaugeGap, v -> c.elementGaugeGap = v, -20f, 30f, 0.5f, "%.1f"))
+                .option(percentOpt("element_gauge_bg_brightness", 0.35f, () -> c.elementGaugeBgBrightness, v -> c.elementGaugeBgBrightness = v, 0f, 1f))
+                .option(percentOpt("element_gauge_bg_alpha", 0.80f, () -> c.elementGaugeBgAlpha, v -> c.elementGaugeBgAlpha = v, 0f, 1f))
+                .option(floatOpt("element_gauge_anim_time", 0.30f, () -> c.elementGaugeAnimTime, v -> c.elementGaugeAnimTime = v, 0f, 2f))
+                .option(floatOpt("element_low_gauge_threshold", 0.40f, () -> c.elementLowGaugeThreshold, v -> c.elementLowGaugeThreshold = v, 0f, 2f))
+                .option(percentOpt("element_flicker_min_alpha", 0.25f, () -> c.elementFlickerMinAlpha, v -> c.elementFlickerMinAlpha = v, 0f, 1f))
+                .option(floatOptCustomStep("element_flicker_min_hz", 1.5f, () -> c.elementFlickerMinHz, v -> c.elementFlickerMinHz = v, 0.1f, 20f, 0.1f, "%.1f"))
+                .option(floatOptCustomStep("element_flicker_max_hz", 8.0f, () -> c.elementFlickerMaxHz, v -> c.elementFlickerMaxHz = v, 0.1f, 30f, 0.1f, "%.1f"))
+                .option(floatOpt("element_flash_in_time", 0.08f, () -> c.elementFlashInTime, v -> c.elementFlashInTime = v, 0f, 1f))
+                .option(floatOpt("element_flash_hold_time", 0.06f, () -> c.elementFlashHoldTime, v -> c.elementFlashHoldTime = v, 0f, 1f))
+                .option(floatOpt("element_flash_out_time", 0.35f, () -> c.elementFlashOutTime, v -> c.elementFlashOutTime = v, 0f, 2f))
+                .option(floatOpt("element_ghost_fade_time", 0.40f, () -> c.elementGhostFadeTime, v -> c.elementGhostFadeTime = v, 0f, 2f))
+                .option(floatOptCustomStep("element_slot_slide_speed", 12f, () -> c.elementSlotSlideSpeed, v -> c.elementSlotSlideSpeed = v, 1f, 40f, 0.5f, "%.1f"))
 
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))

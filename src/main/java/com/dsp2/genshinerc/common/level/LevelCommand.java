@@ -1,7 +1,5 @@
 package com.dsp2.genshinerc.common.level;
 
-import com.dsp2.genshinerc.client.render.bar.api.ElementManager;
-import com.dsp2.genshinerc.client.render.bar.api.ElementType;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.commands.CommandSourceStack;
@@ -54,37 +52,9 @@ public class LevelCommand {
                 )
         );
 
-        dispatcher.register(Commands.literal("d")
-                .then(Commands.argument("id", IntegerArgumentType.integer(1, 3))
-                        .executes(context -> {
-                            int id = IntegerArgumentType.getInteger(context, "id");
-                            Entity target = findTarget(context.getSource());
-                            if (target instanceof LivingEntity living) {
-                                if (id == 1) ElementManager.addElement(living, ElementType.PYRO);
-                                else if (id == 2) ElementManager.addElement(living, ElementType.BURNING);
-                                else if (id == 3) ElementManager.addElement(living, ElementType.FROZEN);
-                                context.getSource().sendSuccess(() -> Component.literal("Added element ID: " + id), false);
-                                return 1;
-                            }
-                            return 0;
-                        })
-                )
-        );
-
-        dispatcher.register(Commands.literal("dc")
-                .executes(context -> {
-                    Entity target = findTarget(context.getSource());
-                    if (target instanceof LivingEntity living) {
-                        ElementManager.clearElements(living);
-                        context.getSource().sendSuccess(() -> Component.literal("Cleared all elements on target"), false);
-                        return 1;
-                    }
-                    return 0;
-                })
-        );
     }
 
-    private static Entity findTarget(CommandSourceStack source) {
+    public static Entity findTarget(CommandSourceStack source) {
         Player player = source.getPlayer();
         if (player != null) {
             var hit = ProjectileUtil.getEntityHitResult(player, player.getEyePosition(), player.getEyePosition().add(player.
