@@ -30,7 +30,6 @@ public final class FrameSequence {
         return new FrameSequenceBuilder(id);
     }
 
-    // ---------- 控制 ----------
 
     public FrameSequence play() {
         this.playing   = true;
@@ -65,7 +64,6 @@ public final class FrameSequence {
         return this;
     }
 
-    // ---------- 状态 ----------
 
     public ResourceLocation getId()         { return id; }
     public FrameMetadata    getMetadata()   { return meta; }
@@ -77,7 +75,6 @@ public final class FrameSequence {
     public int              getWidth()      { return meta.width; }
     public int              getHeight()     { return meta.height; }
 
-    // ---------- 当前帧 ----------
 
     public ResourceLocation getCurrentFrame() {
         int totalFrames = meta.frames;

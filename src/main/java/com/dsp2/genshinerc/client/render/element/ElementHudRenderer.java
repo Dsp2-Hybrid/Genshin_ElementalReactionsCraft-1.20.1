@@ -77,7 +77,7 @@ public final class ElementHudRenderer {
         }
     }
 
-    private static int elementColor(ElementType type) {
+    public static int elementColor(ElementType type) {
         return BarConfig.toAwt(DamageIndicatorConfig.get().colorFor(type.colorKey())).getRGB() & 0xFFFFFF;
     }
 }

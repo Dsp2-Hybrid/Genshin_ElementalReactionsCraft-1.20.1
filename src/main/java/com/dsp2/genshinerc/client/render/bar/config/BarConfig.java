@@ -161,6 +161,23 @@ public class BarConfig {
     @SerialEntry public float elementGhostFadeTime = 0.40f;
     @SerialEntry public float elementSlotSlideSpeed = 12.0f;
 
+    @SerialEntry public float subBarWidth = 50f;
+    @SerialEntry public float shieldBarHeight = 30f;
+    @SerialEntry public float zhenMieBarHeight = 45f;
+    @SerialEntry public float subBarGap = 0f;
+    @SerialEntry public float subBarFillSpeed = 12f;
+    @SerialEntry public float subBarWhiteHoldTime = 0.35f;
+    @SerialEntry public float subBarWhiteDrainSpeed = 6f;
+    @SerialEntry public float subBarFlashTime = 0.25f;
+    @SerialEntry public float shieldBgBrightness = 0.30f;
+    @SerialEntry public float shieldBgAlpha = 0.85f;
+    @SerialEntry public float zhenMieBuffCycleHz = 1.0f;
+    @SerialEntry public Color shieldSpecialColor = new Color(0xE6E6E6);
+    @SerialEntry public Color zhenColor = new Color(0xFFE14D);
+    @SerialEntry public Color mieColor = new Color(0x8E0F12);
+    @SerialEntry public Color zhenBuffColor = new Color(0x4DA6FF);
+    @SerialEntry public Color mieBuffColor = new Color(0x8A3CFF);
+
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
     public float getYOffsetForEntity(String entityKey) {
@@ -344,6 +361,23 @@ public class BarConfig {
                 .option(floatOpt("element_flash_out_time", 0.35f, () -> c.elementFlashOutTime, v -> c.elementFlashOutTime = v, 0f, 2f))
                 .option(floatOpt("element_ghost_fade_time", 0.40f, () -> c.elementGhostFadeTime, v -> c.elementGhostFadeTime = v, 0f, 2f))
                 .option(floatOptCustomStep("element_slot_slide_speed", 12f, () -> c.elementSlotSlideSpeed, v -> c.elementSlotSlideSpeed = v, 1f, 40f, 0.5f, "%.1f"))
+
+                .option(floatOptCustomStep("sub_bar_width", 50f, () -> c.subBarWidth, v -> c.subBarWidth = v, 10f, 150f, 1f, "%.0f"))
+                .option(floatOptCustomStep("shield_bar_height", 30f, () -> c.shieldBarHeight, v -> c.shieldBarHeight = v, 5f, 150f, 1f, "%.0f"))
+                .option(floatOptCustomStep("zhen_mie_bar_height", 45f, () -> c.zhenMieBarHeight, v -> c.zhenMieBarHeight = v, 5f, 150f, 1f, "%.0f"))
+                .option(floatOptCustomStep("sub_bar_gap", 0f, () -> c.subBarGap, v -> c.subBarGap = v, -50f, 100f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("sub_bar_fill_speed", 12f, () -> c.subBarFillSpeed, v -> c.subBarFillSpeed = v, 1f, 50f, 0.5f, "%.1f"))
+                .option(floatOpt("sub_bar_white_hold_time", 0.35f, () -> c.subBarWhiteHoldTime, v -> c.subBarWhiteHoldTime = v, 0f, 2f))
+                .option(floatOptCustomStep("sub_bar_white_drain_speed", 6f, () -> c.subBarWhiteDrainSpeed, v -> c.subBarWhiteDrainSpeed = v, 1f, 20f, 0.5f, "%.1f"))
+                .option(floatOpt("sub_bar_flash_time", 0.25f, () -> c.subBarFlashTime, v -> c.subBarFlashTime = v, 0f, 2f))
+                .option(percentOpt("shield_bg_brightness", 0.30f, () -> c.shieldBgBrightness, v -> c.shieldBgBrightness = v, 0f, 1f))
+                .option(percentOpt("shield_bg_alpha", 0.85f, () -> c.shieldBgAlpha, v -> c.shieldBgAlpha = v, 0f, 1f))
+                .option(floatOptCustomStep("zhen_mie_buff_cycle_hz", 1.0f, () -> c.zhenMieBuffCycleHz, v -> c.zhenMieBuffCycleHz = v, 0.1f, 5f, 0.1f, "%.1f"))
+                .option(colorOpt("shield_special_color", new Color(0xE6E6E6), () -> c.shieldSpecialColor, v -> c.shieldSpecialColor = v))
+                .option(colorOpt("zhen_color", new Color(0xFFE14D), () -> c.zhenColor, v -> c.zhenColor = v))
+                .option(colorOpt("mie_color", new Color(0x8E0F12), () -> c.mieColor, v -> c.mieColor = v))
+                .option(colorOpt("zhen_buff_color", new Color(0x4DA6FF), () -> c.zhenBuffColor, v -> c.zhenBuffColor = v))
+                .option(colorOpt("mie_buff_color", new Color(0x8A3CFF), () -> c.mieBuffColor, v -> c.mieBuffColor = v))
 
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))

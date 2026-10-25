@@ -1,0 +1,41 @@
+package com.dsp2.genshinerc.client.render.bar.shield;
+
+import com.dsp2.genshinerc.client.render.bar.anim.AnimatedBarValue;
+import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.element.ElementHudRenderer;
+import com.dsp2.genshinerc.common.combat.shield.ShieldKind;
+import com.dsp2.genshinerc.common.element.ElementType;
+import com.dsp2.genshinerc.common.network.combat.SyncShieldPacket;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+
+public final class ClientShieldState {
+    final AnimatedBarValue bar = new AnimatedBarValue();
+    float max;
+    ShieldKind kind = ShieldKind.SPECIAL;
+    @Nullable ElementType element;
+    List<SyncShieldPacket.Entry> entries = List.of();
+
+    public void apply(SyncShieldPacket msg, long nowMs, BarConfig cfg) {
+        entries = msg.shields();
+        SyncShieldPacket.Entry top = null;
+        for (SyncShieldPacket.Entry e : entries) {
+            if (top == null || e.amount() > top.amount()) top = e;
+        }
+        if (top != null) {
+            max = top.max();
+            kind = top.kind();
+            element = top.element();
+        }
+        bar.set(top == null ? 0f : top.amount(), nowMs, cfg.subBarWhiteHoldTime, true);
+        if (msg.hit()) bar.flash(nowMs);
+    }
+
+    public List<SyncShieldPacket.Entry> entries() { return entries; }
+
+    int color(BarConfig cfg) {
+        if (kind == ShieldKind.ELEMENTAL && element != null) return ElementHudRenderer.elementColor(element);
+        return cfg.shieldSpecialColor.getRGB() & 0xFFFFFF;
+    }
+}

@@ -1,6 +1,11 @@
 package com.dsp2.genshinerc.client.render.bar;
 
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.bar.layout.BarAnchor;
+import com.dsp2.genshinerc.client.render.bar.layout.BarTextureInfo;
+import com.dsp2.genshinerc.client.render.bar.layout.BarTextures;
+import com.dsp2.genshinerc.client.render.bar.shield.ShieldBarRenderer;
+import com.dsp2.genshinerc.client.render.bar.zhenmie.ZhenMieBarRenderer;
 import com.dsp2.genshinerc.client.render.hud.DeferredHudRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -343,6 +348,11 @@ public class CustomHealthBar extends EntityUI {
         }
 
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        BarAnchor anchor = BarAnchor.fromFrameQuad(minX, minY, maxX, maxY, 0f, BarTextureInfo.get(BarTextures.FRAME));
+        ShieldBarRenderer.render(entity, matrix, buffers, config, anchor, alpha);
+        ZhenMieBarRenderer.render(entity, matrix, buffers, config, anchor, alpha);
+
 
         StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
         RenderSystem.disableBlend();

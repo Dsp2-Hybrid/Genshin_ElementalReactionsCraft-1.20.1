@@ -3,7 +3,11 @@
   "minVersion": "0.8",
   "package": "com.dsp2.genshinerc.mixin",
   "compatibilityLevel": "JAVA_17",
-  "mixins": [],
+  "mixins": [
+    "ef.MixinGuardSkill",
+    "ef.MixinImpactGuardSkill"
+
+  ],
   "client": [
     "patch.gui.epicfight.EntityRenderDispatcherMixin",
     "patch.gui.yacl.YACLScreenActionMixin",
