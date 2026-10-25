@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.client.render.damageindicator.api;
 
-import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorNetworkHandler;
+import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
 import net.minecraft.world.entity.LivingEntity;
 
 public class DamageIndicatorAPI {

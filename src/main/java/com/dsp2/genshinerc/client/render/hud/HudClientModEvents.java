@@ -1,8 +1,8 @@
 package com.dsp2.genshinerc.client.render.hud;
 
-import com.dsp2.genshinerc.client.gui.rpg.HudIconProvider;
+import com.dsp2.genshinerc.client.render.gui.rpg.HudIconProvider;
 import com.dsp2.genshinerc.client.render.bar.layout.BarTextureInfo;
-import com.dsp2.genshinerc.client.render.element.ElementTextures;
+import com.dsp2.genshinerc.client.render.bar.element.ElementTextures;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;

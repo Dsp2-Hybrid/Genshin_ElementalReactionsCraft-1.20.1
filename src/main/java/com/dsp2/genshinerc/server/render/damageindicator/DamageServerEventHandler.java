@@ -1,8 +1,8 @@
 package com.dsp2.genshinerc.server.render.damageindicator;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
-import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorNetworkHandler;
-import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorConfigSyncPacket;
+import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
+import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorConfigSyncPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;

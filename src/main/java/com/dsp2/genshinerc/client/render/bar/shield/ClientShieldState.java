@@ -2,10 +2,10 @@ package com.dsp2.genshinerc.client.render.bar.shield;
 
 import com.dsp2.genshinerc.client.render.bar.anim.AnimatedBarValue;
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
-import com.dsp2.genshinerc.client.render.element.ElementHudRenderer;
-import com.dsp2.genshinerc.common.combat.shield.ShieldKind;
-import com.dsp2.genshinerc.common.element.ElementType;
-import com.dsp2.genshinerc.common.network.combat.SyncShieldPacket;
+import com.dsp2.genshinerc.client.render.bar.element.ElementHudRenderer;
+import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
+import com.dsp2.genshinerc.common.core.element.ElementType;
+import com.dsp2.genshinerc.common.network.base.combat.SyncShieldPacket;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;

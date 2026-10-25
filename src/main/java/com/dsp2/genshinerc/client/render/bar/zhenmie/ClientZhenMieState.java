@@ -2,8 +2,8 @@ package com.dsp2.genshinerc.client.render.bar.zhenmie;
 
 import com.dsp2.genshinerc.client.render.bar.anim.AnimatedBarValue;
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
-import com.dsp2.genshinerc.common.combat.zhenmie.ClashResult;
-import com.dsp2.genshinerc.common.network.combat.SyncZhenMiePacket;
+import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
+import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
 import org.jetbrains.annotations.Nullable;
 
 public final class ClientZhenMieState {

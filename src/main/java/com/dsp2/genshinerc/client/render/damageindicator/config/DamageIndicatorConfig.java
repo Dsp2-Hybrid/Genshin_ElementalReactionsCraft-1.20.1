@@ -1,8 +1,8 @@
 package com.dsp2.genshinerc.client.render.damageindicator.config;
 
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
-import com.dsp2.genshinerc.common.network.damageindicator.DamageIndicatorNetworkHandler;
-import com.dsp2.genshinerc.common.network.damageindicator.ServerConfigUpdatePacket;
+import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
+import com.dsp2.genshinerc.common.network.base.damageindicator.ServerConfigUpdatePacket;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.*;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;

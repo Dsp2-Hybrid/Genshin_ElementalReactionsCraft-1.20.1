@@ -1,7 +1,7 @@
 package com.dsp2.genshinerc.client.render.bar;
 
 import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
-import com.dsp2.genshinerc.client.render.element.ElementHudRenderer;
+import com.dsp2.genshinerc.client.render.bar.element.ElementHudRenderer;
 import com.dsp2.genshinerc.client.render.hud.HudDraw;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import com.mojang.blaze3d.vertex.PoseStack;

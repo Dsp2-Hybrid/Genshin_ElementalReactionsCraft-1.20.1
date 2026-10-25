@@ -4,18 +4,18 @@
   "package": "com.dsp2.genshinerc.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "ef.MixinGuardSkill",
-    "ef.MixinImpactGuardSkill",
-    "ef.MixinBattleModeGui"
+    "mods.core.combat.epicfight.MixinGuardSkill",
+    "mods.core.combat.epicfight.MixinImpactGuardSkill",
+    "mods.core.combat.epicfight.MixinBattleModeGui"
 
   ],
   "client": [
-    "patch.gui.epicfight.EntityRenderDispatcherMixin",
-    "patch.gui.yacl.YACLScreenActionMixin",
-    "patch.gui.epicfight.fixguimodelbyef.MixinScreen",
-    "patch.gui.epicfight.fixguimodelbyef.MixinPatchedLivingEntityRenderer",
-    "patch.gui.epicfight.bar.MixinHealthBar",
-    "patch.gui.yacl.YACLListFormatErrorScreenEventCallbackMixin"
+    "mods.gui.epicfight.EntityRenderDispatcherMixin",
+    "mods.gui.libs.yacl.YACLScreenActionMixin",
+    "mods.gui.epicfight.fixguimodelbyef.MixinScreen",
+    "mods.gui.epicfight.fixguimodelbyef.MixinPatchedLivingEntityRenderer",
+    "mods.gui.epicfight.bar.MixinHealthBar",
+    "mods.gui.libs.yacl.YACLListFormatErrorScreenEventCallbackMixin"
 
 
   ],
