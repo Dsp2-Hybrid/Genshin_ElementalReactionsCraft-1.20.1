@@ -1,5 +1,7 @@
 package com.dsp2.genshinerc.client.render.hud;
 
+import com.dsp2.genshinerc.client.gui.rpg.HudIconProvider;
+import com.dsp2.genshinerc.client.render.bar.layout.BarTextureInfo;
 import com.dsp2.genshinerc.client.render.element.ElementTextures;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraftforge.api.distmarker.Dist;
@@ -16,6 +18,9 @@ public final class HudClientModEvents {
         event.registerReloadListener((ResourceManagerReloadListener) manager -> {
             WhiteMaskTextures.clear();
             ElementTextures.clear();
+
+            HudIconProvider.clear();
+            BarTextureInfo.clear();
         });
     }
 }

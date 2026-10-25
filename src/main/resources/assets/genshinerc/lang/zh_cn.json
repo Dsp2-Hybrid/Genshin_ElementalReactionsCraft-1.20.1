@@ -423,5 +423,20 @@
   "genshinerc.bar.config.zhen_buff_color": "振之增益颜色",
   "genshinerc.bar.config.zhen_buff_color.desc": "振条增益激活时的副颜色（黄蓝交替）。",
   "genshinerc.bar.config.mie_buff_color": "灭之增益颜色",
-  "genshinerc.bar.config.mie_buff_color.desc": "灭条增益激活时的副颜色（红紫交替）。"
+  "genshinerc.bar.config.mie_buff_color.desc": "灭条增益激活时的副颜色（红紫交替）。",
+
+  "genshinerc.bar.config.rpg_hud_enabled": "启用 RPG 界面",
+  "genshinerc.bar.config.rpg_hud_enabled.desc": "用 RPG 面板替换原版的生命、饥饿、氧气和经验条。",
+  "genshinerc.bar.config.rpg_hide_ef_hud": "隐藏史诗战斗界面",
+  "genshinerc.bar.config.rpg_hide_ef_hud.desc": "在 RPG 界面开启时隐藏 Epic Fight 的战斗模式 HUD。",
+  "genshinerc.bar.config.rpg_hud_scale": "RPG 界面缩放",
+  "genshinerc.bar.config.rpg_hud_scale.desc": "RPG 面板的大小。",
+  "genshinerc.bar.config.rpg_hud_offset_x": "RPG 界面 X 偏移",
+  "genshinerc.bar.config.rpg_hud_offset_x.desc": "距离屏幕左边缘的距离。",
+  "genshinerc.bar.config.rpg_hud_offset_y": "RPG 界面 Y 偏移",
+  "genshinerc.bar.config.rpg_hud_offset_y.desc": "距离屏幕下边缘的距离。",
+  "genshinerc.bar.config.rpg_model_yaw": "模型朝向角度",
+  "genshinerc.bar.config.rpg_model_yaw.desc": "玩家模型的旋转角度。",
+  "genshinerc.bar.config.rpg_model_zoom": "模型缩放",
+  "genshinerc.bar.config.rpg_model_zoom.desc": "1为全身；数值越高越聚焦于上半身。"
 }

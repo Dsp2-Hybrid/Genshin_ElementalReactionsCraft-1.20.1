@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "ef.MixinGuardSkill",
-    "ef.MixinImpactGuardSkill"
+    "ef.MixinImpactGuardSkill",
+    "ef.MixinBattleModeGui"
 
   ],
   "client": [

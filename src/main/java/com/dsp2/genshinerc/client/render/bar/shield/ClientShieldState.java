@@ -34,7 +34,19 @@ public final class ClientShieldState {
 
     public List<SyncShieldPacket.Entry> entries() { return entries; }
 
-    int color(BarConfig cfg) {
+    // --- 以下是新加的方法 ---
+
+    public float largestAmount() {
+        float m = 0f;
+        for (SyncShieldPacket.Entry e : entries) m = Math.max(m, e.amount());
+        return m;
+    }
+
+    public float maxAmount() {
+        return max;
+    }
+
+    public int color(BarConfig cfg) {
         if (kind == ShieldKind.ELEMENTAL && element != null) return ElementHudRenderer.elementColor(element);
         return cfg.shieldSpecialColor.getRGB() & 0xFFFFFF;
     }

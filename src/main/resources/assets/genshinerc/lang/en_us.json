@@ -416,5 +416,20 @@
   "genshinerc.bar.config.zhen_buff_color": "Zhen Buff Colour",
   "genshinerc.bar.config.zhen_buff_color.desc": "Secondary colour when the Zhen buff is active.",
   "genshinerc.bar.config.mie_buff_color": "Mie Buff Colour",
-  "genshinerc.bar.config.mie_buff_color.desc": "Secondary colour when the Mie buff is active."
+  "genshinerc.bar.config.mie_buff_color.desc": "Secondary colour when the Mie buff is active.",
+
+  "genshinerc.bar.config.rpg_hud_enabled": "RPG HUD",
+  "genshinerc.bar.config.rpg_hud_enabled.desc": "Replaces vanilla health, hunger, air and XP with the RPG panel.",
+  "genshinerc.bar.config.rpg_hide_ef_hud": "Hide Epic Fight HUD",
+  "genshinerc.bar.config.rpg_hide_ef_hud.desc": "Hides Epic Fight's battle-mode HUD while the RPG HUD is on.",
+  "genshinerc.bar.config.rpg_hud_scale": "RPG HUD Scale",
+  "genshinerc.bar.config.rpg_hud_scale.desc": "Size of the RPG panel.",
+  "genshinerc.bar.config.rpg_hud_offset_x": "RPG HUD Offset X",
+  "genshinerc.bar.config.rpg_hud_offset_x.desc": "Distance from the left screen edge.",
+  "genshinerc.bar.config.rpg_hud_offset_y": "RPG HUD Offset Y",
+  "genshinerc.bar.config.rpg_hud_offset_y.desc": "Distance from the bottom screen edge.",
+  "genshinerc.bar.config.rpg_model_yaw": "Model Angle",
+  "genshinerc.bar.config.rpg_model_yaw.desc": "Player model rotation in degrees.",
+  "genshinerc.bar.config.rpg_model_zoom": "Model Zoom",
+  "genshinerc.bar.config.rpg_model_zoom.desc": "1 shows the full body; higher values zoom toward the upper body."
 }

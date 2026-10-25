@@ -2,6 +2,7 @@ package com.dsp2.genshinerc.common.combat.zhenmie;
 
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import com.dsp2.genshinerc.common.network.combat.SyncZhenMiePacket;
+import com.dsp2.genshinerc.common.combat.ef.EfCombatBridge;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;

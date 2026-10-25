@@ -178,6 +178,14 @@ public class BarConfig {
     @SerialEntry public Color zhenBuffColor = new Color(0x4DA6FF);
     @SerialEntry public Color mieBuffColor = new Color(0x8A3CFF);
 
+    @SerialEntry public boolean rpgHudEnabled = true;
+    @SerialEntry public boolean rpgHideEfHud = true;
+    @SerialEntry public float rpgHudScale = 1.0f;
+    @SerialEntry public float rpgHudOffsetX = 6f;
+    @SerialEntry public float rpgHudOffsetY = 6f;
+    @SerialEntry public float rpgModelYaw = 25f;
+    @SerialEntry public float rpgModelZoom = 1.6f;
+
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
     public float getYOffsetForEntity(String entityKey) {
@@ -378,6 +386,14 @@ public class BarConfig {
                 .option(colorOpt("mie_color", new Color(0x8E0F12), () -> c.mieColor, v -> c.mieColor = v))
                 .option(colorOpt("zhen_buff_color", new Color(0x4DA6FF), () -> c.zhenBuffColor, v -> c.zhenBuffColor = v))
                 .option(colorOpt("mie_buff_color", new Color(0x8A3CFF), () -> c.mieBuffColor, v -> c.mieBuffColor = v))
+
+                .option(boolOpt("rpg_hud_enabled", true, () -> c.rpgHudEnabled, v -> c.rpgHudEnabled = v))
+                .option(boolOpt("rpg_hide_ef_hud", true, () -> c.rpgHideEfHud, v -> c.rpgHideEfHud = v))
+                .option(floatOptCustomStep("rpg_hud_scale", 1f, () -> c.rpgHudScale, v -> c.rpgHudScale = v, 0.5f, 3f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_hud_offset_x", 6f, () -> c.rpgHudOffsetX, v -> c.rpgHudOffsetX = v, 0f, 400f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_hud_offset_y", 6f, () -> c.rpgHudOffsetY, v -> c.rpgHudOffsetY = v, 0f, 400f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_model_yaw", 25f, () -> c.rpgModelYaw, v -> c.rpgModelYaw = v, -90f, 90f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_model_zoom", 1.6f, () -> c.rpgModelZoom, v -> c.rpgModelZoom = v, 1f, 3f, 0.05f, "%.2f"))
 
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))
