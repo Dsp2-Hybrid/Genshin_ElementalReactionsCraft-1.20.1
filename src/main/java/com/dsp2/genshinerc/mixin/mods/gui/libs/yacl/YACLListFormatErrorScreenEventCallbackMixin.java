@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.mixin.mods.gui.libs.yacl;
 
-import com.dsp2.genshinerc.client.render.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.common.config.ConfigListFormatErrorScreen;
 import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraft.client.Minecraft;

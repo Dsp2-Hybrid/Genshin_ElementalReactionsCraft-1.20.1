@@ -1,7 +1,7 @@
 package com.dsp2.genshinerc.common.network.sync.packet;
 
-import com.dsp2.genshinerc.client.render.bar.api.ClientElementCache;
-import com.dsp2.genshinerc.client.render.bar.api.ElementType;
+import com.dsp2.genshinerc.client.render.hud.bar.api.ClientElementCache;
+import com.dsp2.genshinerc.client.render.hud.bar.api.ElementType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
