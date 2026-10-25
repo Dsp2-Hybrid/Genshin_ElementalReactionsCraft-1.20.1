@@ -9,8 +9,27 @@ import yesman.epicfight.client.gui.BattleModeGui;
 
 @Mixin(value = BattleModeGui.class, remap = false)
 public abstract class MixinBattleModeGui {
-    @Inject(method = "renderGui", at = @At("HEAD"), cancellable = true)
-    private void genshinerc$hide(CallbackInfo ci) {
+
+    @Inject(method = "renderStaminaBar", at = @At("HEAD"), cancellable = true)
+    private void genshinerc$hideStamina(CallbackInfo ci) {
+        BarConfig cfg = BarConfig.get();
+        if (cfg.rpgHudEnabled && cfg.rpgHideEfHud) ci.cancel();
+    }
+
+    @Inject(method = "renderNormalSkills", at = @At("HEAD"), cancellable = true)
+    private void genshinerc$hideSkills(CallbackInfo ci) {
+        BarConfig cfg = BarConfig.get();
+        if (cfg.rpgHudEnabled && cfg.rpgHideEfHud) ci.cancel();
+    }
+
+    @Inject(method = "renderWeaponInnateSkill", at = @At("HEAD"), cancellable = true)
+    private void genshinerc$hideInnate(CallbackInfo ci) {
+        BarConfig cfg = BarConfig.get();
+        if (cfg.rpgHudEnabled && cfg.rpgHideEfHud) ci.cancel();
+    }
+
+    @Inject(method = "renderCharingBar", at = @At("HEAD"), cancellable = true)
+    private void genshinerc$hideCharging(CallbackInfo ci) {
         BarConfig cfg = BarConfig.get();
         if (cfg.rpgHudEnabled && cfg.rpgHideEfHud) ci.cancel();
     }
