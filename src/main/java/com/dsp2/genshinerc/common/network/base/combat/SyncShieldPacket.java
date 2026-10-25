@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.common.network.base.combat;
 
-import com.dsp2.genshinerc.client.render.bar.ClientCombatBars;
+import com.dsp2.genshinerc.client.render.hud.bar.ClientCombatBars;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.network.FriendlyByteBuf;

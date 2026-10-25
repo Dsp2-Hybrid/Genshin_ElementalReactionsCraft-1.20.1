@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.mixin.mods.gui.libs.yacl;
 
-import com.dsp2.genshinerc.client.render.damageindicator.config.DamageIndicatorConfigYaclActionTracker;
+import com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfigYaclActionTracker;
 import dev.isxander.yacl3.gui.YACLScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

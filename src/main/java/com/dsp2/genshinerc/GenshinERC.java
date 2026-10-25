@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc;
 
-import com.dsp2.genshinerc.client.render.bar.StatusBar;
+import com.dsp2.genshinerc.client.render.hud.bar.StatusBar;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.config.ConfigInitCore;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;

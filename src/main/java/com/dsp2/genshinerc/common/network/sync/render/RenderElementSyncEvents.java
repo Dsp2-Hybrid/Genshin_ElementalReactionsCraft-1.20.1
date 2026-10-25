@@ -1,8 +1,8 @@
 package com.dsp2.genshinerc.common.network.sync.render;
 
-import com.dsp2.genshinerc.client.render.bar.api.ClientElementCache;
-import com.dsp2.genshinerc.client.render.bar.api.ElementManager;
-import com.dsp2.genshinerc.client.render.bar.api.ElementType;
+import com.dsp2.genshinerc.client.render.hud.bar.api.ClientElementCache;
+import com.dsp2.genshinerc.client.render.hud.bar.api.ElementManager;
+import com.dsp2.genshinerc.client.render.hud.bar.api.ElementType;
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import com.dsp2.genshinerc.common.network.sync.packet.SyncElementsPacket;
 import net.minecraft.server.level.ServerPlayer;

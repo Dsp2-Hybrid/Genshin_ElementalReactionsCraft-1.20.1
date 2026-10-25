@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.common.network.base.element;
 
-import com.dsp2.genshinerc.client.render.bar.element.ClientAuraCache;
+import com.dsp2.genshinerc.client.render.hud.bar.element.ClientAuraCache;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;

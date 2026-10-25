@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.mixin.mods.gui.epicfight.bar;
 
-import com.dsp2.genshinerc.client.render.bar.CustomHealthBar;
+import com.dsp2.genshinerc.client.render.hud.bar.CustomHealthBar;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

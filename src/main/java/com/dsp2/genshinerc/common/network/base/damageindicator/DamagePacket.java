@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.common.network.base.damageindicator;
 
-import com.dsp2.genshinerc.client.render.damageindicator.event.ClientPacketHandler;
+import com.dsp2.genshinerc.client.render.world.component.damageindicator.event.ClientPacketHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
