@@ -94,7 +94,7 @@ public class BarConfig {
 
     @SerialEntry public float shakeDuration = 0.35f;
     @SerialEntry public float shakeAmplitudeFactor = 1.75f;
-    @SerialEntry public float shakeFrequencyFactor = 8.0f;
+    @SerialEntry public float shakeFrequencyFactor = 5.5f;
     @SerialEntry public float shakeDecayFactor = 0.50f;
 
     @SerialEntry public float fatalShakeMultiplier = 2.75f;
@@ -108,7 +108,7 @@ public class BarConfig {
 
     @SerialEntry public BuffDirection buffDirection = BuffDirection.RIGHT_TO_LEFT;
     @SerialEntry public int hudBuffOffsetX = -4;
-    @SerialEntry public int hudBuffOffsetY = 0;
+    @SerialEntry public int hudBuffOffsetY = 3;
     @SerialEntry public float buffSpacing = 37.0f;
     @SerialEntry public int maxBuffs = 8;
     @SerialEntry public boolean buffRenderBackground = true;
@@ -141,50 +141,51 @@ public class BarConfig {
 
     @SerialEntry public float elementBoxSize = 30.0f;
     @SerialEntry public float elementSpacing = 0.0f;
-    @SerialEntry public int elementOffsetY = 19;
+    @SerialEntry public int elementOffsetY = 30;
     @SerialEntry public int elementOffsetX = 4;
     @SerialEntry public float elementScale = 1.50f;
-    @SerialEntry public float elementMinOpacity = 0.50f;
+
+    @SerialEntry public float elementMinOpacity = 0.60f;
     @SerialEntry public float elementGaugeWidth = 80.0f;
     @SerialEntry public float elementGaugeHeight = 8.0f;
-    @SerialEntry public float elementGaugeGap = 4.0f;
+    @SerialEntry public float elementGaugeGap = -10.0f;
     @SerialEntry public float elementGaugeBgBrightness = 0.35f;
     @SerialEntry public float elementGaugeBgAlpha = 0.80f;
     @SerialEntry public float elementGaugeAnimTime = 0.30f;
-    @SerialEntry public float elementLowGaugeThreshold = 0.40f;
+    @SerialEntry public float elementLowGaugeThreshold = 0.50f;
     @SerialEntry public float elementFlickerMinAlpha = 0.25f;
     @SerialEntry public float elementFlickerMinHz = 1.5f;
-    @SerialEntry public float elementFlickerMaxHz = 8.0f;
+    @SerialEntry public float elementFlickerMaxHz = 5.5f;
     @SerialEntry public float elementFlashInTime = 0.08f;
     @SerialEntry public float elementFlashHoldTime = 0.06f;
     @SerialEntry public float elementFlashOutTime = 0.35f;
     @SerialEntry public float elementGhostFadeTime = 0.40f;
     @SerialEntry public float elementSlotSlideSpeed = 12.0f;
 
-    @SerialEntry public float subBarWidth = 50f;
-    @SerialEntry public float shieldBarHeight = 30f;
-    @SerialEntry public float zhenMieBarHeight = 45f;
-    @SerialEntry public float subBarGap = 0f;
+    @SerialEntry public float subBarWidth = 95f;
+    @SerialEntry public float shieldBarHeight = 45f;
+    @SerialEntry public float zhenMieBarHeight = 65f;
+    @SerialEntry public float subBarGap = -27f;
     @SerialEntry public float subBarFillSpeed = 12f;
     @SerialEntry public float subBarWhiteHoldTime = 0.35f;
     @SerialEntry public float subBarWhiteDrainSpeed = 6f;
     @SerialEntry public float subBarFlashTime = 0.25f;
     @SerialEntry public float shieldBgBrightness = 0.30f;
     @SerialEntry public float shieldBgAlpha = 0.85f;
-    @SerialEntry public float zhenMieBuffCycleHz = 1.0f;
+    @SerialEntry public float zhenMieBuffCycleHz = 0.3f;
     @SerialEntry public Color shieldSpecialColor = new Color(0xE6E6E6);
-    @SerialEntry public Color zhenColor = new Color(0xFFE14D);
-    @SerialEntry public Color mieColor = new Color(0x8E0F12);
-    @SerialEntry public Color zhenBuffColor = new Color(0x4DA6FF);
-    @SerialEntry public Color mieBuffColor = new Color(0x8A3CFF);
+    @SerialEntry public Color zhenColor = new Color(0x79C9FF);
+    @SerialEntry public Color mieColor = new Color(0xFFAFAF);
+    @SerialEntry public Color zhenBuffColor = new Color(0x0045FF);
+    @SerialEntry public Color mieBuffColor = new Color(0xFF00CE);
 
     @SerialEntry public boolean rpgHudEnabled = true;
     @SerialEntry public boolean rpgHideEfHud = true;
     @SerialEntry public float rpgHudScale = 1.0f;
     @SerialEntry public float rpgHudOffsetX = 6f;
     @SerialEntry public float rpgHudOffsetY = 6f;
-    @SerialEntry public float rpgModelYaw = 25f;
-    @SerialEntry public float rpgModelZoom = 1.6f;
+    @SerialEntry public float rpgModelYaw = -10f;
+    @SerialEntry public float rpgModelZoom = 1.55f;
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -317,7 +318,7 @@ public class BarConfig {
 
                 .option(enumOpt("buff_direction", BuffDirection.class, BuffDirection.RIGHT_TO_LEFT, () -> c.buffDirection, v -> c.buffDirection = v))
                 .option(intOpt("hud_offset_x", -4, () -> c.hudBuffOffsetX, v -> c.hudBuffOffsetX = v, -100, 100))
-                .option(intOpt("hud_offset_y", 0, () -> c.hudBuffOffsetY, v -> c.hudBuffOffsetY = v, -100, 100))
+                .option(intOpt("hud_offset_y", 3, () -> c.hudBuffOffsetY, v -> c.hudBuffOffsetY = v, -100, 100))
                 .option(floatOpt("buff_single_scale", 0.50f, () -> c.buffSingleScale, v -> c.buffSingleScale = v, 0.25f, 3.00f))
                 .option(floatOpt("buff_list_scale", 0.75f, () -> c.buffListScale, v -> c.buffListScale = v, 0.25f, 3.00f))
                 .option(floatOptCustomStep("buff_spacing", 37.0f, () -> c.buffSpacing, v -> c.buffSpacing = v, 10.0f, 80.0f, 0.1f, "%.1f"))
@@ -348,57 +349,60 @@ public class BarConfig {
 
                 .option(floatOptCustomStep("element_box_size", 30.0f, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10.0f, 70.0f, 0.1f, "%.1f"))
                 .option(floatOptCustomStep("element_spacing", 0.0f, () -> c.elementSpacing, v -> c.elementSpacing = v, -5.0f, 15.0f, 0.1f, "%.1f"))
-                .option(intOpt("element_offset_y", 19, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 100, 1))
+                .option(intOpt("element_offset_y", 30, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 120, 1))
                 .option(intOpt("element_offset_x", 4, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100, 1))
-                .option(floatOpt("element_scale", 1.50f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 3.0f))
+                .option(floatOpt("element_scale", 1.50f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 2.0f))
                 .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
                 .option(floatOpt("element_offset_z", 0.0f, () -> c.elementOffsetZ, v -> c.elementOffsetZ = v, -1f, 1f))
-                .option(percentOpt("element_min_opacity", 0.50f, () -> c.elementMinOpacity, v -> c.elementMinOpacity = v, 0f, 1f))
+                .option(percentOpt("element_min_opacity", 0.60f, () -> c.elementMinOpacity, v -> c.elementMinOpacity = v, 0f, 1f))
                 .option(floatOptCustomStep("element_gauge_width", 80f, () -> c.elementGaugeWidth, v -> c.elementGaugeWidth = v, 20f, 150f, 1f, "%.0f"))
                 .option(floatOptCustomStep("element_gauge_height", 8f, () -> c.elementGaugeHeight, v -> c.elementGaugeHeight = v, 2f, 30f, 0.5f, "%.1f"))
-                .option(floatOptCustomStep("element_gauge_gap", 4f, () -> c.elementGaugeGap, v -> c.elementGaugeGap = v, -20f, 30f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("element_gauge_gap", -10.0f, () -> c.elementGaugeGap, v -> c.elementGaugeGap = v, -50f, 30f, 0.5f, "%.1f"))
                 .option(percentOpt("element_gauge_bg_brightness", 0.35f, () -> c.elementGaugeBgBrightness, v -> c.elementGaugeBgBrightness = v, 0f, 1f))
                 .option(percentOpt("element_gauge_bg_alpha", 0.80f, () -> c.elementGaugeBgAlpha, v -> c.elementGaugeBgAlpha = v, 0f, 1f))
                 .option(floatOpt("element_gauge_anim_time", 0.30f, () -> c.elementGaugeAnimTime, v -> c.elementGaugeAnimTime = v, 0f, 2f))
-                .option(floatOpt("element_low_gauge_threshold", 0.40f, () -> c.elementLowGaugeThreshold, v -> c.elementLowGaugeThreshold = v, 0f, 2f))
+                .option(floatOpt("element_low_gauge_threshold", 0.50f, () -> c.elementLowGaugeThreshold, v -> c.elementLowGaugeThreshold = v, 0f, 2f))
                 .option(percentOpt("element_flicker_min_alpha", 0.25f, () -> c.elementFlickerMinAlpha, v -> c.elementFlickerMinAlpha = v, 0f, 1f))
                 .option(floatOptCustomStep("element_flicker_min_hz", 1.5f, () -> c.elementFlickerMinHz, v -> c.elementFlickerMinHz = v, 0.1f, 20f, 0.1f, "%.1f"))
-                .option(floatOptCustomStep("element_flicker_max_hz", 8.0f, () -> c.elementFlickerMaxHz, v -> c.elementFlickerMaxHz = v, 0.1f, 30f, 0.1f, "%.1f"))
+                .option(floatOptCustomStep("element_flicker_max_hz", 5.5f, () -> c.elementFlickerMaxHz, v -> c.elementFlickerMaxHz = v, 2.0f, 12.5f, 0.1f, "%.1f"))
                 .option(floatOpt("element_flash_in_time", 0.08f, () -> c.elementFlashInTime, v -> c.elementFlashInTime = v, 0f, 1f))
                 .option(floatOpt("element_flash_hold_time", 0.06f, () -> c.elementFlashHoldTime, v -> c.elementFlashHoldTime = v, 0f, 1f))
                 .option(floatOpt("element_flash_out_time", 0.35f, () -> c.elementFlashOutTime, v -> c.elementFlashOutTime = v, 0f, 2f))
                 .option(floatOpt("element_ghost_fade_time", 0.40f, () -> c.elementGhostFadeTime, v -> c.elementGhostFadeTime = v, 0f, 2f))
                 .option(floatOptCustomStep("element_slot_slide_speed", 12f, () -> c.elementSlotSlideSpeed, v -> c.elementSlotSlideSpeed = v, 1f, 40f, 0.5f, "%.1f"))
 
-                .option(floatOptCustomStep("sub_bar_width", 50f, () -> c.subBarWidth, v -> c.subBarWidth = v, 10f, 150f, 1f, "%.0f"))
-                .option(floatOptCustomStep("shield_bar_height", 30f, () -> c.shieldBarHeight, v -> c.shieldBarHeight = v, 5f, 150f, 1f, "%.0f"))
-                .option(floatOptCustomStep("zhen_mie_bar_height", 45f, () -> c.zhenMieBarHeight, v -> c.zhenMieBarHeight = v, 5f, 150f, 1f, "%.0f"))
-                .option(floatOptCustomStep("sub_bar_gap", 0f, () -> c.subBarGap, v -> c.subBarGap = v, -50f, 100f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("sub_bar_width", 95f, () -> c.subBarWidth, v -> c.subBarWidth = v, 10f, 150f, 1f, "%.0f"))
+                .option(floatOptCustomStep("shield_bar_height", 45f, () -> c.shieldBarHeight, v -> c.shieldBarHeight = v, 5f, 150f, 1f, "%.0f"))
+                .option(floatOptCustomStep("zhen_mie_bar_height", 65f, () -> c.zhenMieBarHeight, v -> c.zhenMieBarHeight = v, 5f, 150f, 1f, "%.0f"))
+                .option(floatOptCustomStep("sub_bar_gap", -27f, () -> c.subBarGap, v -> c.subBarGap = v, -50f, 25f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("sub_bar_fill_speed", 12f, () -> c.subBarFillSpeed, v -> c.subBarFillSpeed = v, 1f, 50f, 0.5f, "%.1f"))
                 .option(floatOpt("sub_bar_white_hold_time", 0.35f, () -> c.subBarWhiteHoldTime, v -> c.subBarWhiteHoldTime = v, 0f, 2f))
                 .option(floatOptCustomStep("sub_bar_white_drain_speed", 6f, () -> c.subBarWhiteDrainSpeed, v -> c.subBarWhiteDrainSpeed = v, 1f, 20f, 0.5f, "%.1f"))
                 .option(floatOpt("sub_bar_flash_time", 0.25f, () -> c.subBarFlashTime, v -> c.subBarFlashTime = v, 0f, 2f))
                 .option(percentOpt("shield_bg_brightness", 0.30f, () -> c.shieldBgBrightness, v -> c.shieldBgBrightness = v, 0f, 1f))
                 .option(percentOpt("shield_bg_alpha", 0.85f, () -> c.shieldBgAlpha, v -> c.shieldBgAlpha = v, 0f, 1f))
-                .option(floatOptCustomStep("zhen_mie_buff_cycle_hz", 1.0f, () -> c.zhenMieBuffCycleHz, v -> c.zhenMieBuffCycleHz = v, 0.1f, 5f, 0.1f, "%.1f"))
+                .option(floatOptCustomStep("zhen_mie_buff_cycle_hz", 0.3f, () -> c.zhenMieBuffCycleHz, v -> c.zhenMieBuffCycleHz = v, 0.05f, 2.00f, 0.01f, "%.2f"))
                 .option(colorOpt("shield_special_color", new Color(0xE6E6E6), () -> c.shieldSpecialColor, v -> c.shieldSpecialColor = v))
-                .option(colorOpt("zhen_color", new Color(0xFFE14D), () -> c.zhenColor, v -> c.zhenColor = v))
-                .option(colorOpt("mie_color", new Color(0x8E0F12), () -> c.mieColor, v -> c.mieColor = v))
-                .option(colorOpt("zhen_buff_color", new Color(0x4DA6FF), () -> c.zhenBuffColor, v -> c.zhenBuffColor = v))
-                .option(colorOpt("mie_buff_color", new Color(0x8A3CFF), () -> c.mieBuffColor, v -> c.mieBuffColor = v))
+                .option(colorOpt("zhen_color", new Color(0x79C9FF), () -> c.zhenColor, v -> c.zhenColor = v))
+                .option(colorOpt("mie_color", new Color(0xFFAFAF), () -> c.mieColor, v -> c.mieColor = v))
+                .option(colorOpt("zhen_buff_color", new Color(0x0045FF), () -> c.zhenBuffColor, v -> c.zhenBuffColor = v))
+                .option(colorOpt("mie_buff_color", new Color(0xFF00CE), () -> c.mieBuffColor, v -> c.mieBuffColor = v))
 
                 .option(boolOpt("rpg_hud_enabled", true, () -> c.rpgHudEnabled, v -> c.rpgHudEnabled = v))
                 .option(boolOpt("rpg_hide_ef_hud", true, () -> c.rpgHideEfHud, v -> c.rpgHideEfHud = v))
                 .option(floatOptCustomStep("rpg_hud_scale", 1f, () -> c.rpgHudScale, v -> c.rpgHudScale = v, 0.5f, 3f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_hud_offset_x", 6f, () -> c.rpgHudOffsetX, v -> c.rpgHudOffsetX = v, 0f, 400f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_hud_offset_y", 6f, () -> c.rpgHudOffsetY, v -> c.rpgHudOffsetY = v, 0f, 400f, 1f, "%.0f"))
-                .option(floatOptCustomStep("rpg_model_yaw", 25f, () -> c.rpgModelYaw, v -> c.rpgModelYaw = v, -90f, 90f, 1f, "%.0f"))
-                .option(floatOptCustomStep("rpg_model_zoom", 1.6f, () -> c.rpgModelZoom, v -> c.rpgModelZoom = v, 1f, 3f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_model_yaw", -10f, () -> c.rpgModelYaw, v -> c.rpgModelYaw = v, -90f, 90f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_model_zoom", 1.55f, () -> c.rpgModelZoom, v -> c.rpgModelZoom = v, 0.65f, 3.00f, 0.01f, "%.2f"))
 
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))
                         .description(OptionDescription.of(td(P("entity_y_offsets"))))
-                        .action((screen, option) -> Minecraft.getInstance().setScreen(createOffsetScreen(screen)))
+                        .action((screen, option) -> {
+                            YaclScrollMemory.save((YACLScreen) screen);
+                            Minecraft.getInstance().setScreen(createOffsetScreen(screen));
+                        })
                         .build())
                 .build();
     }
@@ -443,13 +447,13 @@ public class BarConfig {
     private static Option<Float> floatOptCustomStep(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max, float step, String format) {
         return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s)
                 .controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(step)
-                .formatValue(v -> Component.literal(String.format(format, v)))).build();
+                        .formatValue(v -> Component.literal(String.format(format, v)))).build();
     }
 
     private static Option<Float> percentOpt(String key, float def, java.util.function.Supplier<Float> g, java.util.function.Consumer<Float> s, float min, float max) {
         return Option.<Float>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s).
                 controller(opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(0.01f).
-                formatValue(v -> Component.literal(String.format("%.0f%%", v * 100f)))).build();
+                        formatValue(v -> Component.literal(String.format("%.0f%%", v * 100f)))).build();
     }
 
     private static Option<Integer> intOpt(String key, int def, java.util.function.Supplier<Integer> g, java.util.function.Consumer<Integer> s, int min, int max, int step) {

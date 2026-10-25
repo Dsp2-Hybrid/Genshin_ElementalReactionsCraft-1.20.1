@@ -7,7 +7,7 @@ public enum ElementType {
     HYDRO("hyd.png", null, "hydro"),
     ELECTRO("elec.png", null, "electro"),
     CRYO("cry_0.png", null, "cryo"),
-    DENDRO("den.png", "den_ani", "dendro"),
+    DENDRO("den.png", null, "dendro"),
     ANEMO("ane.png", null, "anemo"),
     GEO("geo.png", null, "geo"),
     BURNING("pyro.png", "pyro_ani", "pyro"),

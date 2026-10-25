@@ -45,7 +45,10 @@ public final class ZhenMieBarRenderer {
 
         SlicedBar.draw(m, buffers, BarTextures.FRAME, frame, q, q[0], q[2], z, 0xFFFFFF, alpha);
 
-        float l = fill.visibleLeft(q), r = fill.visibleRight(q), span = r - l;
+        float mieDebugOffset = 0.1f;
+        float l = fill.visibleLeft(q);
+        float r = fill.visibleRight(q) + mieDebugOffset;
+        float span = r - l;
 
         int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF;
         int mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;

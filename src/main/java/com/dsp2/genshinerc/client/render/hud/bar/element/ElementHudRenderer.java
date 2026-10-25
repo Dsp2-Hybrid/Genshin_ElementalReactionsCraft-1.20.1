@@ -60,11 +60,11 @@ public final class ElementHudRenderer {
         float barBottom = cy + half + box * cfg.elementGaugeGap / 100f;
         float bx1 = cx - barW / 2f;
         HudDraw.rect(m, buffers, bx1, barBottom, bx1 + barW, barBottom + barH, z,
-                HudDraw.scaleRgb(color, cfg.elementGaugeBgBrightness), alpha * cfg.elementGaugeBgAlpha);
+                HudDraw.scaleRgb(color, cfg.elementGaugeBgBrightness), alpha * cfg.elementGaugeBgAlpha * 0.85f);
         float fill = Mth.clamp(gauge / ElementGauge.MAX_GAUGE, 0f, 1f);
         if (fill > 0.001f) {
             HudDraw.rect(m, buffers, bx1, barBottom, bx1 + barW * fill, barBottom + barH, z,
-                    HudDraw.lerpRgb(color, 0xFFFFFF, white), alpha);
+                    HudDraw.lerpRgb(color, 0xFFFFFF, white), alpha * 0.7f);
         }
 
         ResourceLocation icon = ElementTextures.currentFrame(aura.type(), nowMs);
