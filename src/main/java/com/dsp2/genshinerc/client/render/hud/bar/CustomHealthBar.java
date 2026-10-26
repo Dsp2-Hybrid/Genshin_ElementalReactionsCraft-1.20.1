@@ -225,7 +225,7 @@ public class CustomHealthBar extends EntityUI {
         float innerMinY = minY + (6.0f / 32.0f) * scaledWidth;
         float innerMaxY = maxY - (12.0f / 32.0f) * scaledWidth;
 
-        boolean isAlly = !(entity instanceof Monster);
+        boolean isAlly = !(entity instanceof net.minecraft.world.entity.monster.Enemy);
         Color awtColor = isAlly ? BarConfig.toAwt(config.allyColor) : BarConfig.toAwt(config.enemyColor);
         float r = awtColor.getRed() / 255f;
         float g = awtColor.getGreen() / 255f;
