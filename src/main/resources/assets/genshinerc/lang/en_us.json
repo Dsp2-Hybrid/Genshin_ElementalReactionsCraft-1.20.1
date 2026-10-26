@@ -122,7 +122,7 @@
   "genshinerc.config.select": "Select Config Type",
   "genshinerc.config.client": "Client Render Config",
   "genshinerc.config.server": "Server Broadcast Config",
-  "key.genshinerc.damageindicator.config": "Open Damage Indicator Config",
+  "key.genshinerc.damageindicator.config": "Open GenshinERC Config",
   "category.genshinerc.damageindicator": "GenshinERC",
   "genshinerc.damageindicator.damage_type.physical": "Physical",
   "genshinerc.damageindicator.damage_type.pyro": "Pyro",

@@ -124,7 +124,7 @@
   "genshinerc.config.select": "选择配置类型",
   "genshinerc.config.client": "客户端配置",
   "genshinerc.config.server": "服务端配置",
-  "key.genshinerc.damageindicator.config": "打开伤害指示器配置",
+  "key.genshinerc.damageindicator.config": "打开原神-元素工艺:史诗战斗配置",
   "category.genshinerc.damageindicator": "GenshinERC",
 
   "genshinerc.damageindicator.damage_type.physical": "物理",

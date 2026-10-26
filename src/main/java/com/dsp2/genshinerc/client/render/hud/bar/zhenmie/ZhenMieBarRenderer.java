@@ -20,16 +20,14 @@ public final class ZhenMieBarRenderer {
     private static final long KNOCKDOWN_SWAP_MS = 90L;
     private static final float MARKER_WIDTH = 0.6f;
 
+    private static final float MIE_RIGHT_OFFSET = 0.02f;
+    private static final float MIE_TOP_OFFSET = 0.02f;
+    private static final float MIE_BOTTOM_OFFSET = 0.02f;
+
     private ZhenMieBarRenderer() {}
 
     public static void render(LivingEntity entity, Matrix4f m, MultiBufferSource buffers,
                               BarConfig cfg, BarAnchor anchor, float alpha) {
-
-        ClientZhenMieState s = ClientCombatBars.zhenMie(entity.getId());
-        if (s == null) return;
-        long now = Util.getMillis();
-        s.update(now, cfg);
-
         float w = anchor.width() * cfg.subBarWidth / 100f;
         float h = anchor.height() * cfg.zhenMieBarHeight / 100f;
         float vx1 = anchor.centerX() - w / 2f, vx2 = vx1 + w;
@@ -42,13 +40,21 @@ public final class ZhenMieBarRenderer {
 
         SlicedBar.draw(m, buffers, BarTextures.FRAME, frame, q, q[0], q[2], z, 0xFFFFFF, alpha);
 
+        ClientZhenMieState s = ClientCombatBars.zhenMie(entity.getId());
+        if (s == null) return;
+
+        long now = Util.getMillis();
+        s.update(now, cfg);
+
         float l = frame.visibleLeft(q);
         float r = frame.visibleRight(q);
+        float span = r - l;
+        float topY = frame.visibleTop(q);
+        float bottomY = frame.visibleBottom(q);
 
-
-        float MIE_OFFSET = 0.01f;
-        float rMie = r + MIE_OFFSET;
-        float spanMie = rMie - l;
+        float uLeft = fill.left / (float) fill.width;
+        float uRight = fill.right / (float) fill.width;
+        float uSpan = uRight - uLeft;
 
         int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF;
         int mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;
@@ -58,26 +64,32 @@ public final class ZhenMieBarRenderer {
         float zm = Mth.clamp(s.zhen.main(), 0f, 1f), zt = Mth.clamp(s.zhen.trail(), 0f, 1f);
         float mm = Mth.clamp(s.mie.main(), 0f, 1f), mt = Mth.clamp(s.mie.trail(), 0f, 1f);
 
-        if (zt > zm) SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, l, l + (r - l) * zt, z, 0xFFFFFF, alpha);
-        if (zm > 0f) SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, l, l + (r - l) * zm, z,
+        if (zt > zm) SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, l, l + span * zt, z, 0xFFFFFF, alpha);
+        if (zm > 0f) SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, l, l + span * zm, z,
                 HudDraw.lerpRgb(zc, 0xFFFFFF, s.zhen.whiteness(now, cfg.subBarFlashTime)), alpha);
 
+        float rMie = r + MIE_RIGHT_OFFSET;
+        float topMie = topY - MIE_TOP_OFFSET;
+        float bottomMie = bottomY + MIE_BOTTOM_OFFSET;
+
         if (mt > mm) {
-            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - spanMie * mt, vy1, rMie, vy2,
-                    1f - mt, 0f, 1f, 1f, z, 0xFFFFFF, alpha);
+            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * mt, bottomMie, rMie, topMie,
+                    uRight - uSpan * mt, 0f, uRight, 1f, z, 0xFFFFFF, alpha);
         }
         if (mm > 0f) {
             int c = HudDraw.lerpRgb(mc, 0xFFFFFF, s.mie.whiteness(now, cfg.subBarFlashTime));
-            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - spanMie * mm, vy1, rMie, vy2,
-                    1f - mm, 0f, 1f, 1f, z, c, alpha);
+            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * mm, bottomMie, rMie, topMie,
+                    uRight - uSpan * mm, 0f, uRight, 1f, z, c, alpha);
         }
 
-        if (s.clash != null) drawClash(m, buffers, s, fill, q, l, rMie, vy1, vy2, z, zhenBase, mieBase, alpha, now);
+        if (s.clash != null) {
+            drawClash(m, buffers, s, fill, l, rMie, bottomMie, topMie, z, zhenBase, mieBase, uLeft, uRight, alpha, now);
+        }
     }
 
     private static void drawClash(Matrix4f m, MultiBufferSource buffers, ClientZhenMieState s, BarTextureInfo fill,
-                                  float[] q, float l, float r, float vy1, float vy2, float z,
-                                  int zhenBase, int mieBase, float alpha, long now) {
+                                  float l, float r, float bottomY, float topY, float z,
+                                  int zhenBase, int mieBase, float uLeft, float uRight, float alpha, long now) {
         float t = (now - s.clashStartMs) / (s.clash.visualSeconds() * 1000f);
         float fade = 1f - Mth.clamp(t, 0f, 1f);
         int color;
@@ -90,11 +102,12 @@ public final class ZhenMieBarRenderer {
             case KNOCKDOWN -> color = (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
             default -> color = 0xFFFFFF;
         }
-        HudDraw.quad(m, buffers, BarTextures.FILL, l, vy1, r, vy2, 0f, 0f, 1f, 1f, z, color, alpha * fade * a * CLASH_OVERLAY_ALPHA);
+
+        HudDraw.quad(m, buffers, BarTextures.FILL, l, bottomY, r, topY, uLeft, 0f, uRight, 1f, z, color, alpha * fade * a * CLASH_OVERLAY_ALPHA);
 
         float x = Mth.lerp(s.clashPoint, l, r);
-        float half = (vy2 - vy1) * MARKER_WIDTH / 2f;
-        HudDraw.rect(m, buffers, x - half, vy1, x + half, vy2, z, 0xFFFFFF, alpha * fade);
+        float half = (topY - bottomY) * MARKER_WIDTH / 2f;
+        HudDraw.rect(m, buffers, x - half, bottomY, x + half, topY, z, 0xFFFFFF, alpha * fade);
     }
 
     private static int cycle(int a, int b, float hz, long now) {

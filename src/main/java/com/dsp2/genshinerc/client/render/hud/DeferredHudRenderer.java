@@ -43,6 +43,11 @@ public final class DeferredHudRenderer {
         modelView.setIdentity();
         RenderSystem.applyModelViewMatrix();
 
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
         MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         try {
             for (Consumer<MultiBufferSource> task : QUEUE) task.accept(buffers);
