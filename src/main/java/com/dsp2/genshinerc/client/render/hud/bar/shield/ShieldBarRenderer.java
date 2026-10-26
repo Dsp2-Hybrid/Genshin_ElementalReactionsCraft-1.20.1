@@ -30,7 +30,7 @@ public final class ShieldBarRenderer {
         float denom = Math.max(entity.getMaxHealth(), s.max);
         if (denom <= 0f) return;
 
-        float w = anchor.width() * cfg.subBarWidth / 100f;
+        float w = anchor.width();
         float h = anchor.height() * cfg.shieldBarHeight / 100f;
         float vx1 = anchor.centerX() - w / 2f, vx2 = vx1 + w;
         float vy1 = anchor.top() + anchor.height() * cfg.subBarGap / 100f, vy2 = vy1 + h;
