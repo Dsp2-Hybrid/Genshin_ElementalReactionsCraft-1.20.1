@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.core.combat.ef;
+package com.dsp2.genshinerc.common.core.combat.epicfight;
 
 import com.dsp2.genshinerc.common.core.combat.zhenmie.DefenseOutcome;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;

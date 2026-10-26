@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.mixin.mods.core.combat.epicfight;
 
-import com.dsp2.genshinerc.common.core.combat.ef.ZhenMieCombatEvents;
+import com.dsp2.genshinerc.common.core.combat.epicfight.ZhenMieCombatEvents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
