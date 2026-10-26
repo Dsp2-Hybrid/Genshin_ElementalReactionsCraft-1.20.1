@@ -168,7 +168,14 @@ public class CustomHealthBar extends EntityUI {
         }
 
         Minecraft mc = Minecraft.getInstance();
-        if (!(entity instanceof Player) && mc.getCameraEntity() != null && entity.distanceToSqr(mc.getCameraEntity()) > config.maxDistance * config.maxDistance) return false;
+        if (!(entity instanceof Player) && mc.getCameraEntity() != null) {
+            if (entity.distanceToSqr(mc.getCameraEntity()) > config.maxDistance * config.maxDistance) {
+                return false;
+            }
+            if (LineOfSightChecker.isOccluded(mc, entity)) {
+                return false;
+            }
+        }
 
         Tracker tracker = trackers.computeIfAbsent(entity, k -> new Tracker());
         tracker.update(entity, config);

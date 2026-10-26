@@ -20,9 +20,9 @@ public final class ZhenMieBarRenderer {
     private static final long KNOCKDOWN_SWAP_MS = 90L;
     private static final float MARKER_WIDTH = 0.6f;
 
-    private static final float MIE_RIGHT_OFFSET = 0.02f;
-    private static final float MIE_TOP_OFFSET = 0.02f;
-    private static final float MIE_BOTTOM_OFFSET = 0.02f;
+    private static final float MIE_RIGHT_OFFSET = 0.003f;
+    private static final float MIE_TOP_OFFSET = 0.10f;
+    private static final float MIE_BOTTOM_OFFSET = 0.088f;
 
     private ZhenMieBarRenderer() {}
 
