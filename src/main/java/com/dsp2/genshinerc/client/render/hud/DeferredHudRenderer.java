@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT)
 public final class DeferredHudRenderer {
     private static final List<Consumer<MultiBufferSource>> QUEUE = new ArrayList<>();
+    private static final List<Consumer<MultiBufferSource>> POST_QUEUE = new ArrayList<>();
 
     private DeferredHudRenderer() {}
 
@@ -25,14 +26,19 @@ public final class DeferredHudRenderer {
         QUEUE.add(task);
     }
 
+    public static void submitPost(Consumer<MultiBufferSource> task) {
+        POST_QUEUE.add(task);
+    }
+
     @SubscribeEvent
     public static void onRenderStage(RenderLevelStageEvent event) {
         RenderLevelStageEvent.Stage stage = event.getStage();
         if (stage == RenderLevelStageEvent.Stage.AFTER_SKY) {
             QUEUE.clear();
+            POST_QUEUE.clear();
             return;
         }
-        if (stage != RenderLevelStageEvent.Stage.AFTER_LEVEL || QUEUE.isEmpty()) return;
+        if (stage != RenderLevelStageEvent.Stage.AFTER_LEVEL || (QUEUE.isEmpty() && POST_QUEUE.isEmpty())) return;
 
         Matrix4f prevProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
         VertexSorting prevSorting = RenderSystem.getVertexSorting();
@@ -52,8 +58,12 @@ public final class DeferredHudRenderer {
         try {
             for (Consumer<MultiBufferSource> task : QUEUE) task.accept(buffers);
             buffers.endBatch();
+
+            for (Consumer<MultiBufferSource> task : POST_QUEUE) task.accept(buffers);
+            buffers.endBatch();
         } finally {
             QUEUE.clear();
+            POST_QUEUE.clear();
             modelView.popPose();
             RenderSystem.applyModelViewMatrix();
             RenderSystem.setProjectionMatrix(prevProjection, prevSorting);

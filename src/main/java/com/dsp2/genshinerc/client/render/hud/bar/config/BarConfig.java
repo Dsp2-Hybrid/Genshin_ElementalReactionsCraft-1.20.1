@@ -207,6 +207,13 @@ public class BarConfig {
     @SerialEntry public float rpgFoodPreviewHz = 1.2f;
     @SerialEntry public float rpgExhaustionAlpha = 0.55f;
     @SerialEntry public Color rpgExpColor = new Color(0x5BE35B);
+    @SerialEntry public float rpgPortraitX = 0f, rpgPortraitY = -52f, rpgPortraitW = 52f, rpgPortraitH = 52f;
+    @SerialEntry public float rpgLevelTextX = 0f, rpgLevelTextY = -66f, rpgLevelTextW = 52f, rpgLevelTextH = 12f;
+    @SerialEntry public float rpgHpX = 48f, rpgHpY = -26f, rpgHpW = 110f, rpgHpH = 9f;
+    @SerialEntry public float rpgStaminaX = 54f, rpgStaminaY = -19f, rpgStaminaW = 92f, rpgStaminaH = 5f;
+    @SerialEntry public float rpgShieldX = 50f, rpgShieldY = -29f, rpgShieldW = 106f, rpgShieldH = 2f;
+    @SerialEntry public float rpgZhenMieX = 48f, rpgZhenMieY = -43f, rpgZhenMieW = 62f, rpgZhenMieH = 10f;
+    @SerialEntry public float rpgStackX = 112f, rpgStackY = -80f, rpgStackW = 46f, rpgStackH = 48f;
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -437,6 +444,14 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_food_preview_hz", 1.2f, () -> c.rpgFoodPreviewHz, v -> c.rpgFoodPreviewHz = v, 0.2f, 4f, 0.1f, "%.1f"))
                 .option(percentOpt("rpg_exhaustion_alpha", 0.55f, () -> c.rpgExhaustionAlpha, v -> c.rpgExhaustionAlpha = v, 0f, 1f))
                 .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
+                .option(ButtonOption.createBuilder()
+                        .name(t(P("rpg_hud_editor")))
+                        .description(OptionDescription.of(td(P("rpg_hud_editor"))))
+                        .action((screen, option) -> {
+                            YaclScrollMemory.save((YACLScreen) screen);
+                            Minecraft.getInstance().setScreen(new com.dsp2.genshinerc.client.render.hud.gui.rpg.editor.RpgHudEditorScreen(screen));
+                        })
+                        .build())
 
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))

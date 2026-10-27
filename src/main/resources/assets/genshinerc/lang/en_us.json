@@ -473,5 +473,20 @@
   "genshinerc.bar.config.rpg_exhaustion_alpha": "Exhaustion Overlay Opacity",
   "genshinerc.bar.config.rpg_exhaustion_alpha.desc": "Opacity of the striped overlay that fills the hunger icon as exhaustion builds.",
   "genshinerc.bar.config.rpg_exp_color": "EXP Fill Colour",
-  "genshinerc.bar.config.rpg_exp_color.desc": "Colour of the EXP chevron fill."
+  "genshinerc.bar.config.rpg_exp_color.desc": "Colour of the EXP chevron fill.",
+  "genshinerc.bar.config.rpg_hud_editor": "Open HUD Editor",
+  "genshinerc.bar.config.rpg_hud_editor.desc": "Drag, resize and scale each RPG HUD element. Changes save automatically.",
+  "genshinerc.hud_editor.title": "RPG HUD Editor",
+  "genshinerc.hud_editor.done": "Done",
+  "genshinerc.hud_editor.reset_selected": "Reset Selected",
+  "genshinerc.hud_editor.reset_all": "Reset All",
+  "genshinerc.hud_editor.no_world": "Join a world to preview the HUD",
+  "genshinerc.hud_editor.help": "Drag to move · Corner to resize (Shift: keep ratio, Alt: fine) · Scroll to scale · Arrows nudge · R resets",
+  "genshinerc.hud_editor.element.portrait": "Portrait",
+  "genshinerc.hud_editor.element.level_text": "Level Text",
+  "genshinerc.hud_editor.element.health": "Health",
+  "genshinerc.hud_editor.element.stamina": "Stamina",
+  "genshinerc.hud_editor.element.shield": "Shield",
+  "genshinerc.hud_editor.element.zhen_mie": "Zhen-Mie",
+  "genshinerc.hud_editor.element.stack": "Status Stack"
 }

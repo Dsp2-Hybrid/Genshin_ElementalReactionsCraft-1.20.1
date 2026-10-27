@@ -480,5 +480,20 @@
   "genshinerc.bar.config.rpg_exhaustion_alpha": "消耗度覆盖层不透明度",
   "genshinerc.bar.config.rpg_exhaustion_alpha.desc": "饥饿图标上条纹覆盖层的不透明度。",
   "genshinerc.bar.config.rpg_exp_color": "经验条填充颜色",
-  "genshinerc.bar.config.rpg_exp_color.desc": "经验条绿色填充的颜色。"
+  "genshinerc.bar.config.rpg_exp_color.desc": "经验条绿色填充的颜色。",
+  "genshinerc.bar.config.rpg_hud_editor": "打开 HUD 编辑器",
+  "genshinerc.bar.config.rpg_hud_editor.desc": "拖拽、缩放每个 RPG HUD 元素。更改会自动保存。",
+  "genshinerc.hud_editor.title": "RPG HUD 编辑器",
+  "genshinerc.hud_editor.done": "完成",
+  "genshinerc.hud_editor.reset_selected": "重置选中",
+  "genshinerc.hud_editor.reset_all": "重置全部",
+  "genshinerc.hud_editor.no_world": "请进入世界以预览 HUD",
+  "genshinerc.hud_editor.help": "拖拽移动 · 边角缩放 (Shift保持比例, Alt精细) · 滚轮缩放 · 方向键微调 · R重置",
+  "genshinerc.hud_editor.element.portrait": "头像",
+  "genshinerc.hud_editor.element.level_text": "等级文本",
+  "genshinerc.hud_editor.element.health": "生命值",
+  "genshinerc.hud_editor.element.stamina": "体力值",
+  "genshinerc.hud_editor.element.shield": "护盾",
+  "genshinerc.hud_editor.element.zhen_mie": "振灭条",
+  "genshinerc.hud_editor.element.stack": "右侧状态栏"
 }

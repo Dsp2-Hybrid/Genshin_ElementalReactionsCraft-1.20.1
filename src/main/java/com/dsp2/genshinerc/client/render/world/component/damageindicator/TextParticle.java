@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.client.render.world.component.damageindicator;
 
+import com.dsp2.genshinerc.client.render.hud.DeferredHudRenderer;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.api.CustomColor;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.api.EasingType;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig;
@@ -10,6 +11,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 
 public class TextParticle {
     private double x, y, z, px, py, pz, vx, vy, vz;
@@ -126,6 +129,18 @@ public class TextParticle {
     }
 
     public void render(PoseStack ps, MultiBufferSource buf, Camera cam, float partialTick) {
+        Matrix4f pose = new Matrix4f(ps.last().pose());
+        Matrix3f normal = new Matrix3f(ps.last().normal());
+
+        DeferredHudRenderer.submitPost(deferred -> {
+            PoseStack replay = new PoseStack();
+            replay.last().pose().set(pose);
+            replay.last().normal().set(normal);
+            renderNow(replay, deferred, cam, partialTick);
+        });
+    }
+
+    private void renderNow(PoseStack ps, MultiBufferSource buf, Camera cam, float partialTick) {
         double dx = Mth.lerp(partialTick, px, x) - cam.getPosition().x;
         double dy = Mth.lerp(partialTick, py, y) - cam.getPosition().y;
         double dz = Mth.lerp(partialTick, pz, z) - cam.getPosition().z;
