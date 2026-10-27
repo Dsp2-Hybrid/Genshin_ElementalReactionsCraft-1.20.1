@@ -34,8 +34,6 @@ public final class ClientShieldState {
 
     public List<SyncShieldPacket.Entry> entries() { return entries; }
 
-    // --- 以下是新加的方法 ---
-
     public float largestAmount() {
         float m = 0f;
         for (SyncShieldPacket.Entry e : entries) m = Math.max(m, e.amount());
@@ -50,4 +48,7 @@ public final class ClientShieldState {
         if (kind == ShieldKind.ELEMENTAL && element != null) return ElementHudRenderer.elementColor(element);
         return cfg.shieldSpecialColor.getRGB() & 0xFFFFFF;
     }
+
+    public float amount() { return bar.main(); }
+    public float initial() { return max; }
 }

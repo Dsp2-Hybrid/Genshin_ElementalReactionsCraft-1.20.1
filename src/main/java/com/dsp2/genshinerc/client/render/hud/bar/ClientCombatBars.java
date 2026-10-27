@@ -31,7 +31,6 @@ public final class ClientCombatBars {
         ZHEN_MIE.computeIfAbsent(msg.entityId(), k -> new ClientZhenMieState()).apply(msg, Util.getMillis(), BarConfig.get());
     }
 
-    @Nullable public static ClientShieldState shield(int id)   { return SHIELDS.get(id); }
     @Nullable public static ClientZhenMieState zhenMie(int id) { return ZHEN_MIE.get(id); }
     public static void removeShield(int id)  { SHIELDS.remove(id); }
     public static void removeZhenMie(int id) { ZHEN_MIE.remove(id); }
@@ -49,4 +48,6 @@ public final class ClientCombatBars {
         SHIELDS.clear();
         ZHEN_MIE.clear();
     }
+
+    public static ClientShieldState shield(int entityId) { return SHIELDS.get(entityId); }
 }

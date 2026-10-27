@@ -3,6 +3,7 @@ package com.dsp2.genshinerc.client.render.hud;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.HudIconProvider;
 import com.dsp2.genshinerc.client.render.hud.bar.layout.BarTextureInfo;
 import com.dsp2.genshinerc.client.render.hud.bar.element.ElementTextures;
+import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.RpgTextures;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
@@ -21,6 +22,7 @@ public final class HudClientModEvents {
 
             HudIconProvider.clear();
             BarTextureInfo.clear();
+            RpgTextures.clear();
         });
     }
 }

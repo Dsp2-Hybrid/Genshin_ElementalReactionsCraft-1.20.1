@@ -41,4 +41,17 @@ public final class ClientZhenMieState {
     boolean isIdle(long nowMs, BarConfig cfg) {
         return clash == null && zhen.isIdle(nowMs, cfg.subBarFlashTime) && mie.isIdle(nowMs, cfg.subBarFlashTime);
     }
+
+    public float zhenTrail() { return zhen.trail(); }
+    public float mieTrail()  { return mie.trail(); }
+    public float zhenWhite(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg) { return zhen.whiteness(nowMs, cfg.subBarFlashTime); }
+    public float mieWhite(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg)  { return mie.whiteness(nowMs, cfg.subBarFlashTime); }
+    public boolean zhenBuff() { return zhenBuff; }
+    public boolean mieBuff()  { return mieBuff; }
+
+    @org.jetbrains.annotations.Nullable public com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult clash() { return clash; }
+    public long clashStartMs() { return clashStartMs; }
+    public float clashPoint()  { return clashPoint; }
+    public void tick(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg) { update(nowMs, cfg); }
+    public boolean idle(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg) { return isIdle(nowMs, cfg); }
 }

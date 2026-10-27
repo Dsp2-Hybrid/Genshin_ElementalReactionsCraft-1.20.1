@@ -16,7 +16,9 @@ public final class RpgHudClientEvents {
             VanillaGuiOverlay.PLAYER_HEALTH.id(),
             VanillaGuiOverlay.FOOD_LEVEL.id(),
             VanillaGuiOverlay.AIR_LEVEL.id(),
-            VanillaGuiOverlay.EXPERIENCE_BAR.id());
+            VanillaGuiOverlay.EXPERIENCE_BAR.id(),
+            VanillaGuiOverlay.ARMOR_LEVEL.id(),
+            VanillaGuiOverlay.MOUNT_HEALTH.id());
 
     private RpgHudClientEvents() {}
 
@@ -24,7 +26,7 @@ public final class RpgHudClientEvents {
     public static final class ModBus {
         @SubscribeEvent
         public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
-            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "rpg_hud", RpgHudOverlay.INSTANCE);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "rpg_hud", RpgHudOverlay.OVERLAY);
         }
     }
 

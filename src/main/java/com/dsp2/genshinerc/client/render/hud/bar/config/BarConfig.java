@@ -186,6 +186,27 @@ public class BarConfig {
     @SerialEntry public float rpgHudOffsetY = 6f;
     @SerialEntry public float rpgModelYaw = -10f;
     @SerialEntry public float rpgModelZoom = 1.55f;
+    @SerialEntry public float rpgDiamondBgAlpha = 0.85f;
+    @SerialEntry public boolean rpgModelStencil = true;
+    @SerialEntry public float rpgModelPivot = 0.75f;
+    @SerialEntry public float rpgCamX = 0f;
+    @SerialEntry public float rpgCamY = 0f;
+    @SerialEntry public float rpgCamZ = 0f;
+    @SerialEntry public float rpgCamYaw = 0f;
+    @SerialEntry public float rpgCamPitch = -8f;
+    @SerialEntry public float rpgCamRoll = 0f;
+    @SerialEntry public float rpgTextPopScale = 0.12f;
+    @SerialEntry public float rpgTextPopTime = 0.22f;
+    @SerialEntry public float rpgLayerDarken = 0.15f;
+    @SerialEntry public float rpgLayerMinBrightness = 0.35f;
+    @SerialEntry public float rpgOxygenRetractTime = 0.30f;
+    @SerialEntry public float rpgOxygenSettleTime = 0.35f;
+    @SerialEntry public float rpgOxygenGainIdleTime = 0.50f;
+    @SerialEntry public float rpgShakePixels = 4f;
+    @SerialEntry public float rpgCountSpeed = 12f;
+    @SerialEntry public float rpgFoodPreviewHz = 1.2f;
+    @SerialEntry public float rpgExhaustionAlpha = 0.55f;
+    @SerialEntry public Color rpgExpColor = new Color(0x5BE35B);
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -395,6 +416,27 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_hud_offset_y", 6f, () -> c.rpgHudOffsetY, v -> c.rpgHudOffsetY = v, 0f, 400f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_model_yaw", -10f, () -> c.rpgModelYaw, v -> c.rpgModelYaw = v, -90f, 90f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_model_zoom", 1.55f, () -> c.rpgModelZoom, v -> c.rpgModelZoom = v, 0.65f, 3.00f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_diamond_bg_alpha", 0.85f, () -> c.rpgDiamondBgAlpha, v -> c.rpgDiamondBgAlpha = v, 0f, 1f, 0.05f, "%.2f"))
+                .option(boolOpt("rpg_model_stencil", true, () -> c.rpgModelStencil, v -> c.rpgModelStencil = v))
+                .option(floatOptCustomStep("rpg_model_pivot", 0.75f, () -> c.rpgModelPivot, v -> c.rpgModelPivot = v, 0f, 1f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_cam_x", 0f, () -> c.rpgCamX, v -> c.rpgCamX = v, -40f, 40f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("rpg_cam_y", 0f, () -> c.rpgCamY, v -> c.rpgCamY = v, -40f, 40f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("rpg_cam_z", 0f, () -> c.rpgCamZ, v -> c.rpgCamZ = v, -100f, 80f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_cam_yaw", 0f, () -> c.rpgCamYaw, v -> c.rpgCamYaw = v, -180f, 180f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_cam_pitch", -8f, () -> c.rpgCamPitch, v -> c.rpgCamPitch = v, -90f, 90f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_cam_roll", 0f, () -> c.rpgCamRoll, v -> c.rpgCamRoll = v, -180f, 180f, 1f, "%.0f"))
+                .option(floatOptCustomStep("rpg_text_pop_scale", 0.12f, () -> c.rpgTextPopScale, v -> c.rpgTextPopScale = v, 0f, 0.5f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_text_pop_time", 0.22f, () -> c.rpgTextPopTime, v -> c.rpgTextPopTime = v, 0f, 1f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_layer_darken", 0.15f, () -> c.rpgLayerDarken, v -> c.rpgLayerDarken = v, 0f, 0.5f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_layer_min_brightness", 0.35f, () -> c.rpgLayerMinBrightness, v -> c.rpgLayerMinBrightness = v, 0f, 1f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_oxygen_retract_time", 0.30f, () -> c.rpgOxygenRetractTime, v -> c.rpgOxygenRetractTime = v, 0.05f, 2f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_oxygen_settle_time", 0.35f, () -> c.rpgOxygenSettleTime, v -> c.rpgOxygenSettleTime = v, 0.05f, 2f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_oxygen_gain_idle_time", 0.50f, () -> c.rpgOxygenGainIdleTime, v -> c.rpgOxygenGainIdleTime = v, 0.1f, 3f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_shake_pixels", 4f, () -> c.rpgShakePixels, v -> c.rpgShakePixels = v, 0f, 12f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("rpg_count_speed", 12f, () -> c.rpgCountSpeed, v -> c.rpgCountSpeed = v, 1f, 40f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("rpg_food_preview_hz", 1.2f, () -> c.rpgFoodPreviewHz, v -> c.rpgFoodPreviewHz = v, 0.2f, 4f, 0.1f, "%.1f"))
+                .option(percentOpt("rpg_exhaustion_alpha", 0.55f, () -> c.rpgExhaustionAlpha, v -> c.rpgExhaustionAlpha = v, 0f, 1f))
+                .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
 
                 .option(ButtonOption.createBuilder()
                         .name(t(P("entity_y_offsets")))

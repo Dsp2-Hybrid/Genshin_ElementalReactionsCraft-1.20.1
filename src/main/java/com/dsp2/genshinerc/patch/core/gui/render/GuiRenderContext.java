@@ -3,6 +3,7 @@ package com.dsp2.genshinerc.patch.core.gui.render;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -17,6 +18,13 @@ public final class GuiRenderContext {
     public static boolean isInGui() { return depth > 0; }
     public static void enter() { depth++; }
     public static void exit()  { if (depth > 0) depth--; }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            depth = 0;
+        }
+    }
 
     @SubscribeEvent
     public static void onScreenPre(ScreenEvent.Render.Pre event)   { enter(); }

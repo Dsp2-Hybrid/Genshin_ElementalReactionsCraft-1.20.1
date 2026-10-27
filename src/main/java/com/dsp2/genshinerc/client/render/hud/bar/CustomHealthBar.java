@@ -22,7 +22,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.joml.Matrix3f;
@@ -185,6 +184,9 @@ public class CustomHealthBar extends EntityUI {
 
     @Override
     public void draw(LivingEntity entity, LivingEntityPatch<?> entitypatch, LocalPlayerPatch playerpatch, PoseStack poseStack, MultiBufferSource buffers, float partialTicks) {
+
+        if (com.dsp2.genshinerc.client.render.hud.gui.rpg.render.DiamondModelView.isRendering()) return;
+
         if (Minecraft.getInstance().screen != null) {
             drawNow(entity, poseStack, buffers, partialTicks);
             return;

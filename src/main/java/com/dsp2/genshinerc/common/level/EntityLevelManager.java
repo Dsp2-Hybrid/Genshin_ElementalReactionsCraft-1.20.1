@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.common.level;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -21,24 +22,29 @@ public class EntityLevelManager {
     public static int getLevel(LivingEntity entity) {
         AttributeInstance maxHealth = entity.getAttribute(Attributes.MAX_HEALTH);
         if (maxHealth != null) {
-            for (AttributeModifier mod : maxHealth.getModifiers()) {
-                if (mod.getName().equals("genshin_level_health") && mod.getId().equals(HEALTH_MODIFIER_UUID)) {
-                    double amount = mod.getAmount();
-                    double level = Math.log(amount + 1.0) / Math.log(500.0) * 100.0;
-                    return (int) Math.round(level);
-                }
+            AttributeModifier mod = maxHealth.getModifier(HEALTH_MODIFIER_UUID);
+            if (mod != null) {
+                double amount = mod.getAmount();
+                double level = Math.log(amount + 1.0) / Math.log(500.0) * 100.0;
+                return (int) Math.round(level);
             }
         }
         return 0;
     }
 
     public static int getPlayerLevel(Player player) {
+        if (player.level().isClientSide()) {
+            return PlayerHudSync.clientLevel();
+        }
         CompoundTag tag = player.getPersistentData();
         return tag.contains("GenshinPlayerLevel") ? tag.getInt("GenshinPlayerLevel") : 0;
     }
 
     public static void setPlayerLevel(Player player, int level) {
         player.getPersistentData().putInt("GenshinPlayerLevel", level);
+        if (player instanceof ServerPlayer sp) {
+            PlayerHudSync.markDirty(sp);
+        }
     }
 
     public static void setLevel(LivingEntity entity, int level) {
