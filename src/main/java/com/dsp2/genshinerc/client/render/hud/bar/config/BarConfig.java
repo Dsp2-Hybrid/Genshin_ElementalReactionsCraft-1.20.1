@@ -214,6 +214,9 @@ public class BarConfig {
     @SerialEntry public float rpgShieldX = 50f, rpgShieldY = -29f, rpgShieldW = 106f, rpgShieldH = 2f;
     @SerialEntry public float rpgZhenMieX = 48f, rpgZhenMieY = -43f, rpgZhenMieW = 62f, rpgZhenMieH = 10f;
     @SerialEntry public float rpgStackX = 112f, rpgStackY = -80f, rpgStackW = 46f, rpgStackH = 48f;
+    @SerialEntry public float rpgZmBorderX = 57f, rpgZmBorderY = -45f, rpgZmBorderW = 55f, rpgZmBorderH = 14f;
+    @SerialEntry public int rpgZmBorderSlice = 4;
+    @SerialEntry public float rpgZmBorderCornerPx = 3f;
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -444,6 +447,18 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_food_preview_hz", 1.2f, () -> c.rpgFoodPreviewHz, v -> c.rpgFoodPreviewHz = v, 0.2f, 4f, 0.1f, "%.1f"))
                 .option(percentOpt("rpg_exhaustion_alpha", 0.55f, () -> c.rpgExhaustionAlpha, v -> c.rpgExhaustionAlpha = v, 0f, 1f))
                 .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
+                .option(Option.<Integer>createBuilder()
+                        .name(t(P("rpg_zm_border_slice")))
+                        .description(OptionDescription.of(td(P("rpg_zm_border_slice"))))
+                        .binding(4, () -> c.rpgZmBorderSlice, v -> c.rpgZmBorderSlice = v)
+                        .controller(o -> IntegerSliderControllerBuilder.create(o).range(1, 32).step(1))
+                        .build())
+                .option(Option.<Float>createBuilder()
+                        .name(t(P("rpg_zm_border_corner")))
+                        .description(OptionDescription.of(td(P("rpg_zm_border_corner"))))
+                        .binding(3f, () -> c.rpgZmBorderCornerPx, v -> c.rpgZmBorderCornerPx = v)
+                        .controller(o -> FloatSliderControllerBuilder.create(o).range(0.5f, 16f).step(0.5f))
+                        .build())
                 .option(ButtonOption.createBuilder()
                         .name(t(P("rpg_hud_editor")))
                         .description(OptionDescription.of(td(P("rpg_hud_editor"))))

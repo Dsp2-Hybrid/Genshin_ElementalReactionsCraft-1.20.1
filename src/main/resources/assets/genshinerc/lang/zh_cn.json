@@ -495,5 +495,10 @@
   "genshinerc.hud_editor.element.stamina": "体力值",
   "genshinerc.hud_editor.element.shield": "护盾",
   "genshinerc.hud_editor.element.zhen_mie": "振灭条",
-  "genshinerc.hud_editor.element.stack": "右侧状态栏"
+  "genshinerc.hud_editor.element.stack": "右侧状态栏",
+  "genshinerc.hud_editor.element.zhen_mie_border": "振灭条外框",
+  "genshinerc.bar.config.rpg_zm_border_slice": "振灭外框切片大小",
+  "genshinerc.bar.config.rpg_zm_border_slice.desc": "zm_bar_border.png 的边角切片像素大小。四个角永远不拉伸。",
+  "genshinerc.bar.config.rpg_zm_border_corner": "振灭外框边角尺寸",
+  "genshinerc.bar.config.rpg_zm_border_corner.desc": "屏幕上渲染的边角 GUI 像素尺寸。"
 }

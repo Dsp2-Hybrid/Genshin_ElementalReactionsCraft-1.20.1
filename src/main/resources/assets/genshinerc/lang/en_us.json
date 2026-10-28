@@ -488,5 +488,10 @@
   "genshinerc.hud_editor.element.stamina": "Stamina",
   "genshinerc.hud_editor.element.shield": "Shield",
   "genshinerc.hud_editor.element.zhen_mie": "Zhen-Mie",
-  "genshinerc.hud_editor.element.stack": "Status Stack"
+  "genshinerc.hud_editor.element.stack": "Status Stack",
+  "genshinerc.hud_editor.element.zhen_mie_border": "Zhen-Mie Frame",
+  "genshinerc.bar.config.rpg_zm_border_slice": "Zhen-Mie Frame Slice",
+  "genshinerc.bar.config.rpg_zm_border_slice.desc": "Corner size in texture pixels of zm_bar_border.png. Corners are never stretched.",
+  "genshinerc.bar.config.rpg_zm_border_corner": "Zhen-Mie Frame Corner Size",
+  "genshinerc.bar.config.rpg_zm_border_corner.desc": "On-screen corner size in GUI pixels."
 }

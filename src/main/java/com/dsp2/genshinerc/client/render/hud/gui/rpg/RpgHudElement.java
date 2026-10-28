@@ -9,6 +9,7 @@ public enum RpgHudElement {
     HEALTH(48, -26, 110, 9, 20, 3),
     STAMINA(54, -19, 92, 5, 20, 2),
     SHIELD(50, -29, 106, 2, 10, 1),
+    ZHEN_MIE_BORDER(57, -45, 55, 14, 8, 6),
     ZHEN_MIE(48, -43, 62, 10, 20, 4),
     STACK(112, -80, 46, 48, 20, 15);
 
@@ -40,6 +41,7 @@ public enum RpgHudElement {
             case HEALTH -> new Box(c.rpgHpX, c.rpgHpY, c.rpgHpW, c.rpgHpH);
             case STAMINA -> new Box(c.rpgStaminaX, c.rpgStaminaY, c.rpgStaminaW, c.rpgStaminaH);
             case SHIELD -> new Box(c.rpgShieldX, c.rpgShieldY, c.rpgShieldW, c.rpgShieldH);
+            case ZHEN_MIE_BORDER -> new Box(c.rpgZmBorderX, c.rpgZmBorderY, c.rpgZmBorderW, c.rpgZmBorderH);
             case ZHEN_MIE -> new Box(c.rpgZhenMieX, c.rpgZhenMieY, c.rpgZhenMieW, c.rpgZhenMieH);
             case STACK -> new Box(c.rpgStackX, c.rpgStackY, c.rpgStackW, c.rpgStackH);
         };
@@ -53,6 +55,7 @@ public enum RpgHudElement {
             case HEALTH -> { c.rpgHpX = b.x(); c.rpgHpY = b.y(); c.rpgHpW = w; c.rpgHpH = h; }
             case STAMINA -> { c.rpgStaminaX = b.x(); c.rpgStaminaY = b.y(); c.rpgStaminaW = w; c.rpgStaminaH = h; }
             case SHIELD -> { c.rpgShieldX = b.x(); c.rpgShieldY = b.y(); c.rpgShieldW = w; c.rpgShieldH = h; }
+            case ZHEN_MIE_BORDER -> { c.rpgZmBorderX = b.x(); c.rpgZmBorderY = b.y(); c.rpgZmBorderW = w; c.rpgZmBorderH = h; }
             case ZHEN_MIE -> { c.rpgZhenMieX = b.x(); c.rpgZhenMieY = b.y(); c.rpgZhenMieW = w; c.rpgZhenMieH = h; }
             case STACK -> { c.rpgStackX = b.x(); c.rpgStackY = b.y(); c.rpgStackW = w; c.rpgStackH = h; }
         }

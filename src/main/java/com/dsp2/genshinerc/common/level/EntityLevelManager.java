@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.common.level;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = "genshinerc")
 public class EntityLevelManager {
+    public static final String PLAYER_LEVEL_KEY = "genshinerc_level";
     private static final String NBT_LEVEL = "GenshinLevel";
     private static final UUID HEALTH_MODIFIER_UUID = UUID.fromString("cb3f55d3-645c-4f38-a497-9c13a33db5cf");
     private static final UUID ATTACK_MODIFIER_UUID = UUID.fromString("cb3f55d3-645c-4f38-a497-9c13a33db5c0");
@@ -32,16 +34,14 @@ public class EntityLevelManager {
         return 0;
     }
 
-    public static int getPlayerLevel(Player player) {
-        if (player.level().isClientSide()) {
-            return PlayerHudSync.clientLevel();
-        }
-        CompoundTag tag = player.getPersistentData();
-        return tag.contains("GenshinPlayerLevel") ? tag.getInt("GenshinPlayerLevel") : 0;
+    public static int getPlayerLevel(Player p) {
+        if (p.level().isClientSide) return PlayerHudSync.clientLevel();
+        CompoundTag tag = p.getPersistentData();
+        return tag.contains(PLAYER_LEVEL_KEY, Tag.TAG_INT) ? Math.max(0, tag.getInt(PLAYER_LEVEL_KEY)) : 0;
     }
 
     public static void setPlayerLevel(Player player, int level) {
-        player.getPersistentData().putInt("GenshinPlayerLevel", level);
+        player.getPersistentData().putInt(PLAYER_LEVEL_KEY, level);
         if (player instanceof ServerPlayer sp) {
             PlayerHudSync.markDirty(sp);
         }
