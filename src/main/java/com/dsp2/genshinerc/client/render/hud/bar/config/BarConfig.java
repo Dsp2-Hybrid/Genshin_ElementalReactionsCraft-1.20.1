@@ -185,10 +185,10 @@ public class BarConfig {
     @SerialEntry public float rpgHudOffsetX = 6f;
     @SerialEntry public float rpgHudOffsetY = 6f;
     @SerialEntry public float rpgModelYaw = -10f;
-    @SerialEntry public float rpgModelZoom = 1.55f;
+    @SerialEntry public float rpgModelZoom = 1.00f;
     @SerialEntry public float rpgDiamondBgAlpha = 0.85f;
     @SerialEntry public boolean rpgModelStencil = true;
-    @SerialEntry public float rpgModelPivot = 0.75f;
+    @SerialEntry public float rpgModelPivot = 1.00f;
     @SerialEntry public float rpgCamX = 0f;
     @SerialEntry public float rpgCamY = 0f;
     @SerialEntry public float rpgCamZ = 0f;
@@ -425,10 +425,10 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_hud_offset_x", 6f, () -> c.rpgHudOffsetX, v -> c.rpgHudOffsetX = v, 0f, 400f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_hud_offset_y", 6f, () -> c.rpgHudOffsetY, v -> c.rpgHudOffsetY = v, 0f, 400f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_model_yaw", -10f, () -> c.rpgModelYaw, v -> c.rpgModelYaw = v, -90f, 90f, 1f, "%.0f"))
-                .option(floatOptCustomStep("rpg_model_zoom", 1.55f, () -> c.rpgModelZoom, v -> c.rpgModelZoom = v, 0.65f, 3.00f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_model_zoom", 1.00f, () -> c.rpgModelZoom, v -> c.rpgModelZoom = v, 0.50f, 2.00f, 0.01f, "%.2f"))
                 .option(floatOptCustomStep("rpg_diamond_bg_alpha", 0.85f, () -> c.rpgDiamondBgAlpha, v -> c.rpgDiamondBgAlpha = v, 0f, 1f, 0.05f, "%.2f"))
                 .option(boolOpt("rpg_model_stencil", true, () -> c.rpgModelStencil, v -> c.rpgModelStencil = v))
-                .option(floatOptCustomStep("rpg_model_pivot", 0.75f, () -> c.rpgModelPivot, v -> c.rpgModelPivot = v, 0f, 1f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_model_pivot", 1.00f, () -> c.rpgModelPivot, v -> c.rpgModelPivot = v, 0f, 2f, 0.01f, "%.2f"))
                 .option(floatOptCustomStep("rpg_cam_x", 0f, () -> c.rpgCamX, v -> c.rpgCamX = v, -40f, 40f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_cam_y", 0f, () -> c.rpgCamY, v -> c.rpgCamY = v, -40f, 40f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_cam_z", 0f, () -> c.rpgCamZ, v -> c.rpgCamZ = v, -100f, 80f, 1f, "%.0f"))
