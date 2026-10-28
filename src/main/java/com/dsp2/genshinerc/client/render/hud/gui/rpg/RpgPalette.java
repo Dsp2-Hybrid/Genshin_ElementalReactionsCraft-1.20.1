@@ -20,7 +20,9 @@ final class RpgPalette {
     static final int HUNGER_DEBUFF = 0x5E9C1E, SATURATION_DEBUFF = 0x87BC00;
 
     static final int MOUNT = 0x90EE90;
-    static final int EXH_LIGHT = 0xC8C8C8, EXH_DARK = 0x3A3A3A;
+
+    static final int EXH_LIGHT = 0x323232;
+    static final int EXH_DARK = 0x8E8E8E;
 
     static final float BG_DARKEN = 0.28f;
 

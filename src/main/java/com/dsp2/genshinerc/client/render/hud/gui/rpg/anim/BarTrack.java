@@ -5,178 +5,331 @@ import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import net.minecraft.util.Mth;
 
 public final class BarTrack {
-    private static final long MAIN_DURATION_MS = 900L;
-    private static final long RAPID_CHANGE_MS = 100L;
-    private static final float EPS = 0.001f;
+    public interface Sink { void accept(float lo, float hi, float alpha); }
 
-    public interface Sink { void accept(float start, float end, float alpha); }
+    private float currentValue = -1f;
+    private float currentExtra = -1f;
+    private float lastMax = -1f;
 
-    private boolean init;
-    private float value, extra, max;
-    private float visMain, visExtra, fromMain, fromExtra, toMain, toExtra;
-    private long animStart;
-    private boolean animating;
-    private long lastChange, smallStart;
-    private boolean small;
-    private boolean shaking;
-    private long shakeStart;
-    private float shakeMag;
-    private final White mainWhite = new White(), extraWhite = new White();
+    public float main = 1.0f;
+    public float extra = 1.0f;
+    private float targetMain = 1.0f;
+    private float targetExtra = 1.0f;
+    private float startMain = 1.0f;
+    private float startExtra = 1.0f;
 
-    public void reset() { init = false; small = false; shaking = false; mainWhite.clear(); extraWhite.clear(); }
+    private long mainAnimStart = 0L;
+    private boolean mainAnimating = false;
+    private static final long MAIN_DURATION = 900L;
 
-    public void update(long now, float v, float e, float m, BarConfig cfg, boolean shake, boolean fatal) {
-        m = Math.max(m, EPS);
-        v = Math.max(0f, v);
-        e = Math.max(0f, e);
-        if (!init) {
-            init = true;
-            value = v; extra = e; max = m;
-            visMain = fromMain = toMain = mainEnd(v, e, m);
-            visExtra = fromExtra = toExtra = extraEnd(v, e, m);
-        }
+    private final WhiteState mainWhite = new WhiteState();
+    private final WhiteState extraWhite = new WhiteState();
 
-        if (Math.abs(v - value) > EPS || Math.abs(e - extra) > EPS || Math.abs(m - max) > EPS) {
-            long prev = lastChange;
-            lastChange = now;
-            boolean isSmall = false;
-            float delta = Math.max(Math.abs(v - value), Math.abs(e - extra));
-            if (delta > EPS) {
-                float pct = delta / Math.max(1f, m);
-                if (now - prev < RAPID_CHANGE_MS) isSmall = true;
-                else if (fatal && v <= 0f && v < value)
-                    startShake(now, Mth.clamp(value / m * cfg.fatalShakeMultiplier, cfg.fatalShakeMinPercent, cfg.fatalShakeMaxPercent));
-                else if (cfg.smallChangeEnabled && pct < cfg.smallChangeThreshold) isSmall = true;
-                else if (shake && v < value) startShake(now, Math.min(pct, 1f));
-                if (isSmall) { small = true; smallStart = now; }
-            }
-            fromMain = visMain;
-            fromExtra = visExtra;
-            toMain = mainEnd(v, e, m);
-            toExtra = extraEnd(v, e, m);
-            if (!isSmall) {
-                if (Math.abs(toMain - visMain) > EPS) mainWhite.trigger(visMain, toMain, now);
-                if (Math.abs(toExtra - visExtra) > EPS) extraWhite.trigger(visExtra, toExtra, now);
-            }
-            animStart = now;
-            animating = true;
-            value = v; extra = e; max = m;
-        }
+    private boolean isSmallChangeActive = false;
+    private long lastSmallChangeTime = 0L;
+    private long lastChangeTime = 0L;
 
-        if (animating) {
-            long el = now - animStart;
-            if (el >= MAIN_DURATION_MS) {
-                visMain = toMain; visExtra = toExtra; animating = false;
-            } else {
-                float k = BarConfig.interpolate(el / (float) MAIN_DURATION_MS, BarConfig.EasingType.EASE_OUT_CUBIC);
-                visMain = fromMain + (toMain - fromMain) * k;
-                visExtra = fromExtra + (toExtra - fromExtra) * k;
-            }
-        }
-        mainWhite.update(now, visMain, cfg.playerOverlayShrinkTime, cfg.overlayFadeTime, cfg.whiteEasing);
-        extraWhite.update(now, visExtra, cfg.playerOverlayShrinkTime, cfg.overlayFadeTime, cfg.whiteEasing);
+    private boolean isShaking = false;
+    private long shakeStartTime = 0L;
+    private float shakeMagnitude = 0f;
+
+    public void reset() {
+        currentValue = -1f;
+        currentExtra = -1f;
+        lastMax = -1f;
+        main = 1.0f;
+        extra = 1.0f;
+        mainAnimating = false;
+        mainWhite.active = false;
+        mainWhite.oldActive = false;
+        extraWhite.active = false;
+        extraWhite.oldActive = false;
+        isSmallChangeActive = false;
+        isShaking = false;
     }
 
-    public float main() { return visMain; }
-    public float extra() { return visExtra; }
-    public boolean busy() { return animating || small || mainWhite.busy() || extraWhite.busy(); }
+    public float shakeOffset(long now, BarConfig config) {
+        if (!isShaking) return 0f;
+        long elapsed = now - shakeStartTime;
+        float durationMs = config.shakeDuration * 1000f;
+        if (elapsed >= durationMs) {
+            isShaking = false;
+            return 0f;
+        }
+        float t = elapsed / 1000.0f;
+        float startAmplitude = shakeMagnitude * config.shakeAmplitudeFactor;
+        float dampingRatio = 0.1f;
+        float omega0 = 2 * (float) Math.PI * config.shakeFrequencyFactor;
+        float omegaD = omega0 * (float) Math.sqrt(1 - dampingRatio * dampingRatio);
+        float amplitude = startAmplitude * (float) Math.exp(-dampingRatio * omega0 * t);
+        amplitude *= (float) Math.exp(-config.shakeDecayFactor * t);
+        return amplitude * (float) Math.sin(omegaD * t);
+    }
 
-    public void forEachWhite(Sink sink) { mainWhite.emit(sink); extraWhite.emit(sink); }
+    public void update(long now, float value, float extraVal, float max, BarConfig cfg, boolean isPlayer, boolean isAbs) {
+        if (currentValue == -1f) {
+            currentValue = value;
+            currentExtra = extraVal;
+            lastMax = max;
+            main = Mth.clamp(value / max, 0f, 1f);
+            extra = Mth.clamp((value + extraVal) / max, 0f, 1f);
+            targetMain = main;
+            targetExtra = extra;
+            startMain = main;
+            startExtra = extra;
+        }
+
+        boolean changed = Math.abs(value - currentValue) > 0.001f || Math.abs(extraVal - currentExtra) > 0.001f || Math.abs(max - lastMax) > 0.001f;
+
+        if (changed) {
+            long oldLastChange = lastChangeTime;
+            lastChangeTime = now;
+            boolean isSmall = false;
+
+            if (value < currentValue) {
+                float changePercent = Math.abs(value - currentValue) / Math.max(1f, max);
+                boolean isUltra = (now - oldLastChange < 100L);
+                if (isUltra) {
+                    isSmall = true;
+                    isSmallChangeActive = true;
+                    lastSmallChangeTime = now;
+                } else if (value <= 0 && value < currentValue) {
+                    isShaking = true;
+                    shakeStartTime = now;
+                    float rem = currentValue / max;
+                    shakeMagnitude = Mth.clamp(rem * cfg.fatalShakeMultiplier, cfg.fatalShakeMinPercent, cfg.fatalShakeMaxPercent);
+                } else if (changePercent < cfg.smallChangeThreshold && cfg.smallChangeEnabled) {
+                    isSmall = true;
+                    isSmallChangeActive = true;
+                    lastSmallChangeTime = now;
+                } else {
+                    isShaking = true;
+                    shakeStartTime = now;
+                    shakeMagnitude = Math.min(changePercent, 1.0f);
+                }
+            }
+
+            startMain = main;
+            startExtra = extra;
+            targetMain = Mth.clamp(value / max, 0f, 1f);
+            targetExtra = Mth.clamp((value + extraVal) / max, 0f, 1f);
+
+            if (!isSmall) {
+                if (Math.abs(targetMain - main) > 0.001f) {
+                    mainWhite.trigger(main, targetMain, now);
+                }
+                if (Math.abs(targetExtra - extra) > 0.001f) {
+                    extraWhite.trigger(extra, targetExtra, now);
+                }
+            }
+
+            mainAnimStart = now;
+            mainAnimating = true;
+
+            currentValue = value;
+            currentExtra = extraVal;
+            lastMax = max;
+        }
+
+        if (mainAnimating) {
+            long elapsed = now - mainAnimStart;
+            if (elapsed >= MAIN_DURATION) {
+                main = targetMain;
+                extra = targetExtra;
+                mainAnimating = false;
+            } else {
+                float progress = Math.min(1.0f, elapsed / (float) MAIN_DURATION);
+                float eased = BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
+                main = startMain + (targetMain - startMain) * eased;
+                extra = startExtra + (targetExtra - startExtra) * eased;
+            }
+        }
+
+        float baseShrink = isPlayer ? cfg.playerOverlayShrinkTime : cfg.mobOverlayShrinkTime;
+        mainWhite.update(now, main, baseShrink, cfg.overlayFadeTime, cfg.whiteEasing);
+        extraWhite.update(now, extra, baseShrink, cfg.overlayFadeTime, cfg.whiteEasing);
+    }
+
+    public boolean busy() {
+        return mainAnimating || mainWhite.active || mainWhite.oldActive || extraWhite.active || extraWhite.oldActive || isSmallChangeActive;
+    }
+
+    public void forEachWhite(Sink sink) {
+        mainWhite.emit(sink);
+        extraWhite.emit(sink);
+    }
 
     public float smallAlpha(long now, BarConfig cfg) {
-        if (!small) return 0f;
-        if (now - lastChange < RAPID_CHANGE_MS) return 1f;
-        float el = now - smallStart, fade = cfg.smallChangeFadeOut * 1000f, a;
-        if (cfg.smallChangeUseShaderMode && CustomHealthBar.isShaderPackEnabled()) {
-            float hold = cfg.smallChangeShaderDuration * 1000f;
-            if (el >= hold + fade) { small = false; return 0f; }
-            a = el > hold ? 1f - (el - hold) / fade : 1f;
+        if (!isSmallChangeActive) return 0f;
+        long timeSinceLastChange = now - lastChangeTime;
+        boolean isStillUltraHighFreq = (timeSinceLastChange < 100L);
+
+        float smallAlpha = 0f;
+        boolean shouldDraw = false;
+
+        if (isStillUltraHighFreq) {
+            smallAlpha = 1.0f;
+            shouldDraw = true;
         } else {
-            float total = cfg.smallChangeDuration * 1000f;
-            if (el >= total) { small = false; return 0f; }
-            if (total < fade) a = 1f - el / total;
-            else if (el > total - fade) a = (total - el) / fade;
-            else a = 1f;
-        }
-        return Mth.clamp(a, 0f, 1f);
-    }
-
-    public float shakeOffset(long now, BarConfig cfg) {
-        if (!shaking) return 0f;
-        long el = now - shakeStart;
-        if (el >= cfg.shakeDuration * 1000f) { shaking = false; return 0f; }
-        float t = el / 1000f, zeta = 0.1f;
-        float w0 = Mth.TWO_PI * cfg.shakeFrequencyFactor, wd = w0 * Mth.sqrt(1f - zeta * zeta);
-        float amp = shakeMag * cfg.shakeAmplitudeFactor * (float) Math.exp(-zeta * w0 * t) * (float) Math.exp(-cfg.shakeDecayFactor * t);
-        return amp * Mth.sin(wd * t);
-    }
-
-    private void startShake(long now, float magnitude) { shaking = true; shakeStart = now; shakeMag = magnitude; }
-
-    private static float mainEnd(float v, float e, float m) { return Mth.clamp(v + e <= m ? v / m : v / (v + e), 0f, 1f); }
-    private static float extraEnd(float v, float e, float m) { return v + e <= m ? Mth.clamp((v + e) / m, 0f, 1f) : 1f; }
-
-    private static final class White {
-        private static final float OLD_FADE_MS = 150f, EXTEND_MS = 350f;
-        boolean active, extending, shrinking, healing;
-        float start, end, maxWidth, base, alpha = 1f;
-        long animStart;
-        boolean oldActive;
-        float oldStart, oldEnd, oldAlpha;
-        long oldStartMs;
-
-        void clear() { active = false; oldActive = false; }
-        boolean busy() { return active || oldActive; }
-
-        void trigger(float current, float target, long now) {
-            if (active) {
-                oldStart = Math.min(start, end); oldEnd = Math.max(start, end);
-                oldActive = true; oldAlpha = 1f; oldStartMs = now; active = false;
-            }
-            maxWidth = Math.abs(target - current);
-            if (maxWidth <= 0.001f) return;
-            healing = target > current;
-            base = start = end = current;
-            animStart = now;
-            active = extending = true;
-            shrinking = false;
-            alpha = 1f;
-        }
-
-        void update(long now, float current, float shrinkTime, float fadeSec, BarConfig.EasingType easing) {
-            if (oldActive) {
-                float p = (now - oldStartMs) / OLD_FADE_MS;
-                if (p >= 1f) oldActive = false;
-                else {
-                    oldAlpha = 1f - p;
-                    oldStart = Mth.lerp(p, oldStart, current);
-                    oldEnd = Mth.lerp(p, oldEnd, current);
+            long elapsed = now - lastSmallChangeTime;
+            if (cfg.smallChangeUseShaderMode && CustomHealthBar.isShaderPackEnabled()) {
+                float shaderDurationMs = cfg.smallChangeShaderDuration * 1000f;
+                float fadeOutMs = cfg.smallChangeFadeOut * 1000f;
+                float totalMs = shaderDurationMs + fadeOutMs;
+                if (elapsed < totalMs) {
+                    shouldDraw = true;
+                    if (elapsed > shaderDurationMs) {
+                        smallAlpha = 1.0f - ((float)(elapsed - shaderDurationMs) / fadeOutMs);
+                    } else {
+                        smallAlpha = 1.0f;
+                    }
+                }
+            } else {
+                float totalMs = cfg.smallChangeDuration * 1000f;
+                float fadeOutMs = cfg.smallChangeFadeOut * 1000f;
+                if (elapsed < totalMs) {
+                    shouldDraw = true;
+                    if (totalMs < fadeOutMs) {
+                        smallAlpha = 1.0f - ((float) elapsed / totalMs);
+                    } else if (elapsed > totalMs - fadeOutMs) {
+                        smallAlpha = (totalMs - elapsed) / fadeOutMs;
+                    } else {
+                        smallAlpha = 1.0f;
+                    }
                 }
             }
+        }
+
+        if (shouldDraw) {
+            return Mth.clamp(smallAlpha, 0.0f, 1.0f);
+        } else {
+            isSmallChangeActive = false;
+            return 0f;
+        }
+    }
+
+    private static class WhiteState {
+        boolean active = false;
+        float startOverlay = 0f;
+        float endOverlay = 0f;
+        float maxWidth = 0f;
+        float baseScale = 0f;
+        long animStart = 0L;
+        boolean isHealing = false;
+        boolean extending = false;
+        boolean shrinking = false;
+        float alpha = 1.0f;
+
+        boolean oldActive = false;
+        float oldStart = 0f;
+        float oldEnd = 0f;
+        float oldAlpha = 1.0f;
+        long oldAnimStart = 0L;
+
+        void interrupt(long now) {
+            if (active) {
+                oldStart = Math.min(startOverlay, endOverlay);
+                oldEnd = Math.max(startOverlay, endOverlay);
+                oldActive = true;
+                oldAlpha = 1.0f;
+                oldAnimStart = now;
+                active = false;
+            }
+        }
+
+        void trigger(float currentVisualScale, float exactTargetScale, long now) {
+            interrupt(now);
+            maxWidth = Math.abs(exactTargetScale - currentVisualScale);
+            if (maxWidth > 0.001f) {
+                isHealing = exactTargetScale > currentVisualScale;
+                baseScale = currentVisualScale;
+                startOverlay = baseScale;
+                endOverlay = baseScale;
+                animStart = now;
+                active = true;
+                extending = true;
+                shrinking = false;
+                alpha = 1.0f;
+            }
+        }
+
+        void update(long now, float currentVisualScale, float baseShrinkTime, float fadeTimeSec, BarConfig.EasingType easing) {
+            if (oldActive) {
+                long oldElapsed = now - oldAnimStart;
+                float oldDur = 150f;
+                if (oldElapsed >= oldDur) {
+                    oldActive = false;
+                } else {
+                    float progress = Math.min(1.0f, oldElapsed / oldDur);
+                    oldAlpha = 1.0f - progress;
+                    oldStart = Mth.lerp(progress, oldStart, currentVisualScale);
+                    oldEnd = Mth.lerp(progress, oldEnd, currentVisualScale);
+                }
+            }
+
             if (!active) return;
-            long el = now - animStart;
+            long elapsed = now - animStart;
+
             if (extending) {
-                float p = Math.min(1f, el / EXTEND_MS);
-                float k = BarConfig.interpolate(p, BarConfig.EasingType.EASE_OUT_CUBIC);
-                if (healing) end = base + maxWidth * k; else start = base - maxWidth * k;
-                if (p >= 1f) {
-                    start = healing ? base : base - maxWidth;
-                    end = healing ? base + maxWidth : base;
-                    extending = false; shrinking = true; animStart = now;
+                float progress = Math.min(1.0f, elapsed / 350f);
+                float eased = BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
+                if (isHealing) {
+                    endOverlay = baseScale + (maxWidth * eased);
+                } else {
+                    startOverlay = baseScale - (maxWidth * eased);
+                }
+                if (progress >= 1.0f) {
+                    if (isHealing) {
+                        startOverlay = baseScale;
+                        endOverlay = baseScale + maxWidth;
+                    } else {
+                        startOverlay = baseScale - maxWidth;
+                        endOverlay = baseScale;
+                    }
+                    extending = false;
+                    shrinking = true;
+                    animStart = now;
                 }
             } else if (shrinking) {
-                float dur = Math.max(0.3f, maxWidth * shrinkTime) * 1000f;
-                if (el >= dur) { active = shrinking = false; return; }
-                float k = BarConfig.interpolate(el / dur, easing);
-                if (healing) start = base + maxWidth * k; else end = base - maxWidth * k;
-                float fadeMs = Math.max(1f, fadeSec * 1000f), fadeStart = dur - fadeMs;
-                alpha = el > fadeStart ? Math.max(0f, 1f - (el - fadeStart) / fadeMs) : 1f;
+                float dynamicDuration = Math.max(0.3f, maxWidth * baseShrinkTime) * 1000f;
+                long shrinkDurationMs = (long) dynamicDuration;
+                long shrinkElapsed = elapsed;
+
+                if (shrinkElapsed >= shrinkDurationMs) {
+                    active = false;
+                    shrinking = false;
+                } else {
+                    float progress = Math.min(1.0f, shrinkElapsed / (float) shrinkDurationMs);
+                    float eased = BarConfig.interpolate(progress, easing);
+
+                    if (isHealing) {
+                        startOverlay = baseScale + (maxWidth * eased);
+                    } else {
+                        endOverlay = baseScale - (maxWidth * eased);
+                    }
+
+                    float actualFadeTimeMs = Math.max(1f, fadeTimeSec * 1000f);
+                    float fadeStartMs = dynamicDuration - actualFadeTimeMs;
+
+                    if (shrinkElapsed > fadeStartMs) {
+                        alpha = 1.0f - (shrinkElapsed - fadeStartMs) / actualFadeTimeMs;
+                        if (alpha < 0) alpha = 0;
+                    } else {
+                        alpha = 1.0f;
+                    }
+                }
             }
         }
 
         void emit(Sink sink) {
-            if (oldActive && oldAlpha > 0.01f) sink.accept(Math.min(oldStart, oldEnd), Math.max(oldStart, oldEnd), oldAlpha);
-            if (active && alpha > 0.01f) sink.accept(Math.min(start, end), Math.max(start, end), alpha);
+            if (oldActive && oldAlpha > 0.01f) {
+                float s = Math.min(oldStart, oldEnd), e = Math.max(oldStart, oldEnd);
+                if (e - s > 0.001f) sink.accept(s, e, oldAlpha);
+            }
+            if (active && alpha > 0.01f) {
+                float s = Math.min(startOverlay, endOverlay), e = Math.max(startOverlay, endOverlay);
+                if (e - s > 0.001f) sink.accept(s, e, alpha);
+            }
         }
     }
 }

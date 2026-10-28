@@ -2,6 +2,7 @@ package com.dsp2.genshinerc.client.render.hud.gui.rpg;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 
+import java.util.List;
 import java.util.Locale;
 
 public enum RpgHudElement {
@@ -11,6 +12,7 @@ public enum RpgHudElement {
     HEALTH(48, -26, 110, 9, 20, 3, Kind.FREE, true),
     HP_ICON(38, -26, 8, 8, 3, 3, Kind.ASPECT, true),
     STAMINA(54, -19, 92, 5, 20, 2, Kind.FREE, true),
+    STAMINA_ICON(44, -19, 5, 5, 3, 3, Kind.ASPECT, true),
     SHIELD(50, -29, 106, 2, 10, 1, Kind.FREE, true),
     ARMOR(54, -47, 92, 3.5f, 20, 1.5f, Kind.FREE, true),
     ARMOR_ICON(44, -47, 8, 8, 3, 3, Kind.ASPECT, true),
@@ -21,28 +23,32 @@ public enum RpgHudElement {
     EXHAUSTION(54, -35.5f, 92, 1, 10, 0.5f, Kind.FREE, true),
     ZHEN_MIE_BORDER(65, -63, 55, 14, 8, 6, Kind.NINE_SLICE, true),
     ZHEN_MIE(56, -61, 62, 10, 20, 4, Kind.FREE, true),
+    ZHEN_MIE_LOGO(56, -61, 10, 10, 4, 4, Kind.ASPECT, true),
     ZHEN_MIE_TRIANGLE(89, -66, 7, 6, 3, 3, Kind.ASPECT, true),
     MOUNT(58, -10, 60, 3.5f, 20, 1.5f, Kind.FREE, true),
     MOUNT_ICON(51, -10.75f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, true),
-    OXYGEN(58, -4, 60, 3.5f, 20, 1.5f, Kind.FREE, true);
+    OXYGEN(58, -4, 60, 3.5f, 20, 1.5f, Kind.FREE, true),
+    OXYGEN_ICON(51, -4.5f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, true);
 
     public enum Kind { FREE, ASPECT, NINE_SLICE }
 
     public record Box(float x, float y, float w, float h) {
         public float aw() { return Math.abs(w); }
         public float ah() { return Math.abs(h); }
-        public float x2() { return x + aw(); }
-        public float y2() { return y + ah(); }
-        public float cx() { return x + aw() / 2f; }
-        public float cy() { return y + ah() / 2f; }
+        public float x2() { return Math.max(x, x + w); }
+        public float y2() { return Math.max(y, y + h); }
+        public float cx() { return Math.min(x, x + w) + aw() / 2f; }
+        public float cy() { return Math.min(y, y + h) + ah() / 2f; }
         public boolean flipX() { return w < 0f; }
         public boolean flipY() { return h < 0f; }
-        public Box abs() { return new Box(x, y, aw(), ah()); }
+        public Box abs() { return new Box(Math.min(x, x + w), Math.min(y, y + h), aw(), ah()); }
         public Box withPos(float nx, float ny) { return new Box(nx, ny, w, h); }
         public Box withSize(float nw, float nh) {
             return new Box(x, y, flipX() ? -Math.abs(nw) : Math.abs(nw), flipY() ? -Math.abs(nh) : Math.abs(nh));
         }
-        public Box withFlip(boolean fx, boolean fy) { return new Box(x, y, fx ? -aw() : aw(), fy ? -ah() : ah()); }
+        public Box withFlip(boolean fx, boolean fy) {
+            return new Box(x, y, fx ? -Math.abs(w) : Math.abs(w), fy ? -Math.abs(h) : Math.abs(h));
+        }
     }
 
     private final Box def;
@@ -56,6 +62,21 @@ public enum RpgHudElement {
         this.minH = minH;
         this.kind = kind;
         this.mirrorable = mirrorable;
+    }
+
+    public List<RpgHudElement> children() {
+        return switch (this) {
+            case HEALTH -> List.of(SHIELD, STAMINA, HP_ICON);
+            case STAMINA -> List.of(STAMINA_ICON);
+            case ARMOR -> List.of(TOUGHNESS, ARMOR_ICON);
+            case TOUGHNESS -> List.of(TOUGHNESS_ICON);
+            case HUNGER -> List.of(EXHAUSTION, HUNGER_ICON);
+            case MOUNT -> List.of(MOUNT_ICON);
+            case OXYGEN -> List.of(OXYGEN_ICON);
+            case ZHEN_MIE_BORDER -> List.of(ZHEN_MIE, ZHEN_MIE_TRIANGLE);
+            case ZHEN_MIE -> List.of(ZHEN_MIE_LOGO);
+            default -> List.of();
+        };
     }
 
     public Box defaults() { return def; }

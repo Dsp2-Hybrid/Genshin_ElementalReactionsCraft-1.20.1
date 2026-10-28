@@ -9,7 +9,6 @@ import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.OxygenAnim;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.PointAnim;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.TextAnim;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.HudGeom;
-import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.HudMirror;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.Strip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -83,25 +82,27 @@ final class RpgStatBars {
 
     static void draw(GuiGraphics g, Snap s, long now, BarConfig cfg, float a, boolean preview) {
         if (preview || s.armor() > 0 || ARMOR.busy())
-            layered(g, RpgHudElement.ARMOR.get(cfg), ARMOR, RpgPalette.ARMOR, Math.round(T_ARMOR.shown()), now, a);
+            layered(g, RpgHudElement.ARMOR.get(cfg).abs(), ARMOR, RpgPalette.ARMOR, Math.round(T_ARMOR.shown()), now, a);
         if (preview || s.toughness() > 0 || TOUGH.busy())
-            layered(g, RpgHudElement.TOUGHNESS.get(cfg), TOUGH, RpgPalette.TOUGHNESS, Math.round(T_TOUGH.shown()), now, a);
-        hunger(g, s, RpgHudElement.HUNGER.get(cfg), now, cfg, a);
-        exhaustion(g, RpgHudElement.EXHAUSTION.get(cfg), a);
+            layered(g, RpgHudElement.TOUGHNESS.get(cfg).abs(), TOUGH, RpgPalette.TOUGHNESS, Math.round(T_TOUGH.shown()), now, a);
 
-        HudMirror.draw(g, RpgHudElement.ARMOR_ICON.get(cfg),
-                b -> HudGeom.icon(g, HudGeom.ICONS, 43, 9, b, argb(a, WHITE)));
-        HudMirror.draw(g, RpgHudElement.TOUGHNESS_ICON.get(cfg),
-                b -> HudGeom.icon(g, HudGeom.ICONS, 43, 9, b, argb(a, 0xAAAAAA)));
-        HudMirror.draw(g, RpgHudElement.HUNGER_ICON.get(cfg),
-                b -> HudGeom.icon(g, HudGeom.ICONS, 52, 27, b, argb(a, WHITE)));
+        hunger(g, s, RpgHudElement.HUNGER.get(cfg).abs(), now, cfg, a);
+        exhaustion(g, RpgHudElement.EXHAUSTION.get(cfg).abs(), a);
+
+        Box armorIcon = RpgHudElement.ARMOR_ICON.get(cfg).abs();
+        HudGeom.icon(g, HudGeom.ICONS, 43, 9, armorIcon, argb(a, WHITE));
+
+        Box toughIcon = RpgHudElement.TOUGHNESS_ICON.get(cfg).abs();
+        HudGeom.icon(g, HudGeom.ICONS, 43, 9, toughIcon, argb(a, 0xAAAAAA));
+
+        Box hungerIcon = RpgHudElement.HUNGER_ICON.get(cfg).abs();
+        HudGeom.icon(g, HudGeom.ICONS, 52, 27, hungerIcon, argb(a, WHITE));
 
         drawMount(g, cfg, now, preview ? a : a * F_MOUNT.v);
         drawOxygen(g, cfg, preview ? a : a * F_AIR.v);
     }
 
-    private static void layered(GuiGraphics g, Box signed, PointAnim anim, int[] colors, int number, long now, float a) {
-        Box b = signed.abs();
+    private static void layered(GuiGraphics g, Box b, PointAnim anim, int[] colors, int number, long now, float a) {
         Strip st = Strip.of(BAR_STAT);
         int cap = colors.length;
         float v = Mth.clamp(anim.shown(), 0f, cap * LAYER);
@@ -118,37 +119,39 @@ final class RpgStatBars {
             float base = cur * LAYER;
             anim.emitWhite(now, (lo, hi, wa) -> {
                 float s0 = Math.max(lo, base), s1 = Math.min(hi, base + LAYER);
-                if (s1 > s0) st.seg(g, st.i.white(), b, (s0 - base) / LAYER, (s1 - base) / LAYER, argb(a * wa * 0.4f, WHITE));
+                if (s1 > s0) st.seg(g, st.i.white(), b, (s0 - base) / LAYER, (s1 - base) / LAYER, argb(a * wa, WHITE));
             });
         }
         st.outline(g, b, a * OUTLINE_ALPHA);
-        label(g, signed, Component.literal(String.valueOf(number)), 1f, a);
+        label(g, b, Component.literal(String.valueOf(number)), 1f, a);
     }
 
-    private static void hunger(GuiGraphics g, Snap s, Box signed, long now, BarConfig cfg, float a) {
+    private static void hunger(GuiGraphics g, Snap s, Box b, long now, BarConfig cfg, float a) {
         int fc = C_FOOD.rgb(), sc = C_SAT.rgb();
         FoodProperties held = s.held();
         float pulse = held == null ? 0f : 0.5f - 0.5f * Mth.cos(now / 1000f * cfg.rpgFoodPreviewHz * Mth.TWO_PI);
         int pf = held == null ? s.food() : Math.min(20, s.food() + held.getNutrition());
         float psat = held == null ? s.sat() : Math.min(pf, s.sat() + held.getNutrition() * held.getSaturationModifier() * 2f);
 
-        Box b = signed.abs();
         Strip st = Strip.of(BAR_STAT);
         float food = FOOD.shown() / FOOD_MAX, sat = SAT.shown() / FOOD_MAX;
         st.background(g, b, HudDraw.scaleRgb(fc, RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
+
         if (held != null) st.seg(g, st.i.tint(), b, food, pf / FOOD_MAX, argb(a * pulse * PREVIEW_ALPHA, fc));
         st.seg(g, st.i.tint(), b, 0f, food, argb(a, fc));
-        FOOD.emitWhite(now, (lo, hi, wa) -> st.seg(g, st.i.white(), b, lo / FOOD_MAX, hi / FOOD_MAX, argb(a * wa * 0.4f, WHITE)));
-        if (held != null) st.seg(g, st.i.tint(), b, sat, psat / FOOD_MAX, argb(a * pulse * PREVIEW_ALPHA, sc));
-        st.seg(g, st.i.tint(), b, 0f, sat, argb(a, sc));
+        FOOD.emitWhite(now, (lo, hi, wa) -> st.seg(g, st.i.white(), b, lo / FOOD_MAX, hi / FOOD_MAX, argb(a * wa, WHITE)));
+
+        if (held != null) st.seg(g, st.i.tint(), b, 1f - psat / FOOD_MAX, 1f - sat, argb(a * pulse * PREVIEW_ALPHA, sc));
+        st.seg(g, st.i.tint(), b, 1f - sat, 1f, argb(a, sc));
+
         st.outline(g, b, a * OUTLINE_ALPHA);
 
         float ta = a * Math.max(N_FOOD.alpha(), N_SAT.alpha());
         float pop = Math.max(N_FOOD.scale(now), N_SAT.scale(now));
         Component cur = foodLabel(N_FOOD.shown(), N_SAT.shown(), s.exhaustion());
-        if (held == null) { label(g, signed, cur, pop, ta); return; }
-        label(g, signed, cur, pop, ta * (1f - pulse));
-        label(g, signed, colored(oneDecimal(pf) + "+" + oneDecimal(psat), PREVIEW_RGB), pop, ta * pulse);
+        if (held == null) { label(g, b, cur, pop, ta); return; }
+        label(g, b, cur, pop, ta * (1f - pulse));
+        label(g, b, colored(oneDecimal(pf) + "+" + oneDecimal(psat), PREVIEW_RGB), pop, ta * pulse);
     }
 
     private static Component foodLabel(float food, float sat, float exh) {
@@ -158,40 +161,34 @@ final class RpgStatBars {
                 .append(colored(oneDecimal(sat), RpgPalette.satText(sat)));
     }
 
-    private static void exhaustion(GuiGraphics g, Box signed, float a) {
+    private static void exhaustion(GuiGraphics g, Box b, float a) {
         float f = Mth.clamp(EXH.shown() / EXH_MAX, 0f, 1f);
-        HudMirror.draw(g, signed, b -> {
-            HudGeom.rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * EXH_BG_ALPHA, EXH_BG));
-            HudGeom.rect(g, b.x(), b.y(), b.x() + b.w() * f, b.y2(),
-                    argb(a, HudDraw.lerpRgb(RpgPalette.EXH_LIGHT, RpgPalette.EXH_DARK, f)));
-        });
+        HudGeom.rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * EXH_BG_ALPHA, EXH_BG));
+        HudGeom.rect(g, b.x(), b.y(), b.x() + b.w() * f, b.y2(),
+                argb(a, HudDraw.lerpRgb(RpgPalette.EXH_LIGHT, RpgPalette.EXH_DARK, f)));
     }
 
     private static void drawMount(GuiGraphics g, BarConfig cfg, long now, float a) {
         if (a <= 0.01f) return;
-        Box bs = RpgHudElement.MOUNT.get(cfg);
-        HudMirror.draw(g, bs, b -> drawBar(g, BAR_MOUNT, b, B_MOUNT, RpgPalette.MOUNT, false, now, cfg, a));
-        label(g, bs, Component.literal(ceil(T_MOUNT.shown()) + "/" + ceil(mountMax)), 1f, a);
-        HudMirror.draw(g, RpgHudElement.MOUNT_ICON.get(cfg), b -> {
-            HudGeom.icon(g, HudGeom.ICONS, 52, 9, b, argb(a, WHITE));
-            HudGeom.icon(g, HudGeom.ICONS, 88, 9, b, argb(a, WHITE));
-        });
+        Box b = RpgHudElement.MOUNT.get(cfg).abs();
+        drawBar(g, BAR_MOUNT, b, B_MOUNT, RpgPalette.MOUNT, false, now, cfg, a);
+        label(g, b, Component.literal(ceil(T_MOUNT.shown()) + "/" + ceil(mountMax)), 1f, a);
+
+        Box icon = RpgHudElement.MOUNT_ICON.get(cfg).abs();
+        HudGeom.icon(g, HudGeom.ICONS, 52, 9, icon, argb(a, WHITE));
+        HudGeom.icon(g, HudGeom.ICONS, 88, 9, icon, argb(a, WHITE));
     }
 
     private static void drawOxygen(GuiGraphics g, BarConfig cfg, float a) {
         if (a <= 0.01f) return;
-        Box bs = RpgHudElement.OXYGEN.get(cfg);
-        HudMirror.draw(g, bs, b -> {
-            Strip st = Strip.of(BAR_OXYGEN);
-            st.full(g, st.i.core(), b, argb(a * BAR_BG_ALPHA, HudDraw.scaleRgb(WHITE, RpgPalette.BG_DARKEN)));
-            st.seg(g, st.i.core(), b, oxygen.bar(), oxygen.gainTop(), argb(a * 0.35f, WHITE));
-            st.seg(g, st.i.core(), b, 0f, oxygen.bar(), argb(a, WHITE));
-            if (oxygen.ghostAlpha() > 0.01f)
-                st.seg(g, st.i.white(), b, oxygen.bar(), oxygen.ghostTop(), argb(a * oxygen.ghostAlpha() * 0.4f, WHITE));
-            st.outline(g, b, a * OUTLINE_ALPHA);
-            float ic = Math.max(5f, b.h() * 1.6f);
-            HudGeom.icon(g, HudGeom.ICONS, 16, 18, new Box(b.x() - ic - 1f, b.cy() - ic / 2f, ic, ic), argb(a, WHITE));
-        });
-        label(g, bs, Component.literal(Math.round(T_AIR.shown()) + "/100"), 1f, a);
+        Box b = RpgHudElement.OXYGEN.get(cfg).abs();
+        Strip st = Strip.of(BAR_OXYGEN);
+        st.full(g, st.i.core(), b, argb(a * BAR_BG_ALPHA, HudDraw.scaleRgb(WHITE, RpgPalette.BG_DARKEN)));
+        st.seg(g, st.i.core(), b, oxygen.bar(), oxygen.gainTop(), argb(a * 0.35f, WHITE));
+        st.seg(g, st.i.core(), b, 0f, oxygen.bar(), argb(a, WHITE));
+        if (oxygen.ghostAlpha() > 0.01f)
+            st.seg(g, st.i.white(), b, oxygen.bar(), oxygen.ghostTop(), argb(a * oxygen.ghostAlpha() * 0.5f, WHITE));
+        st.outline(g, b, a * OUTLINE_ALPHA);
+        label(g, b, Component.literal(Math.round(T_AIR.shown()) + "/100"), 1f, a);
     }
 }

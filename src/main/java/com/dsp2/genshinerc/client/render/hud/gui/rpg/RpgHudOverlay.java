@@ -13,7 +13,6 @@ import com.dsp2.genshinerc.client.render.hud.gui.rpg.editor.RpgHudEditorScreen;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.DiamondModelView;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.GuiQuad;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.HudGeom;
-import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.HudMirror;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.NineSlice;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.Strip;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
@@ -112,7 +111,7 @@ public final class RpgHudOverlay {
         try {
             drawPortrait(g, p, RpgHudElement.PORTRAIT.get(cfg).abs(), cfg, alpha);
             int expRgb = cfg.rpgExpColor.getRGB() & 0xFFFFFF;
-            HudMirror.draw(g, RpgHudElement.EXP.get(cfg), b -> XP.draw(g, b, expRgb, alpha, now, cfg));
+            XP.draw(g, RpgHudElement.EXP.get(cfg).abs(), expRgb, alpha, now, cfg);
             drawLevelText(g, s, RpgHudElement.LEVEL_TEXT.get(cfg).abs(), now, cfg, alpha);
 
             float shake = B_HEALTH.shakeOffset(now, cfg) * cfg.rpgShakePixels * (p.isDeadOrDying() ? DEATH_SHAKE_BOOST : 1f);
@@ -169,43 +168,43 @@ public final class RpgHudOverlay {
 
     private static void drawLevelText(GuiGraphics g, Snap s, Box b, long now, BarConfig cfg, float a) {
         float scale = b.h() / 18f;
-        int exColor = HudDraw.lerpRgb(0xFFFFFF, 0x5BE35B, s.xpProgress());
 
         MutableComponent line1 = Component.empty()
-                .append(Component.literal("Ex." + s.xpLevel()).withStyle(st -> st.withColor(exColor)))
-                .append(Component.literal(" / ").withStyle(st -> st.withColor(exColor)))
+                .append(Component.literal("Ex." + s.xpLevel()).withStyle(st -> st.withColor(0x00FF00)))
+                .append(Component.literal(" / ").withStyle(st -> st.withColor(0x00FF00)))
                 .append(Component.literal("Lv." + s.level()).withStyle(st -> st.withColor(0xFFFFFF)));
 
+        int expColor = HudDraw.lerpRgb(0xFFFFFF, 0x00FF00, s.xpProgress());
+        MutableComponent line2 = Component.empty()
+                .append(Component.literal("EXP:").withStyle(st -> st.withColor(0xFFFFFF)))
+                .append(Component.literal(String.valueOf(Math.round(T_XP.shown()))).withStyle(st -> st.withColor(expColor)))
+                .append(Component.literal(" / " + s.xpNeed()).withStyle(st -> st.withColor(0xFFFFFF)));
+
         text(g, line1, b.cx(), b.y() + b.h() * 0.27f, scale, 0xFFFFFF, a, true);
-        text(g, Component.literal("EXP:" + Math.round(T_XP.shown()) + " / " + s.xpNeed()), b.cx(), b.y() + b.h() * 0.77f,
-                scale * 0.9f * pop(T_XP, now, cfg), exColor, a, true);
+        text(g, line2, b.cx(), b.y() + b.h() * 0.77f,
+                scale * 0.9f * pop(T_XP, now, cfg), 0xFFFFFF, a, true);
     }
 
     private static void drawVitals(GuiGraphics g, Snap s, BarConfig cfg, long now, float a) {
-        Box hpS = RpgHudElement.HEALTH.get(cfg), staS = RpgHudElement.STAMINA.get(cfg);
+        Box hpB = RpgHudElement.HEALTH.get(cfg).abs();
+        Box staB = RpgHudElement.STAMINA.get(cfg).abs();
         int hpRgb = C_HP.rgb();
-        HudMirror.draw(g, hpS, b -> drawBar(g, BAR_HEALTH, b, B_HEALTH, hpRgb, true, now, cfg, a));
+
+        drawBar(g, BAR_HEALTH, hpB, B_HEALTH, hpRgb, true, now, cfg, a);
 
         boolean hasSta = s.maxSta() > 0f;
         if (hasSta) {
-            HudMirror.draw(g, staS, b -> {
-                drawBar(g, BAR_STAMINA, b, B_STAMINA, NATURAL, false, now, cfg, a);
-                float ls = Math.max(6f, b.h() * 2f);
-                GuiQuad.blit(g, STAMINA_LOGO, b.x() - ls * 0.7f, b.cy() - ls / 2f, b.x() + ls * 0.3f, b.cy() + ls / 2f,
-                        0f, 0f, 1f, 1f, argb(a, WHITE));
-            });
+            drawBar(g, BAR_STAMINA, staB, B_STAMINA, NATURAL, false, now, cfg, a);
         }
 
-        HudMirror.draw(g, RpgHudElement.HP_ICON.get(cfg), b -> {
-            HudGeom.icon(g, HudGeom.ICONS, 16, s.heartV(), b, argb(a, WHITE));
-            HudGeom.icon(g, HudGeom.ICONS, s.heartU(), s.heartV(), b, argb(a, WHITE));
-        });
+        Box iconB = RpgHudElement.HP_ICON.get(cfg).abs();
+        HudGeom.icon(g, HudGeom.ICONS, 16, s.heartV(), iconB, argb(a, WHITE));
+        HudGeom.icon(g, HudGeom.ICONS, s.heartU(), s.heartV(), iconB, argb(a, WHITE));
 
-        Box hp = hpS.abs(), sta = staS.abs();
-        float top = hp.y(), bottom = hp.y2();
-        if (hasSta && sta.y() > top && sta.y() < bottom && sta.x() < hp.x2() && sta.x2() > hp.x()) bottom = sta.y();
+        float top = hpB.y(), bottom = hpB.y2();
+        if (hasSta && staB.y() > top && staB.y() < bottom && staB.x() < hpB.x2() && staB.x2() > hpB.x()) bottom = staB.y();
         float scale = Mth.clamp((bottom - top) / 8f * 0.8f, 0.35f, 1.5f);
-        hpText(g, s, hp.cx(), (top + bottom) / 2f, scale, now, a);
+        hpText(g, s, hpB.cx(), (top + bottom) / 2f, scale, now, a);
     }
 
     private static void hpText(GuiGraphics g, Snap s, float cx, float cy, float scale, long now, float a) {
@@ -229,51 +228,56 @@ public final class RpgHudOverlay {
         if (tinted) st.background(g, b, HudDraw.scaleRgb(rgb, RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
         else st.full(g, st.i.core(), b, argb(a * BAR_BG_ALPHA, HudDraw.scaleRgb(WHITE, RpgPalette.BG_DARKEN)));
 
-        float main = t.main(), extra = t.extra();
+        float main = t.main, extra = t.extra;
         st.seg(g, tinted ? st.i.tint() : st.i.core(), b, 0f, main, argb(a, tinted ? rgb : WHITE));
         if (absorption && extra > main + 0.001f) {
             Strip abs = Strip.of(BAR_ABSORB);
             abs.seg(g, abs.i.core(), b, main, extra, argb(a, WHITE));
         }
-        t.forEachWhite((s0, s1, wa) -> st.seg(g, st.i.white(), b, s0, s1, argb(a * wa * 0.4f, WHITE)));
+
+        t.forEachWhite((s0, s1, wa) -> st.seg(g, st.i.white(), b, s0, s1, argb(a * wa, WHITE)));
+
         float sa = t.smallAlpha(now, cfg);
-        if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa, WHITE));
+        if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa * 0.5f, WHITE));
+
         st.outline(g, b, a * OUTLINE_ALPHA);
     }
 
     private static void drawShield(GuiGraphics g, BarConfig cfg, long now, float a, boolean preview) {
-        if (!preview && B_SHIELD.main() <= 0.001f && !B_SHIELD.busy()) return;
+        if (!preview && B_SHIELD.main <= 0.001f && !B_SHIELD.busy()) return;
         int c = cfg.shieldSpecialColor.getRGB() & 0xFFFFFF;
-        HudMirror.draw(g, RpgHudElement.SHIELD.get(cfg), b -> {
-            HudGeom.rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * cfg.shieldBgAlpha, HudDraw.scaleRgb(c, cfg.shieldBgBrightness)));
-            float x0 = b.x(), span = b.w();
-            HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a, c));
-            B_SHIELD.forEachWhite((s0, s1, wa) -> HudGeom.rect(g, x0 + span * s0, b.y(), x0 + span * s1, b.y2(), argb(a * wa * 0.4f, WHITE)));
-            float sa = B_SHIELD.smallAlpha(now, cfg);
-            if (sa > 0.01f) HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a * sa, WHITE));
-        });
+        Box b = RpgHudElement.SHIELD.get(cfg).abs();
+
+        HudGeom.rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * cfg.shieldBgAlpha, HudDraw.scaleRgb(c, cfg.shieldBgBrightness)));
+        float x0 = b.x(), span = b.w();
+        HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main, b.y2(), argb(a, c));
+
+        B_SHIELD.forEachWhite((s0, s1, wa) -> HudGeom.rect(g, x0 + span * s0, b.y(), x0 + span * s1, b.y2(), argb(a * wa, WHITE)));
+
+        float sa = B_SHIELD.smallAlpha(now, cfg);
+        if (sa > 0.01f) HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main, b.y2(), argb(a * sa * 0.5f, WHITE));
     }
 
     private static void drawZhenMie(GuiGraphics g, LocalPlayer p, long now, BarConfig cfg, float a) {
         ClientZhenMieState z = ClientCombatBars.zhenMie(p.getId());
         if (z != null) z.tick(now, cfg);
-        Box zmS = RpgHudElement.ZHEN_MIE.get(cfg);
-        HudMirror.draw(g, zmS, b -> zmBar(g, z, b, now, cfg, a));
-        HudMirror.draw(g, RpgHudElement.ZHEN_MIE_BORDER.get(cfg),
-                b -> NineSlice.draw(g, ZM_BORDER, b, frameCorner(cfg), argb(a, WHITE)));
-        HudMirror.draw(g, zmS, b -> {
-            float ls = b.h();
-            GuiQuad.blit(g, ZM_LOGO, b.x(), b.y(), b.x() + ls, b.y() + ls, 0f, 0f, 1f, 1f, argb(a, WHITE));
-        });
-        HudMirror.draw(g, RpgHudElement.ZHEN_MIE_TRIANGLE.get(cfg),
-                b -> GuiQuad.blit(g, ZM_TRIANGLE, b.x(), b.y(), b.x2(), b.y2(), 0f, 0f, 1f, 1f, argb(a, WHITE)));
+
+        Box zmB = RpgHudElement.ZHEN_MIE.get(cfg).abs();
+        zmBar(g, z, zmB, now, cfg, a);
+
+        Box borderB = RpgHudElement.ZHEN_MIE_BORDER.get(cfg).abs();
+        NineSlice.draw(g, ZM_BORDER, borderB, frameCorner(cfg), argb(a, WHITE));
+
+        Box logoB = RpgHudElement.ZHEN_MIE_LOGO.get(cfg).abs();
+        GuiQuad.blit(g, ZM_LOGO, logoB.x(), logoB.y(), logoB.x2(), logoB.y2(), 0f, 0f, 1f, 1f, argb(a, WHITE));
+
+        Box triB = RpgHudElement.ZHEN_MIE_TRIANGLE.get(cfg).abs();
+        GuiQuad.blit(g, ZM_TRIANGLE, triB.x(), triB.y(), triB.x2(), triB.y2(), 0f, 0f, 1f, 1f, argb(a, WHITE));
     }
 
     private static void zmBar(GuiGraphics g, @Nullable ClientZhenMieState z, Box b, long now, BarConfig cfg, float a) {
-        float ls = b.h();
-        Box bar = new Box(b.x() + ls + 1f, b.y(), Math.max(1f, b.w() - ls - 1f), b.h());
         Strip st = Strip.of(ZM_BAR);
-        st.full(g, ZM_BAR, bar, argb(a, WHITE));
+        st.full(g, ZM_BAR, b, argb(a, WHITE));
         if (z == null) return;
 
         int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF, mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;
@@ -282,15 +286,15 @@ public final class RpgHudOverlay {
         float zm = Mth.clamp(z.zhen(), 0f, 1f), zt = Mth.clamp(z.zhenTrail(), 0f, 1f);
         float mm = Mth.clamp(z.mie(), 0f, 1f), mt = Mth.clamp(z.mieTrail(), 0f, 1f);
 
-        if (zt > zm) st.seg(g, st.i.white(), bar, zm, zt, argb(a, WHITE));
-        st.seg(g, st.i.tint(), bar, 0f, zm, argb(a, HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg))));
+        if (zt > zm) st.seg(g, st.i.white(), b, zm, zt, argb(a, WHITE));
+        st.seg(g, st.i.tint(), b, 0f, zm, argb(a, HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg))));
 
         int sweepColor = HudDraw.scaleRgb(mc, 0.75f);
-        sweep(g, st, bar, 0f, zm, now, 0f, a, sweepColor);
+        sweep(g, st, b, 0f, zm, now, 0f, a, sweepColor);
 
-        if (mt > mm) st.seg(g, st.i.white(), bar, 1f - mt, 1f - mm, argb(a, WHITE));
-        st.seg(g, st.i.tint(), bar, 1f - mm, 1f, argb(a, HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg))));
-        sweep(g, st, bar, 1f - mm, 1f, now, 0.5f, a, sweepColor);
+        if (mt > mm) st.seg(g, st.i.white(), b, 1f - mt, 1f - mm, argb(a, WHITE));
+        st.seg(g, st.i.tint(), b, 1f - mm, 1f, argb(a, HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg))));
+        sweep(g, st, b, 1f - mm, 1f, now, 0.5f, a, sweepColor);
 
         ClashResult clash = z.clash();
         if (clash == null) return;
@@ -303,8 +307,8 @@ public final class RpgHudOverlay {
             case KNOCKDOWN -> (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
             default -> WHITE;
         };
-        st.seg(g, st.i.white(), bar, 0f, 1f, argb(a * fade * ca * CLASH_ALPHA, color));
-        float mx = st.xAt(bar, st.i.u(z.clashPoint())), ts = bar.h() * 0.8f, ty = bar.y() - ts * 0.6f;
+        st.seg(g, st.i.white(), b, 0f, 1f, argb(a * fade * ca * CLASH_ALPHA, color));
+        float mx = st.xAt(b, st.i.u(z.clashPoint())), ts = b.h() * 0.8f, ty = b.y() - ts * 0.6f;
         GuiQuad.blit(g, ZM_TRIANGLE, mx - ts / 2f, ty, mx + ts / 2f, ty + ts, 0f, 0f, 1f, 1f, argb(a * fade, WHITE));
     }
 

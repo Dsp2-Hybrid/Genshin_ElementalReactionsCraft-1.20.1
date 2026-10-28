@@ -43,7 +43,7 @@ final class XpGauge {
         float vCut = Mth.lerp(f, fv1, fv0);
         float yCut = b.y() + b.h() * (vCut - fv0) / (fv1 - fv0);
 
-        GuiQuad.blit(g, fill.tint(), b.x(), yCut, b.x2(), b.y2(), fu0, vCut, fu1, fv1, HudGeom.argb(a, rgb));
+        GuiQuad.blit(g, fill.white(), b.x(), yCut, b.x2(), b.y2(), fu0, vCut, fu1, fv1, HudGeom.argb(a, rgb));
 
         TexScan.Rows rows = TexScan.rows(RpgHudOverlay.EXP_FILL);
         if (rows.h() <= 0) return;

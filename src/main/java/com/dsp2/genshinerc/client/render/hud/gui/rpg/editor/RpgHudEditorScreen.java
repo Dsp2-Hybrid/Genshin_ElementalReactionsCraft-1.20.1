@@ -44,7 +44,7 @@ public final class RpgHudEditorScreen extends Screen {
             for (RpgHudElement e : RpgHudElement.values()) e.reset(cfg());
             changed();
         }).bounds(x + w + gap, y, w, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Hide Boxes"), b -> {
+        addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.hide_boxes"), b -> {
             hideBoxes = !hideBoxes;
         }).bounds(x + (w + gap) * 2, y, w, 20).build());
         addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.done"), b -> onClose())
@@ -84,6 +84,14 @@ public final class RpgHudEditorScreen extends Screen {
         g.drawString(font, label, x, ly, sel ? BOX_SEL : BOX_HOVER, true);
     }
 
+    private void moveChild(BarConfig c, RpgHudElement e, float dx, float dy) {
+        for (RpgHudElement child : e.children()) {
+            Box cb = child.get(c);
+            child.set(c, cb.withPos(cb.x() + dx, cb.y() + dy));
+            moveChild(c, child, dx, dy);
+        }
+    }
+
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (super.mouseClicked(mx, my, button)) return true;
@@ -108,8 +116,17 @@ public final class RpgHudEditorScreen extends Screen {
         if (hideBoxes || drag == Drag.NONE || selected == null || button != GLFW.GLFW_MOUSE_BUTTON_LEFT)
             return super.mouseDragged(mx, my, button, dx, dy);
         BarConfig c = cfg();
-        if (drag == Drag.MOVE) selected.set(c, start.withPos(snap(localX(mx) - grabX), snap(localY(my) - grabY)));
-        else resize(c, mx, my);
+        if (drag == Drag.MOVE) {
+            float nx = snap(localX(mx) - grabX);
+            float ny = snap(localY(my) - grabY);
+            float dX = nx - start.x();
+            float dY = ny - start.y();
+            selected.set(c, start.withPos(nx, ny));
+            moveChild(c, selected, dX, dY);
+            start = selected.get(c);
+        } else {
+            resize(c, mx, my);
+        }
         dirty = true;
         return true;
     }
@@ -185,6 +202,7 @@ public final class RpgHudEditorScreen extends Screen {
             }
             if (dx != 0 || dy != 0) {
                 selected.set(c, b.withPos(b.x() + dx, b.y() + dy));
+                moveChild(c, selected, dx, dy);
                 changed();
                 return true;
             }
@@ -207,9 +225,9 @@ public final class RpgHudEditorScreen extends Screen {
 
     private int[] screenRect(RpgHudElement e) {
         BarConfig c = cfg();
-        Box b = e.get(c);
+        Box b = e.get(c).abs();
         float s = c.rpgHudScale, ox = RpgHudOverlay.originX(c), oy = RpgHudOverlay.originY(c, height);
-        float x = ox + b.x() * s, y = oy + b.y() * s, w = b.aw() * s, h = b.ah() * s;
+        float x = ox + b.x() * s, y = oy + b.y() * s, w = b.w() * s, h = b.h() * s;
         if (w < MIN_HIT) { x -= (MIN_HIT - w) / 2f; w = MIN_HIT; }
         if (h < MIN_HIT) { y -= (MIN_HIT - h) / 2f; h = MIN_HIT; }
         return new int[]{Math.round(x), Math.round(y), Math.round(w), Math.round(h)};

@@ -508,13 +508,15 @@
   "genshinerc.bar.config.rpg_frame_slice.desc": "Corner size of zm_bar_border.png in texture pixels. 0 detects it from the texture.",
   "genshinerc.bar.config.rpg_frame_corner": "Frame Corner Size Override",
   "genshinerc.bar.config.rpg_frame_corner.desc": "On-screen corner size in GUI pixels. 0 keeps the texture's own proportions. Corners never stretch.",
-  "genshinerc.hud_editor.element.armor_icon": "Armor Icon",
-  "genshinerc.hud_editor.element.toughness_icon": "Toughness Icon",
-  "genshinerc.hud_editor.element.hunger_icon": "Hunger Icon",
   "genshinerc.bar.config.rpg_orb_hz": "EXP Orb Pulse Hz",
   "genshinerc.bar.config.rpg_orb_hz.desc": "How many times the orb pulses per second.",
   "genshinerc.bar.config.rpg_orb_brightness": "EXP Orb Brightness",
   "genshinerc.bar.config.rpg_orb_brightness.desc": "The intensity of the orb's glow.",
   "genshinerc.bar.config.rpg_orb_min_alpha": "EXP Orb Min Alpha",
-  "genshinerc.bar.config.rpg_orb_min_alpha.desc": "The lowest opacity during the breathing cycle."
+  "genshinerc.bar.config.rpg_orb_min_alpha.desc": "The lowest opacity during the breathing cycle.",
+  "genshinerc.hud_editor.hide_boxes": "Hide Boxes",
+  "genshinerc.hud_editor.element.zhen_mie_logo": "Zhen-Mie Icon",
+  "genshinerc.hud_editor.element.armor_icon": "Armor Icon",
+  "genshinerc.hud_editor.element.toughness_icon": "Toughness Icon",
+  "genshinerc.hud_editor.element.hunger_icon": "Hunger Icon"
 }
