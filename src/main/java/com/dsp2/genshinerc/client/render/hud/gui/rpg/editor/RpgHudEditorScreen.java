@@ -71,7 +71,9 @@ public final class RpgHudEditorScreen extends Screen {
         if (sel) {
             g.fill(x + w - HANDLE, y + h - HANDLE, x + w, y + h, BOX_SEL);
             Box b = e.get(cfg());
-            label += String.format(Locale.ROOT, "  %.1f, %.1f  %.1f x %.1f", b.x(), b.y(), b.w(), b.h());
+            label += String.format(Locale.ROOT, "  %.1f, %.1f  %.1f x %.1f", b.x(), b.y(), b.aw(), b.ah());
+            if (b.flipX()) label += " [H]";
+            if (b.flipY()) label += " [V]";
         }
         int ly = y - 10 >= 0 ? y - 10 : y + h + 2;
         g.drawString(font, label, x, ly, sel ? BOX_SEL : BOX_HOVER, true);
@@ -101,20 +103,29 @@ public final class RpgHudEditorScreen extends Screen {
         if (drag == Drag.NONE || selected == null || button != GLFW.GLFW_MOUSE_BUTTON_LEFT)
             return super.mouseDragged(mx, my, button, dx, dy);
         BarConfig c = cfg();
-        if (drag == Drag.MOVE) {
-            selected.set(c, start.withPos(snap(localX(mx) - grabX), snap(localY(my) - grabY)));
-        } else {
-            float w = Math.max(selected.minW, snap(localX(mx) - start.x()));
-            float h = Math.max(selected.minH, snap(localY(my) - start.y()));
-            if (hasShiftDown()) {
-                float k = Math.max(w / start.w(), h / start.h());
-                w = Math.max(selected.minW, snap(start.w() * k));
-                h = Math.max(selected.minH, snap(start.h() * k));
-            }
-            selected.set(c, new Box(start.x(), start.y(), w, h));
-        }
+        if (drag == Drag.MOVE) selected.set(c, start.withPos(snap(localX(mx) - grabX), snap(localY(my) - grabY)));
+        else resize(c, mx, my);
         dirty = true;
         return true;
+    }
+
+    private void resize(BarConfig c, double mx, double my) {
+        RpgHudElement e = selected;
+        float minW = e.minW(c), minH = e.minH(c);
+        float w = Math.max(minW, snap(localX(mx) - start.x()));
+        float h = Math.max(minH, snap(localY(my) - start.y()));
+        boolean lock = e.kind == RpgHudElement.Kind.ASPECT;
+        if (lock || hasShiftDown()) {
+            float k = Math.max(w / Math.max(1e-3f, start.aw()), h / Math.max(1e-3f, start.ah()));
+            w = start.aw() * k;
+            h = lock ? w * e.defaults().ah() / Math.max(1e-3f, e.defaults().aw()) : start.ah() * k;
+            if (w < minW || h < minH) {
+                float up = Math.max(minW / Math.max(1e-3f, w), minH / Math.max(1e-3f, h));
+                w *= up; h *= up;
+            }
+            w = snap(w); h = snap(h);
+        }
+        e.set(c, start.withSize(w, h));
     }
 
     @Override
@@ -131,10 +142,11 @@ public final class RpgHudEditorScreen extends Screen {
     public boolean mouseScrolled(double mx, double my, double delta) {
         RpgHudElement e = selected != null && contains(screenRect(selected), mx, my) ? selected : hit(mx, my);
         if (e == null || delta == 0) return super.mouseScrolled(mx, my, delta);
+        BarConfig c = cfg();
         float k = delta > 0 ? SCROLL_STEP : 1f / SCROLL_STEP;
-        Box b = e.get(cfg());
-        float w = Math.max(e.minW, b.w() * k), h = Math.max(e.minH, b.h() * k);
-        e.set(cfg(), new Box(b.cx() - w / 2f, b.cy() - h / 2f, w, h));
+        Box b = e.get(c);
+        float w = Math.max(e.minW(c), b.aw() * k), h = Math.max(e.minH(c), b.ah() * k);
+        e.set(c, new Box(b.cx() - w / 2f, b.cy() - h / 2f, b.w(), b.h()).withSize(w, h));
         selected = e;
         changed();
         return true;
@@ -143,7 +155,15 @@ public final class RpgHudEditorScreen extends Screen {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
         if (selected != null) {
-            if (key == GLFW.GLFW_KEY_R) { selected.reset(cfg()); changed(); return true; }
+            BarConfig c = cfg();
+            Box b = selected.get(c);
+            if (key == GLFW.GLFW_KEY_R) { selected.reset(c); changed(); return true; }
+            if (selected.mirrorable && (key == GLFW.GLFW_KEY_H || key == GLFW.GLFW_KEY_V)) {
+                boolean h = key == GLFW.GLFW_KEY_H;
+                selected.set(c, b.withFlip(h != b.flipX(), !h != b.flipY()));
+                changed();
+                return true;
+            }
             int step = hasShiftDown() ? 5 : 1, dx = 0, dy = 0;
             switch (key) {
                 case GLFW.GLFW_KEY_LEFT -> dx = -step;
@@ -153,8 +173,7 @@ public final class RpgHudEditorScreen extends Screen {
                 default -> { }
             }
             if (dx != 0 || dy != 0) {
-                Box b = selected.get(cfg());
-                selected.set(cfg(), b.withPos(b.x() + dx, b.y() + dy));
+                selected.set(c, b.withPos(b.x() + dx, b.y() + dy));
                 changed();
                 return true;
             }
@@ -179,7 +198,7 @@ public final class RpgHudEditorScreen extends Screen {
         BarConfig c = cfg();
         Box b = e.get(c);
         float s = c.rpgHudScale, ox = RpgHudOverlay.originX(c), oy = RpgHudOverlay.originY(c, height);
-        float x = ox + b.x() * s, y = oy + b.y() * s, w = b.w() * s, h = b.h() * s;
+        float x = ox + b.x() * s, y = oy + b.y() * s, w = b.aw() * s, h = b.ah() * s;
         if (w < MIN_HIT) { x -= (MIN_HIT - w) / 2f; w = MIN_HIT; }
         if (h < MIN_HIT) { y -= (MIN_HIT - h) / 2f; h = MIN_HIT; }
         return new int[]{Math.round(x), Math.round(y), Math.round(w), Math.round(h)};

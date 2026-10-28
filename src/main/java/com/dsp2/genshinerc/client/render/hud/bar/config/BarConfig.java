@@ -27,6 +27,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -197,26 +198,26 @@ public class BarConfig {
     @SerialEntry public float rpgCamRoll = 0f;
     @SerialEntry public float rpgTextPopScale = 0.12f;
     @SerialEntry public float rpgTextPopTime = 0.22f;
-    @SerialEntry public float rpgLayerDarken = 0.15f;
-    @SerialEntry public float rpgLayerMinBrightness = 0.35f;
     @SerialEntry public float rpgOxygenRetractTime = 0.30f;
     @SerialEntry public float rpgOxygenSettleTime = 0.35f;
     @SerialEntry public float rpgOxygenGainIdleTime = 0.50f;
     @SerialEntry public float rpgShakePixels = 4f;
     @SerialEntry public float rpgCountSpeed = 12f;
     @SerialEntry public float rpgFoodPreviewHz = 1.2f;
-    @SerialEntry public float rpgExhaustionAlpha = 0.55f;
     @SerialEntry public Color rpgExpColor = new Color(0x5BE35B);
     @SerialEntry public float rpgPortraitX = 0f, rpgPortraitY = -52f, rpgPortraitW = 52f, rpgPortraitH = 52f;
     @SerialEntry public float rpgLevelTextX = 0f, rpgLevelTextY = -66f, rpgLevelTextW = 52f, rpgLevelTextH = 12f;
     @SerialEntry public float rpgHpX = 48f, rpgHpY = -26f, rpgHpW = 110f, rpgHpH = 9f;
     @SerialEntry public float rpgStaminaX = 54f, rpgStaminaY = -19f, rpgStaminaW = 92f, rpgStaminaH = 5f;
     @SerialEntry public float rpgShieldX = 50f, rpgShieldY = -29f, rpgShieldW = 106f, rpgShieldH = 2f;
-    @SerialEntry public float rpgZhenMieX = 48f, rpgZhenMieY = -43f, rpgZhenMieW = 62f, rpgZhenMieH = 10f;
-    @SerialEntry public float rpgStackX = 112f, rpgStackY = -80f, rpgStackW = 46f, rpgStackH = 48f;
-    @SerialEntry public float rpgZmBorderX = 57f, rpgZmBorderY = -45f, rpgZmBorderW = 55f, rpgZmBorderH = 14f;
-    @SerialEntry public int rpgZmBorderSlice = 4;
-    @SerialEntry public float rpgZmBorderCornerPx = 3f;
+    @SerialEntry public int rpgFrameSlice = 0;
+    @SerialEntry public float rpgFrameCornerPx = 0f;
+    @SerialEntry public Map<String, float[]> rpgLayout = new LinkedHashMap<>();
+
+    public Map<String, float[]> layout() {
+        if (rpgLayout == null) rpgLayout = new LinkedHashMap<>();
+        return rpgLayout;
+    }
 
     @SerialEntry public List<String> entityYOffsets = new ArrayList<>(List.of("minecraft:witch 0.60"));
 
@@ -437,28 +438,15 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_cam_roll", 0f, () -> c.rpgCamRoll, v -> c.rpgCamRoll = v, -180f, 180f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_text_pop_scale", 0.12f, () -> c.rpgTextPopScale, v -> c.rpgTextPopScale = v, 0f, 0.5f, 0.01f, "%.2f"))
                 .option(floatOptCustomStep("rpg_text_pop_time", 0.22f, () -> c.rpgTextPopTime, v -> c.rpgTextPopTime = v, 0f, 1f, 0.01f, "%.2f"))
-                .option(floatOptCustomStep("rpg_layer_darken", 0.15f, () -> c.rpgLayerDarken, v -> c.rpgLayerDarken = v, 0f, 0.5f, 0.01f, "%.2f"))
-                .option(floatOptCustomStep("rpg_layer_min_brightness", 0.35f, () -> c.rpgLayerMinBrightness, v -> c.rpgLayerMinBrightness = v, 0f, 1f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_oxygen_retract_time", 0.30f, () -> c.rpgOxygenRetractTime, v -> c.rpgOxygenRetractTime = v, 0.05f, 2f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_oxygen_settle_time", 0.35f, () -> c.rpgOxygenSettleTime, v -> c.rpgOxygenSettleTime = v, 0.05f, 2f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_oxygen_gain_idle_time", 0.50f, () -> c.rpgOxygenGainIdleTime, v -> c.rpgOxygenGainIdleTime = v, 0.1f, 3f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_shake_pixels", 4f, () -> c.rpgShakePixels, v -> c.rpgShakePixels = v, 0f, 12f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_count_speed", 12f, () -> c.rpgCountSpeed, v -> c.rpgCountSpeed = v, 1f, 40f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_food_preview_hz", 1.2f, () -> c.rpgFoodPreviewHz, v -> c.rpgFoodPreviewHz = v, 0.2f, 4f, 0.1f, "%.1f"))
-                .option(percentOpt("rpg_exhaustion_alpha", 0.55f, () -> c.rpgExhaustionAlpha, v -> c.rpgExhaustionAlpha = v, 0f, 1f))
                 .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
-                .option(Option.<Integer>createBuilder()
-                        .name(t(P("rpg_zm_border_slice")))
-                        .description(OptionDescription.of(td(P("rpg_zm_border_slice"))))
-                        .binding(4, () -> c.rpgZmBorderSlice, v -> c.rpgZmBorderSlice = v)
-                        .controller(o -> IntegerSliderControllerBuilder.create(o).range(1, 32).step(1))
-                        .build())
-                .option(Option.<Float>createBuilder()
-                        .name(t(P("rpg_zm_border_corner")))
-                        .description(OptionDescription.of(td(P("rpg_zm_border_corner"))))
-                        .binding(3f, () -> c.rpgZmBorderCornerPx, v -> c.rpgZmBorderCornerPx = v)
-                        .controller(o -> FloatSliderControllerBuilder.create(o).range(0.5f, 16f).step(0.5f))
-                        .build())
+                .option(intOpt("rpg_frame_slice", 0, () -> c.rpgFrameSlice, v -> c.rpgFrameSlice = v, 0, 32))
+                .option(floatOptCustomStep("rpg_frame_corner", 0f, () -> c.rpgFrameCornerPx, v -> c.rpgFrameCornerPx = v, 0f, 16f, 0.5f, "%.1f"))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("rpg_hud_editor")))
                         .description(OptionDescription.of(td(P("rpg_hud_editor"))))

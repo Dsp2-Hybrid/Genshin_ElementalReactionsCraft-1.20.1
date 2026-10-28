@@ -30,7 +30,7 @@ public final class RpgTextures {
     private RpgTextures() {}
 
     public record Info(int w, int h, int ax0, int ay0, int ax1, int ay1, int ix0, int ix1,
-                       ResourceLocation white, ResourceLocation tint) {
+                       ResourceLocation white, ResourceLocation tint, ResourceLocation core, ResourceLocation outline) {
         public float u(float f) { return Mth.lerp(Mth.clamp(f, 0f, 1f), ix0, ix1) / (float) w; }
         public float vTop() { return ay0 / (float) h; }
         public float vBottom() { return ay1 / (float) h; }
@@ -64,14 +64,17 @@ public final class RpgTextures {
         for (ResourceLocation id : OWNED) tm.release(id);
         OWNED.clear();
         CACHE.clear();
+        TexScan.clear();
         pixel = hatch = null;
     }
+
+    private static Info missing(ResourceLocation tex) { return new Info(1, 1, 0, 0, 1, 1, 0, 1, tex, tex, tex, tex); }
 
     private static Info build(ResourceLocation tex) {
         Optional<Resource> res = Minecraft.getInstance().getResourceManager().getResource(tex);
         if (res.isEmpty()) {
             LOG.warn("[genshinerc] Missing HUD texture {}", tex);
-            return new Info(1, 1, 0, 0, 1, 1, 0, 1, tex, tex);
+            return missing(tex);
         }
         try (InputStream in = res.get().open(); NativeImage img = NativeImage.read(in)) {
             int w = img.getWidth(), h = img.getHeight();
@@ -93,22 +96,32 @@ public final class RpgTextures {
             if (ax1 <= ax0) { ax0 = 0; ay0 = 0; ax1 = w; ay1 = h; }
             if (ix1 <= ix0) { ix0 = ax0; ix1 = ax1; }
 
-            NativeImage white = new NativeImage(w, h, true), tint = new NativeImage(w, h, true);
+            NativeImage white = new NativeImage(w, h, true), tint = new NativeImage(w, h, true),
+                    core = new NativeImage(w, h, true), outline = new NativeImage(w, h, true);
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
-                    if (!inside[y * w + x]) { white.setPixelRGBA(x, y, 0); tint.setPixelRGBA(x, y, 0); continue; }
                     int p = img.getPixelRGBA(x, y), a = p >>> 24;
-                    int l = Math.min(255, lum(p) * 255 / maxLum);
-                    white.setPixelRGBA(x, y, (a << 24) | 0xFFFFFF);
-                    tint.setPixelRGBA(x, y, (a << 24) | (l << 16) | (l << 8) | l);
+                    if (inside[y * w + x]) {
+                        int l = Math.min(255, lum(p) * 255 / maxLum);
+                        white.setPixelRGBA(x, y, (a << 24) | 0xFFFFFF);
+                        tint.setPixelRGBA(x, y, (a << 24) | (l << 16) | (l << 8) | l);
+                        core.setPixelRGBA(x, y, p);
+                        outline.setPixelRGBA(x, y, 0);
+                    } else {
+                        white.setPixelRGBA(x, y, 0);
+                        tint.setPixelRGBA(x, y, 0);
+                        core.setPixelRGBA(x, y, 0);
+                        outline.setPixelRGBA(x, y, a > VISIBLE_ALPHA ? p : 0);
+                    }
                 }
             }
             String key = tex.getNamespace() + "/" + tex.getPath();
             return new Info(w, h, ax0, ay0, ax1, ay1, ix0, ix1,
-                    register("white/" + key, white), register("tint/" + key, tint));
+                    register("white/" + key, white), register("tint/" + key, tint),
+                    register("core/" + key, core), register("outline/" + key, outline));
         } catch (IOException e) {
             LOG.warn("[genshinerc] Failed to read HUD texture {}", tex, e);
-            return new Info(1, 1, 0, 0, 1, 1, 0, 1, tex, tex);
+            return missing(tex);
         }
     }
 

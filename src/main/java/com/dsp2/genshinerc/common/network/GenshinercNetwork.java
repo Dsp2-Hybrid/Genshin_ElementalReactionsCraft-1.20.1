@@ -3,7 +3,7 @@ package com.dsp2.genshinerc.common.network;
 import com.dsp2.genshinerc.common.network.base.combat.SyncShieldPacket;
 import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
 import com.dsp2.genshinerc.common.network.base.element.SyncAuraPacket;
-import com.dsp2.genshinerc.common.network.sync.SyncPlayerHudPacket;
+import com.dsp2.genshinerc.common.network.sync.packet.SyncPlayerHudPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;

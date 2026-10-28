@@ -1,7 +1,7 @@
 package com.dsp2.genshinerc.common.level;
 
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
-import com.dsp2.genshinerc.common.network.sync.SyncPlayerHudPacket;
+import com.dsp2.genshinerc.common.network.sync.packet.SyncPlayerHudPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;

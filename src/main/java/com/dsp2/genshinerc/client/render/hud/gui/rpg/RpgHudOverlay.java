@@ -7,13 +7,15 @@ import com.dsp2.genshinerc.client.render.hud.bar.shield.ClientShieldState;
 import com.dsp2.genshinerc.client.render.hud.bar.zhenmie.ClientZhenMieState;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.RpgHudElement.Box;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.BarTrack;
-import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.OxygenAnim;
+import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.NumberFx;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.TextAnim;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.editor.RpgHudEditorScreen;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.DiamondModelView;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.GuiQuad;
-import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.GuiStencil;
-import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.RpgTextures;
+import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.HudGeom;
+import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.HudMirror;
+import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.NineSlice;
+import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.Strip;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import com.dsp2.genshinerc.common.level.PlayerHudSync;
@@ -30,6 +32,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -46,42 +49,40 @@ import java.util.Locale;
 public final class RpgHudOverlay {
     private static ResourceLocation tex(String name) { return new ResourceLocation("genshinerc", "textures/hud/rpg/" + name + ".png"); }
 
-    static final ResourceLocation BAR_HEALTH = tex("rpg_bar_3"), BAR_STAMINA = tex("rpg_bar_2"),
-            BAR_ABSORB = tex("rpg_bar_1"), BAR_MOUNT = tex("rpg_bar_1"), BAR_OXYGEN = tex("rpg_bar_2");
-    private static final int BAR_BG_RGB = 0x1E1E1E;
-    private static final float BAR_BG_ALPHA = 0.75f;
-
+    static final ResourceLocation BAR_HEALTH = tex("rpg_bar_3"), BAR_STAMINA = tex("rpg_bar_2"), BAR_ABSORB = tex("rpg_bar_1"),
+            BAR_MOUNT = tex("rpg_bar_3"), BAR_OXYGEN = tex("rpg_bar_2"), BAR_STAT = tex("rpg_bar_2");
     static final ResourceLocation EXP_TRACK = tex("rpg_exp"), EXP_FILL = tex("rpg_exps");
     static final ResourceLocation ZM_BAR = tex("zm_bar"), ZM_BORDER = tex("zm_bar_border"),
             ZM_LOGO = tex("zm_logo"), ZM_TRIANGLE = tex("zm_triangle"), STAMINA_LOGO = tex("stamina_logo");
-    private static final ResourceLocation ICONS = new ResourceLocation("minecraft", "textures/gui/icons.png");
 
     public static final IGuiOverlay OVERLAY = RpgHudOverlay::render;
 
-    private static final int WHITE = 0xFFFFFF, ABS_RGB = 0xFFB040, PREVIEW_RGB = 0x7CFF6A, HATCH_RGB = 0x1A1A1A;
-    private static final int STACK_ROWS = 5;
-    private static final float TOUGHNESS_DARKEN = 0.6f, DEATH_SHAKE_BOOST = 1.6f, ROW_FADE_S = 0.2f;
-    private static final float CLASH_ALPHA = 0.85f, CRUSH_FLICKER_HZ = 10f;
+    static final int WHITE = 0xFFFFFF;
+    static final float BAR_BG_ALPHA = 0.75f, OUTLINE_ALPHA = 1f;
+    static final int NATURAL = -1;
+
+    private static final int ABS_RGB = 0xFFB040;
+    private static final float DEATH_SHAKE_BOOST = 1.6f, CLASH_ALPHA = 0.85f, CRUSH_FLICKER_HZ = 10f, HP_COLOR_SPEED = 10f;
+    private static final float SWEEP_HZ = 0.6f, SWEEP_WIDTH = 0.18f, SWEEP_ALPHA = 0.45f, LOW_HP_BLINK = 0.15f;
     private static final long CRUSH_HUE_MS = 600L, KNOCKDOWN_SWAP_MS = 90L;
 
-    private static final BarTrack B_HEALTH = new BarTrack(), B_STAMINA = new BarTrack(),
-            B_SHIELD = new BarTrack(), B_MOUNT = new BarTrack();
-    private static final OxygenAnim OXYGEN = new OxygenAnim();
-    private static final TextAnim T_HP = new TextAnim(), T_ABS = new TextAnim(), T_FOOD = new TextAnim(), T_SAT = new TextAnim(),
-            T_ARMOR = new TextAnim(), T_TOUGH = new TextAnim(), T_MOUNT = new TextAnim(), T_AIR = new TextAnim(),
-            T_XP = new TextAnim(), T_EXP_FILL = new TextAnim();
-    private static final TextAnim[] TEXTS = {T_HP, T_ABS, T_FOOD, T_SAT, T_ARMOR, T_TOUGH, T_MOUNT, T_AIR, T_XP, T_EXP_FILL};
-    private static final Fade F_MOUNT = new Fade(), F_AIR = new Fade();
+    private static final BarTrack B_HEALTH = new BarTrack(), B_STAMINA = new BarTrack(), B_SHIELD = new BarTrack();
+    private static final NumberFx N_HP = new NumberFx(400L, 100L, 400L);
+    private static final TextAnim T_ABS = new TextAnim(), T_XP = new TextAnim();
+    private static final XpGauge XP = new XpGauge();
+    private static final RpgPalette.Tween C_HP = new RpgPalette.Tween();
 
     @Nullable private static LocalPlayer lastPlayer;
     private static long deathStart = -1L;
-    private static int lastXpLevel = -1, mountId = -1;
-    private static float mountMax = 1f;
 
     private RpgHudOverlay() {}
 
     public static float originX(BarConfig cfg) { return cfg.rpgHudOffsetX; }
     public static float originY(BarConfig cfg, int screenHeight) { return screenHeight - cfg.rpgHudOffsetY; }
+
+    public static NineSlice.Corner frameCorner(BarConfig cfg) {
+        return NineSlice.corner(ZM_BORDER, cfg.rpgFrameSlice, cfg.rpgFrameCornerPx, RpgHudElement.ZHEN_MIE_BORDER.defaults().ah());
+    }
 
     public static void render(ForgeGui gui, GuiGraphics g, float partialTick, int sw, int sh) {
         if (Minecraft.getInstance().screen instanceof RpgHudEditorScreen) return;
@@ -109,18 +110,20 @@ public final class RpgHudOverlay {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         try {
-            drawPortrait(g, p, RpgHudElement.PORTRAIT.get(cfg), cfg, alpha);
-            drawLevelText(g, s, RpgHudElement.LEVEL_TEXT.get(cfg), now, cfg, alpha);
+            drawPortrait(g, p, RpgHudElement.PORTRAIT.get(cfg).abs(), cfg, alpha);
+            int expRgb = cfg.rpgExpColor.getRGB() & 0xFFFFFF;
+            HudMirror.draw(g, RpgHudElement.EXP.get(cfg), b -> XP.draw(g, b, expRgb, alpha, now));
+            drawLevelText(g, s, RpgHudElement.LEVEL_TEXT.get(cfg).abs(), now, cfg, alpha);
 
             float shake = B_HEALTH.shakeOffset(now, cfg) * cfg.rpgShakePixels * (p.isDeadOrDying() ? DEATH_SHAKE_BOOST : 1f);
             pose.pushPose();
             pose.translate(shake, 0f, 0f);
-            drawVitals(g, s, RpgHudElement.HEALTH.get(cfg), RpgHudElement.STAMINA.get(cfg), now, cfg, alpha);
-            drawShield(g, RpgHudElement.SHIELD.get(cfg), cfg, now, alpha, preview);
+            drawVitals(g, s, cfg, now, alpha);
+            drawShield(g, cfg, now, alpha, preview);
             pose.popPose();
 
-            drawZhenMie(g, p, RpgHudElement.ZHEN_MIE.get(cfg), RpgHudElement.ZHEN_MIE_BORDER.get(cfg), now, cfg, alpha);
-            drawStack(g, s, RpgHudElement.STACK.get(cfg), now, cfg, alpha, preview);
+            drawZhenMie(g, p, now, cfg, alpha);
+            RpgStatBars.draw(g, s, now, cfg, alpha, preview);
         } finally {
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
             pose.popPose();
@@ -128,10 +131,10 @@ public final class RpgHudOverlay {
     }
 
     private static void resetAll() {
-        B_HEALTH.reset(); B_STAMINA.reset(); B_SHIELD.reset(); B_MOUNT.reset();
-        for (TextAnim t : TEXTS) t.reset();
-        F_MOUNT.v = 0f; F_AIR.v = 0f;
-        deathStart = -1L; lastXpLevel = -1; mountId = -1;
+        B_HEALTH.reset(); B_STAMINA.reset(); B_SHIELD.reset();
+        N_HP.reset(); T_ABS.reset(); T_XP.reset(); XP.reset(); C_HP.reset();
+        RpgStatBars.reset();
+        deathStart = -1L;
     }
 
     private static float deathAlpha(Player p, long now, BarConfig cfg) {
@@ -143,30 +146,18 @@ public final class RpgHudOverlay {
     }
 
     private static void tick(Snap s, long now, BarConfig cfg) {
-        B_HEALTH.update(now, s.hp, s.abs, s.maxHp, cfg, true, true);
-        B_STAMINA.update(now, s.sta, 0f, Math.max(1f, s.maxSta), cfg, false, false);
-        B_SHIELD.update(now, s.shield, 0f, Math.max(s.maxHp, s.shieldInit), cfg, false, false);
-
-        if (s.mount != null) {
-            if (s.mount.getId() != mountId) { B_MOUNT.reset(); T_MOUNT.reset(); mountId = s.mount.getId(); }
-            mountMax = s.mount.getMaxHealth();
-            B_MOUNT.update(now, s.mount.getHealth(), 0f, mountMax, cfg, false, false);
-            T_MOUNT.set(s.mount.getHealth(), now);
-        }
-        F_MOUNT.update(now, s.mount != null, ROW_FADE_S);
-
-        float air = s.maxAir > 0 ? Math.max(0, s.air) / (float) s.maxAir : 1f;
-        OXYGEN.update(now, air, cfg);
-        F_AIR.update(now, OXYGEN.visible(s.underwater), ROW_FADE_S);
-
-        T_HP.set(s.hp, now); T_ABS.set(s.abs, now);
-        T_FOOD.set(s.food, now); T_SAT.set(s.sat, now);
-        T_ARMOR.set(s.armor, now); T_TOUGH.set(s.toughness, now);
-        T_AIR.set(Math.round(air * 100f), now);
-        T_XP.set(s.xpPoints, now);
-        if (s.xpLevel != lastXpLevel) { T_EXP_FILL.snap(s.xpProgress); lastXpLevel = s.xpLevel; }
-        else T_EXP_FILL.set(s.xpProgress, now);
-        for (TextAnim t : TEXTS) t.update(now, cfg.rpgCountSpeed);
+        B_HEALTH.update(now, s.hp(), s.abs(), s.maxHp(), cfg, true, true);
+        B_STAMINA.update(now, s.sta(), 0f, Math.max(1f, s.maxSta()), cfg, false, false);
+        B_SHIELD.update(now, s.shield(), 0f, Math.max(s.maxHp(), s.shieldInit()), cfg, false, false);
+        N_HP.set(s.hp(), now);
+        N_HP.update(now);
+        T_ABS.set(s.abs(), now);
+        T_XP.set(s.xpPoints(), now);
+        T_ABS.update(now, cfg.rpgCountSpeed);
+        T_XP.update(now, cfg.rpgCountSpeed);
+        XP.update(now, s.xpLevel(), s.xpProgress());
+        C_HP.step(s.hpColor(), now, HP_COLOR_SPEED);
+        RpgStatBars.tick(s, now, cfg);
     }
 
     private static void drawPortrait(GuiGraphics g, LocalPlayer p, Box b, BarConfig cfg, float a) {
@@ -174,260 +165,152 @@ public final class RpgHudOverlay {
         if (a < 1f) RenderSystem.setShaderColor(1f, 1f, 1f, a);
         DiamondModelView.render(g, p, x, y, size, cfg);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-
-        GuiQuad.blit(g, EXP_TRACK, x, y, x + size, y + size, 0f, 0f, 1f, 1f, argb(a, WHITE));
-        RpgTextures.Info fill = RpgTextures.info(EXP_FILL);
-        float f = Mth.clamp(T_EXP_FILL.shown(), 0f, 1f);
-        if (f > 0.001f) {
-            float vCut = Mth.lerp(f, fill.vBottom(), fill.vTop());
-            GuiQuad.blit(g, fill.tint(), x, y + size * vCut, x + size, y + size, 0f, vCut, 1f, 1f,
-                    argb(a, cfg.rpgExpColor.getRGB() & 0xFFFFFF));
-        }
     }
 
     private static void drawLevelText(GuiGraphics g, Snap s, Box b, long now, BarConfig cfg, float a) {
         float scale = b.h() / 18f;
-        text(g, Component.literal("Ex." + s.xpLevel + " / Lv." + s.level), b.cx(), b.y() + b.h() * 0.27f, scale, WHITE, a, true);
-        text(g, Component.literal("EXP:" + Math.round(T_XP.shown()) + " / " + s.xpNeed), b.cx(), b.y() + b.h() * 0.77f,
+        text(g, Component.literal("Ex." + s.xpLevel() + " / Lv." + s.level()), b.cx(), b.y() + b.h() * 0.27f, scale, WHITE, a, true);
+        text(g, Component.literal("EXP:" + Math.round(T_XP.shown()) + " / " + s.xpNeed()), b.cx(), b.y() + b.h() * 0.77f,
                 scale * 0.9f * pop(T_XP, now, cfg), 0xD8FFD8, a, true);
     }
 
-    private static void drawVitals(GuiGraphics g, Snap s, Box hp, Box sta, long now, BarConfig cfg, float a) {
-        drawBar(g, BAR_HEALTH, hp, B_HEALTH, true, now, cfg, a);
+    private static void drawVitals(GuiGraphics g, Snap s, BarConfig cfg, long now, float a) {
+        Box hpS = RpgHudElement.HEALTH.get(cfg), staS = RpgHudElement.STAMINA.get(cfg);
+        int hpRgb = C_HP.rgb();
+        HudMirror.draw(g, hpS, b -> drawBar(g, BAR_HEALTH, b, B_HEALTH, hpRgb, true, now, cfg, a));
 
-        boolean hasSta = s.maxSta > 0f;
+        boolean hasSta = s.maxSta() > 0f;
         if (hasSta) {
-            drawBar(g, BAR_STAMINA, sta, B_STAMINA, false, now, cfg, a);
-            float ls = Math.max(6f, sta.h() * 2f);
-            GuiQuad.blit(g, STAMINA_LOGO, sta.x() - ls * 0.7f, sta.cy() - ls / 2f, sta.x() + ls * 0.3f, sta.cy() + ls / 2f,
-                    0f, 0f, 1f, 1f, argb(a, WHITE));
+            HudMirror.draw(g, staS, b -> {
+                drawBar(g, BAR_STAMINA, b, B_STAMINA, NATURAL, false, now, cfg, a);
+                float ls = Math.max(6f, b.h() * 2f);
+                GuiQuad.blit(g, STAMINA_LOGO, b.x() - ls * 0.7f, b.cy() - ls / 2f, b.x() + ls * 0.3f, b.cy() + ls / 2f,
+                        0f, 0f, 1f, 1f, argb(a, WHITE));
+            });
         }
 
+        HudMirror.draw(g, RpgHudElement.HP_ICON.get(cfg), b -> {
+            HudGeom.icon(g, HudGeom.ICONS, 16, s.heartV(), b, argb(a, WHITE));
+            HudGeom.icon(g, HudGeom.ICONS, s.heartU(), s.heartV(), b, argb(a, WHITE));
+        });
+
+        Box hp = hpS.abs(), sta = staS.abs();
         float top = hp.y(), bottom = hp.y2();
         if (hasSta && sta.y() > top && sta.y() < bottom && sta.x() < hp.x2() && sta.x2() > hp.x()) bottom = sta.y();
-
-        MutableComponent t = Component.literal(oneDecimal(T_HP.shown()) + " / " + oneDecimal(s.maxHp));
-        if (T_ABS.shown() >= 0.05f)
-            t.append(Component.literal(" +" + oneDecimal(T_ABS.shown())).withStyle(st -> st.withColor(ABS_RGB)));
-
         float scale = Mth.clamp((bottom - top) / 8f * 0.8f, 0.35f, 1.5f);
-        text(g, t, hp.cx(), (top + bottom) / 2f, scale * pop(T_HP, now, cfg), WHITE, a, true);
+        hpText(g, s, hp.cx(), (top + bottom) / 2f, scale, now, a);
     }
 
-    private static void drawBar(GuiGraphics g, ResourceLocation fillTex, Box b, BarTrack t, boolean absorption,
-                                long now, BarConfig cfg, float a) {
-        Crop c = new Crop(fillTex);
-        c.full(g, c.i.tint(), b, argb(a * BAR_BG_ALPHA, BAR_BG_RGB));
+    private static void hpText(GuiGraphics g, Snap s, float cx, float cy, float scale, long now, float a) {
+        float frac = s.maxHp() <= 0f ? 0f : N_HP.shown() / s.maxHp();
+        int curRgb = N_HP.blink(now, frac, LOW_HP_BLINK) ? WHITE : RpgPalette.hpText(frac);
+        float ta = a * N_HP.alpha();
+        String cur = oneDecimal(N_HP.shown());
+        MutableComponent tail = Component.literal(" / " + oneDecimal(s.maxHp()));
+        if (T_ABS.shown() >= 0.05f) tail.append(colored(" +" + oneDecimal(T_ABS.shown()), ABS_RGB));
+
+        Font font = Minecraft.getInstance().font;
+        float wc = font.width(cur) * scale, wt = font.width(tail) * scale, x0 = cx - (wc + wt) / 2f;
+        text(g, Component.literal(cur), x0 + wc / 2f, cy, scale * N_HP.scale(now), curRgb, ta, true);
+        text(g, tail, x0 + wc, cy, scale, WHITE, ta, false);
+    }
+
+    static void drawBar(GuiGraphics g, ResourceLocation tex, Box b, BarTrack t, int rgb, boolean absorption,
+                        long now, BarConfig cfg, float a) {
+        Strip st = Strip.of(tex);
+        boolean tinted = rgb != NATURAL;
+        if (tinted) st.background(g, b, HudDraw.scaleRgb(rgb, RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
+        else st.full(g, st.i.core(), b, argb(a * BAR_BG_ALPHA, HudDraw.scaleRgb(WHITE, RpgPalette.BG_DARKEN)));
+
         float main = t.main(), extra = t.extra();
-        c.seg(g, fillTex, b, 0f, main, argb(a, WHITE));
+        st.seg(g, tinted ? st.i.tint() : st.i.core(), b, 0f, main, argb(a, tinted ? rgb : WHITE));
         if (absorption && extra > main + 0.001f) {
-            Crop abs = new Crop(BAR_ABSORB);
-            abs.seg(g, BAR_ABSORB, b, main, extra, argb(a, WHITE));
+            Strip abs = Strip.of(BAR_ABSORB);
+            abs.seg(g, abs.i.core(), b, main, extra, argb(a, WHITE));
         }
-        t.forEachWhite((s0, s1, wa) -> c.seg(g, c.i.white(), b, s0, s1, argb(a * wa, WHITE)));
+        t.forEachWhite((s0, s1, wa) -> st.seg(g, st.i.white(), b, s0, s1, argb(a * wa, WHITE)));
         float sa = t.smallAlpha(now, cfg);
-        if (sa > 0.01f) c.seg(g, c.i.white(), b, 0f, Math.max(main, extra), argb(a * sa, WHITE));
+        if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa, WHITE));
+        st.outline(g, b, a * OUTLINE_ALPHA);
     }
 
-    private static void drawShield(GuiGraphics g, Box b, BarConfig cfg, long now, float a, boolean preview) {
+    private static void drawShield(GuiGraphics g, BarConfig cfg, long now, float a, boolean preview) {
         if (!preview && B_SHIELD.main() <= 0.001f && !B_SHIELD.busy()) return;
         int c = cfg.shieldSpecialColor.getRGB() & 0xFFFFFF;
-        rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * cfg.shieldBgAlpha, HudDraw.scaleRgb(c, cfg.shieldBgBrightness)));
-        float x0 = b.x(), span = b.w();
-        rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a, c));
-        B_SHIELD.forEachWhite((s0, s1, wa) -> rect(g, x0 + span * s0, b.y(), x0 + span * s1, b.y2(), argb(a * wa, WHITE)));
-        float sa = B_SHIELD.smallAlpha(now, cfg);
-        if (sa > 0.01f) rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a * sa, WHITE));
+        HudMirror.draw(g, RpgHudElement.SHIELD.get(cfg), b -> {
+            HudGeom.rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * cfg.shieldBgAlpha, HudDraw.scaleRgb(c, cfg.shieldBgBrightness)));
+            float x0 = b.x(), span = b.w();
+            HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a, c));
+            B_SHIELD.forEachWhite((s0, s1, wa) -> HudGeom.rect(g, x0 + span * s0, b.y(), x0 + span * s1, b.y2(), argb(a * wa, WHITE)));
+            float sa = B_SHIELD.smallAlpha(now, cfg);
+            if (sa > 0.01f) HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a * sa, WHITE));
+        });
     }
 
-    private static void drawZhenMie(GuiGraphics g, LocalPlayer p, Box b, Box border, long now, BarConfig cfg, float a) {
+    private static void drawZhenMie(GuiGraphics g, LocalPlayer p, long now, BarConfig cfg, float a) {
         ClientZhenMieState z = ClientCombatBars.zhenMie(p.getId());
         if (z != null) z.tick(now, cfg);
+        Box zmS = RpgHudElement.ZHEN_MIE.get(cfg);
+        HudMirror.draw(g, zmS, b -> zmBar(g, z, b, now, cfg, a));
+        HudMirror.draw(g, RpgHudElement.ZHEN_MIE_BORDER.get(cfg),
+                b -> NineSlice.draw(g, ZM_BORDER, b, frameCorner(cfg), argb(a, WHITE)));
+        HudMirror.draw(g, zmS, b -> {
+            float ls = b.h();
+            GuiQuad.blit(g, ZM_LOGO, b.x(), b.y(), b.x() + ls, b.y() + ls, 0f, 0f, 1f, 1f, argb(a, WHITE));
+        });
+        HudMirror.draw(g, RpgHudElement.ZHEN_MIE_TRIANGLE.get(cfg),
+                b -> GuiQuad.blit(g, ZM_TRIANGLE, b.x(), b.y(), b.x2(), b.y2(), 0f, 0f, 1f, 1f, argb(a, WHITE)));
+    }
 
+    private static void zmBar(GuiGraphics g, @Nullable ClientZhenMieState z, Box b, long now, BarConfig cfg, float a) {
         float ls = b.h();
         Box bar = new Box(b.x() + ls + 1f, b.y(), Math.max(1f, b.w() - ls - 1f), b.h());
-        Crop c = new Crop(ZM_BAR);
-        c.full(g, ZM_BAR, bar, argb(a, WHITE));
+        Strip st = Strip.of(ZM_BAR);
+        st.full(g, ZM_BAR, bar, argb(a, WHITE));
+        if (z == null) return;
 
-        if (z != null) {
-            int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF, mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;
-            int zc = z.zhenBuff() ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
-            int mc = z.mieBuff() ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : mieBase;
-            float zm = Mth.clamp(z.zhen(), 0f, 1f), zt = Mth.clamp(z.zhenTrail(), 0f, 1f);
-            float mm = Mth.clamp(z.mie(), 0f, 1f), mt = Mth.clamp(z.mieTrail(), 0f, 1f);
+        int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF, mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;
+        int zc = z.zhenBuff() ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
+        int mc = z.mieBuff() ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : mieBase;
+        float zm = Mth.clamp(z.zhen(), 0f, 1f), zt = Mth.clamp(z.zhenTrail(), 0f, 1f);
+        float mm = Mth.clamp(z.mie(), 0f, 1f), mt = Mth.clamp(z.mieTrail(), 0f, 1f);
 
-            if (zt > zm) c.seg(g, c.i.white(), bar, zm, zt, argb(a, WHITE));
-            c.seg(g, c.i.tint(), bar, 0f, zm, argb(a, HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg))));
-            if (mt > mm) c.seg(g, c.i.white(), bar, 1f - mt, 1f - mm, argb(a, WHITE));
-            c.seg(g, c.i.tint(), bar, 1f - mm, 1f, argb(a, HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg))));
+        if (zt > zm) st.seg(g, st.i.white(), bar, zm, zt, argb(a, WHITE));
+        st.seg(g, st.i.tint(), bar, 0f, zm, argb(a, HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg))));
+        sweep(g, st, bar, 0f, zm, now, 0f, a);
+        if (mt > mm) st.seg(g, st.i.white(), bar, 1f - mt, 1f - mm, argb(a, WHITE));
+        st.seg(g, st.i.tint(), bar, 1f - mm, 1f, argb(a, HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg))));
+        sweep(g, st, bar, 1f - mm, 1f, now, 0.5f, a);
 
-            ClashResult clash = z.clash();
-            if (clash != null) {
-                float t = (now - z.clashStartMs()) / (clash.visualSeconds() * 1000f), fade = 1f - Mth.clamp(t, 0f, 1f), ca = 1f;
-                int color = switch (clash) {
-                    case CRUSH -> {
-                        ca = 0.5f + 0.5f * Mth.cos(now / 1000f * CRUSH_FLICKER_HZ * Mth.TWO_PI);
-                        yield Mth.hsvToRgb((now % CRUSH_HUE_MS) / (float) CRUSH_HUE_MS, 0.85f, 1f);
-                    }
-                    case KNOCKDOWN -> (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
-                    default -> WHITE;
-                };
-                c.seg(g, c.i.white(), bar, 0f, 1f, argb(a * fade * ca * CLASH_ALPHA, color));
-                float mx = c.x(bar, c.i.u(z.clashPoint())), ts = bar.h() * 0.8f, ty = bar.y() - ts * 0.6f;
-                GuiQuad.blit(g, ZM_TRIANGLE, mx - ts / 2f, ty, mx + ts / 2f, ty + ts, 0f, 0f, 1f, 1f, argb(a * fade, WHITE));
+        ClashResult clash = z.clash();
+        if (clash == null) return;
+        float t = (now - z.clashStartMs()) / (clash.visualSeconds() * 1000f), fade = 1f - Mth.clamp(t, 0f, 1f), ca = 1f;
+        int color = switch (clash) {
+            case CRUSH -> {
+                ca = 0.5f + 0.5f * Mth.cos(now / 1000f * CRUSH_FLICKER_HZ * Mth.TWO_PI);
+                yield Mth.hsvToRgb((now % CRUSH_HUE_MS) / (float) CRUSH_HUE_MS, 0.85f, 1f);
             }
-        }
-
-        nineSlice(g, ZM_BORDER, border, cfg.rpgZmBorderSlice, cfg.rpgZmBorderCornerPx, argb(a, WHITE));
-        GuiQuad.blit(g, ZM_LOGO, b.x(), b.y(), b.x() + ls, b.y() + ls, 0f, 0f, 1f, 1f, argb(a, WHITE));
+            case KNOCKDOWN -> (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
+            default -> WHITE;
+        };
+        st.seg(g, st.i.white(), bar, 0f, 1f, argb(a * fade * ca * CLASH_ALPHA, color));
+        float mx = st.xAt(bar, st.i.u(z.clashPoint())), ts = bar.h() * 0.8f, ty = bar.y() - ts * 0.6f;
+        GuiQuad.blit(g, ZM_TRIANGLE, mx - ts / 2f, ty, mx + ts / 2f, ty + ts, 0f, 0f, 1f, 1f, argb(a * fade, WHITE));
     }
 
-    private static void nineSlice(GuiGraphics g, ResourceLocation tex, Box b, int slicePx, float cornerPx, int argb) {
-        RpgTextures.Info i = RpgTextures.info(tex);
-        float tw = i.w(), th = i.h();
-        float u0 = i.ax0() / tw, u3 = i.ax1() / tw, v0 = i.vTop(), v3 = i.vBottom();
-        float su = Math.min(slicePx / tw, (u3 - u0) / 2f), sv = Math.min(slicePx / th, (v3 - v0) / 2f);
-        float cs = Math.max(0f, Math.min(cornerPx, Math.min(b.w(), b.h()) / 2f));
-
-        float[] xs = {b.x(), b.x() + cs, b.x2() - cs, b.x2()};
-        float[] ys = {b.y(), b.y() + cs, b.y2() - cs, b.y2()};
-        float[] us = {u0, u0 + su, u3 - su, u3};
-        float[] vs = {v0, v0 + sv, v3 - sv, v3};
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 3; col++) {
-                if (xs[col + 1] - xs[col] <= 0.001f || ys[row + 1] - ys[row] <= 0.001f) continue;
-                GuiQuad.blit(g, tex, xs[col], ys[row], xs[col + 1], ys[row + 1],
-                        us[col], vs[row], us[col + 1], vs[row + 1], argb);
-            }
+    private static void sweep(GuiGraphics g, Strip st, Box bar, float lo, float hi, long now, float phase, float a) {
+        if (hi - lo <= 0.02f) return;
+        float t = (now / 1000f * SWEEP_HZ + phase) % 1f;
+        float c = Mth.lerp(t, lo - SWEEP_WIDTH, hi + SWEEP_WIDTH);
+        int steps = 6;
+        for (int i = 0; i < steps; i++) {
+            float s0 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * i / steps, s1 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * (i + 1) / steps;
+            float w = 1f - Math.abs((s0 + s1) / 2f - c) / SWEEP_WIDTH;
+            st.seg(g, st.i.white(), bar, Math.max(lo, s0), Math.min(hi, s1), argb(a * SWEEP_ALPHA * w, WHITE));
         }
     }
 
-    private static void drawStack(GuiGraphics g, Snap s, Box b, long now, BarConfig cfg, float a, boolean preview) {
-        float rowH = b.h() / STACK_ROWS, ic = rowH * 0.85f, ts = rowH / 12f, tx = b.x() + ic + 2f;
-
-        float y = rowY(b, rowH, 0);
-        drawHunger(g, s, b.x(), y, ic, rowH, ts, now, cfg, a);
-
-        y = rowY(b, rowH, 1);
-        float ab = layerBrightness(s.armor, cfg);
-        icon(g, 34, 9, b.x(), y + (rowH - ic) / 2f, ic, ab, ab, ab, a);
-        text(g, Component.literal(String.valueOf(Math.round(T_ARMOR.shown()))), tx, y + rowH / 2f, ts * pop(T_ARMOR, now, cfg), WHITE, a, false);
-
-        y = rowY(b, rowH, 2);
-        float tb = layerBrightness(s.toughness, cfg) * TOUGHNESS_DARKEN;
-        icon(g, 34, 9, b.x(), y + (rowH - ic) / 2f, ic, tb, tb, tb, a);
-        text(g, Component.literal(String.valueOf(Math.round(T_TOUGH.shown()))), tx, y + rowH / 2f, ts * pop(T_TOUGH, now, cfg), WHITE, a, false);
-
-        y = rowY(b, rowH, 3);
-        float ma = preview ? a : a * F_MOUNT.v;
-        if (ma > 0.01f) {
-            float iy = y + (rowH - ic) / 2f;
-            icon(g, 16, 0, b.x(), iy, ic, 1f, 1f, 1f, ma);
-            icon(g, 160, 0, b.x(), iy, ic, 1f, 1f, 1f, ma);
-            Box bar = miniBar(b, tx, y, rowH);
-            drawBar(g, BAR_MOUNT, bar, B_MOUNT, false, now, cfg, ma);
-            text(g, Component.literal(ceil(T_MOUNT.shown()) + "/" + ceil(mountMax)), bar.cx(), bar.cy(),
-                    ts * 0.8f * pop(T_MOUNT, now, cfg), WHITE, ma, true);
-        }
-
-        y = rowY(b, rowH, 4);
-        float oa = preview ? a : a * F_AIR.v;
-        if (oa > 0.01f) {
-            icon(g, 16, 18, b.x(), y + (rowH - ic) / 2f, ic, 1f, 1f, 1f, oa);
-            Box bar = miniBar(b, tx, y, rowH);
-            Crop c = new Crop(BAR_OXYGEN);
-            c.full(g, c.i.tint(), bar, argb(oa * BAR_BG_ALPHA, BAR_BG_RGB));
-            c.seg(g, BAR_OXYGEN, bar, OXYGEN.bar(), OXYGEN.gainTop(), argb(oa * 0.35f, WHITE));
-            c.seg(g, BAR_OXYGEN, bar, 0f, OXYGEN.bar(), argb(oa, WHITE));
-            if (OXYGEN.ghostAlpha() > 0.01f)
-                c.seg(g, c.i.white(), bar, OXYGEN.bar(), OXYGEN.ghostTop(), argb(oa * OXYGEN.ghostAlpha(), WHITE));
-            text(g, Component.literal(Math.round(T_AIR.shown()) + "/100"), bar.cx(), bar.cy(), ts * 0.8f, WHITE, oa, true);
-        }
-    }
-
-    private static void drawHunger(GuiGraphics g, Snap s, float x, float rowY, float ic, float rowH, float ts,
-                                   long now, BarConfig cfg, float a) {
-        float iy = rowY + (rowH - ic) / 2f;
-        icon(g, 16, 27, x, iy, ic, 1f, 1f, 1f, a);
-        icon(g, 52, 27, x, iy, ic, 1f, 1f, 1f, a);
-
-        float ex = Mth.clamp(s.exhaustion / 4f, 0f, 1f);
-        if (ex > 0.02f && cfg.rpgExhaustionAlpha > 0f && GuiStencil.ensureEnabled()) {
-            int h = Math.max(1, Math.round(9 * ex));
-            PoseStack ps = g.pose();
-            ps.pushPose();
-            ps.translate(x, iy, 0f);
-            ps.scale(ic / 9f, ic / 9f, 1f);
-            GuiStencil.beginMask(g);
-            g.blit(ICONS, 0, 9 - h, 52, 27 + 9 - h, 9, h);
-            GuiStencil.useMask(g);
-            float scroll = (now % 2000L) / 2000f, span = 9f / 16f;
-            GuiQuad.blit(g, RpgTextures.hatch(), 0f, 0f, 9f, 9f, scroll, 0f, scroll + span, span, argb(a * cfg.rpgExhaustionAlpha, HATCH_RGB));
-            GuiStencil.end(g);
-            ps.popPose();
-        }
-
-        float tx = x + ic + 2f, cy = rowY + rowH / 2f;
-        float sc = ts * Math.max(pop(T_FOOD, now, cfg), pop(T_SAT, now, cfg));
-        Component current = Component.literal(oneDecimal(T_FOOD.shown()) + "+" + oneDecimal(T_SAT.shown()));
-        if (s.held == null) {
-            text(g, current, tx, cy, sc, WHITE, a, false);
-            return;
-        }
-        int pf = Math.min(20, s.food + s.held.getNutrition());
-        float psat = Math.min(pf, s.sat + s.held.getNutrition() * s.held.getSaturationModifier() * 2f);
-        float pulse = 0.5f - 0.5f * Mth.cos(now / 1000f * cfg.rpgFoodPreviewHz * Mth.TWO_PI);
-        text(g, current, tx, cy, sc, WHITE, a * (1f - pulse), false);
-        text(g, Component.literal(oneDecimal(pf) + "+" + oneDecimal(psat)), tx, cy, sc, PREVIEW_RGB, a * pulse, false);
-    }
-
-    private static float rowY(Box b, float rowH, int index) { return b.y2() - (index + 1) * rowH; }
-
-    private static Box miniBar(Box stack, float x, float rowY, float rowH) {
-        return new Box(x, rowY + rowH * 0.2f, Math.max(4f, stack.x2() - x), rowH * 0.6f);
-    }
-
-    private static final class Crop {
-        final RpgTextures.Info i;
-        final float u0, u1, v0, v1;
-
-        Crop(ResourceLocation fill) {
-            i = RpgTextures.info(fill);
-            u0 = i.ax0() / (float) i.w();
-            u1 = i.ax1() / (float) i.w();
-            v0 = i.vTop();
-            v1 = i.vBottom();
-        }
-
-        float x(Box b, float u) { return b.x() + b.w() * (u - u0) / Math.max(1.0e-6f, u1 - u0); }
-
-        void full(GuiGraphics g, ResourceLocation tex, Box b, int argb) {
-            GuiQuad.blit(g, tex, b.x(), b.y(), b.x2(), b.y2(), u0, v0, u1, v1, argb);
-        }
-
-        void seg(GuiGraphics g, ResourceLocation tex, Box b, float s0, float s1, int argb) {
-            if (s1 - s0 <= 0.001f) return;
-            float a0 = i.u(s0), a1 = i.u(s1);
-            GuiQuad.blit(g, tex, x(b, a0), b.y(), x(b, a1), b.y2(), a0, v0, a1, v1, argb);
-        }
-    }
-
-    private static void rect(GuiGraphics g, float x0, float y0, float x1, float y1, int argb) {
-        if (x1 - x0 <= 0.001f) return;
-        GuiQuad.blit(g, RpgTextures.pixel(), x0, y0, x1, y1, 0f, 0f, 1f, 1f, argb);
-    }
-
-    private static void icon(GuiGraphics g, int u, int v, float x, float y, float size, float r, float gr, float b, float a) {
-        RenderSystem.setShaderColor(r, gr, b, a);
-        g.pose().pushPose();
-        g.pose().translate(x, y, 0f);
-        g.pose().scale(size / 9f, size / 9f, 1f);
-        g.blit(ICONS, 0, 0, u, v, 9, 9);
-        g.pose().popPose();
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-    }
-
-    private static void text(GuiGraphics g, Component c, float x, float cy, float scale, int rgb, float a, boolean center) {
+    static void text(GuiGraphics g, Component c, float x, float cy, float scale, int rgb, float a, boolean center) {
         if (a * 255f < 5f) return;
         Font font = Minecraft.getInstance().font;
         PoseStack ps = g.pose();
@@ -439,22 +322,30 @@ public final class RpgHudOverlay {
         ps.popPose();
     }
 
-    private static float pop(TextAnim t, long now, BarConfig cfg) { return t.scale(now, cfg.rpgTextPopScale, cfg.rpgTextPopTime); }
-
-    private static float layerBrightness(float value, BarConfig cfg) {
-        int layers = Math.max(1, (int) Math.ceil(value / 20f));
-        return Math.max(cfg.rpgLayerMinBrightness, 1f - cfg.rpgLayerDarken * (layers - 1));
+    static void label(GuiGraphics g, Box signed, Component c, float pop, float a) {
+        Box b = signed.abs();
+        float scale = Mth.clamp(b.h() * 0.14f, 0.3f, 0.5f) * pop;
+        if (signed.flipX()) {
+            float w = Minecraft.getInstance().font.width(c) * scale;
+            text(g, c, b.x() - 2f - w, b.cy(), scale, WHITE, a, false);
+        } else {
+            text(g, c, b.x2() + 2f, b.cy(), scale, WHITE, a, false);
+        }
     }
+
+    static MutableComponent colored(String s, int rgb) { return Component.literal(s).withStyle(st -> st.withColor(rgb)); }
+
+    private static float pop(TextAnim t, long now, BarConfig cfg) { return t.scale(now, cfg.rpgTextPopScale, cfg.rpgTextPopTime); }
 
     private static int cycle(int a, int b, float hz, long now) {
         return HudDraw.lerpRgb(a, b, 0.5f - 0.5f * Mth.cos(now / 1000f * hz * Mth.TWO_PI));
     }
 
-    private static int argb(float a, int rgb) { return (Mth.clamp(Math.round(a * 255f), 0, 255) << 24) | (rgb & 0xFFFFFF); }
-    private static int ceil(float v) { return (int) Math.ceil(v - 0.001f); }
-    private static String oneDecimal(float v) { return String.format(Locale.ROOT, "%.1f", v); }
+    static int argb(float a, int rgb) { return HudGeom.argb(a, rgb); }
+    static int ceil(float v) { return (int) Math.ceil(v - 0.001f); }
+    static String oneDecimal(float v) { return String.format(Locale.ROOT, "%.1f", v); }
 
-    private static final class Fade {
+    static final class Fade {
         float v;
         long last;
 
@@ -466,23 +357,29 @@ public final class RpgHudOverlay {
         }
     }
 
-    private record Snap(float hp, float maxHp, float abs, float sta, float maxSta, float shield, float shieldInit,
-                        int armor, int toughness, int food, float sat, float exhaustion, @Nullable FoodProperties held,
-                        int air, int maxAir, boolean underwater, @Nullable LivingEntity mount,
-                        int xpLevel, float xpProgress, int xpNeed, int xpPoints, int level) {
+    record Snap(float hp, float maxHp, float abs, float sta, float maxSta, float shield, float shieldInit,
+                int armor, int toughness, int food, float sat, float exhaustion, boolean hungerEffect,
+                @Nullable FoodProperties held, int air, int maxAir, boolean underwater, @Nullable LivingEntity mount,
+                int xpLevel, float xpProgress, int xpNeed, int xpPoints, int level,
+                int hpColor, int heartU, int heartV) {
         static Snap read(LocalPlayer p) {
             PlayerPatch<?> patch = EpicFightCapabilities.getEntityPatch(p, PlayerPatch.class);
             ClientShieldState st = ClientCombatBars.shield(p.getId());
             int need = p.getXpNeededForNextLevel();
-            return new Snap(p.getHealth(), p.getMaxHealth(), p.getAbsorptionAmount(),
+            float hp = p.getHealth(), maxHp = p.getMaxHealth();
+            int heartU = p.hasEffect(MobEffects.WITHER) ? 124 : p.hasEffect(MobEffects.POISON) ? 88 : p.isFullyFrozen() ? 178 : 52;
+            int heartV = p.level().getLevelData().isHardcore() ? 45 : 0;
+            return new Snap(hp, maxHp, p.getAbsorptionAmount(),
                     patch == null ? 0f : patch.getStamina(), patch == null ? 0f : patch.getMaxStamina(),
                     st == null ? 0f : st.amount(), st == null ? 0f : st.initial(),
                     p.getArmorValue(), (int) Math.round(p.getAttributeValue(Attributes.ARMOR_TOUGHNESS)),
                     p.getFoodData().getFoodLevel(), p.getFoodData().getSaturationLevel(), PlayerHudSync.clientExhaustion(),
-                    heldFood(p), p.getAirSupply(), p.getMaxAirSupply(), p.isEyeInFluid(FluidTags.WATER),
+                    p.hasEffect(MobEffects.HUNGER), heldFood(p),
+                    p.getAirSupply(), p.getMaxAirSupply(), p.isEyeInFluid(FluidTags.WATER),
                     p.getVehicle() instanceof LivingEntity m ? m : null,
                     p.experienceLevel, p.experienceProgress, need, Math.round(p.experienceProgress * need),
-                    EntityLevelManager.getPlayerLevel(p));
+                    EntityLevelManager.getPlayerLevel(p),
+                    RpgPalette.hp(p, maxHp > 0f ? hp / maxHp : 0f), heartU, heartV);
         }
 
         @Nullable
