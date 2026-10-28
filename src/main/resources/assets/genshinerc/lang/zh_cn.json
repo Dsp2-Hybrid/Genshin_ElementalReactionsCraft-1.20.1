@@ -514,5 +514,14 @@
   "genshinerc.bar.config.rpg_frame_slice": "边框切片覆盖",
   "genshinerc.bar.config.rpg_frame_slice.desc": "zm_bar_border.png 在纹理像素中的角尺寸。设为 0 则从纹理中自动检测。",
   "genshinerc.bar.config.rpg_frame_corner": "边框角尺寸覆盖",
-  "genshinerc.bar.config.rpg_frame_corner.desc": "GUI 像素中的屏幕角尺寸。设为 0 则保持纹理自身的比例。角永远不会被拉伸。"
+  "genshinerc.bar.config.rpg_frame_corner.desc": "GUI 像素中的屏幕角尺寸。设为 0 则保持纹理自身的比例。角永远不会被拉伸。",
+  "genshinerc.hud_editor.element.armor_icon": "护甲图标",
+  "genshinerc.hud_editor.element.toughness_icon": "韧性图标",
+  "genshinerc.hud_editor.element.hunger_icon": "饥饿图标",
+  "genshinerc.bar.config.rpg_orb_hz": "经验光球呼吸频率",
+  "genshinerc.bar.config.rpg_orb_hz.desc": "每秒呼吸闪烁的次数。",
+  "genshinerc.bar.config.rpg_orb_brightness": "经验光球亮度",
+  "genshinerc.bar.config.rpg_orb_brightness.desc": "光球发光的强度。",
+  "genshinerc.bar.config.rpg_orb_min_alpha": "经验光球最低透明度",
+  "genshinerc.bar.config.rpg_orb_min_alpha.desc": "呼吸到最暗时的透明度。"
 }

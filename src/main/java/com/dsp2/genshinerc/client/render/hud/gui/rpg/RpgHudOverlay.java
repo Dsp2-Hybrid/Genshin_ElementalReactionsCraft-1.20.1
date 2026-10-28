@@ -112,7 +112,7 @@ public final class RpgHudOverlay {
         try {
             drawPortrait(g, p, RpgHudElement.PORTRAIT.get(cfg).abs(), cfg, alpha);
             int expRgb = cfg.rpgExpColor.getRGB() & 0xFFFFFF;
-            HudMirror.draw(g, RpgHudElement.EXP.get(cfg), b -> XP.draw(g, b, expRgb, alpha, now));
+            HudMirror.draw(g, RpgHudElement.EXP.get(cfg), b -> XP.draw(g, b, expRgb, alpha, now, cfg));
             drawLevelText(g, s, RpgHudElement.LEVEL_TEXT.get(cfg).abs(), now, cfg, alpha);
 
             float shake = B_HEALTH.shakeOffset(now, cfg) * cfg.rpgShakePixels * (p.isDeadOrDying() ? DEATH_SHAKE_BOOST : 1f);
@@ -169,9 +169,16 @@ public final class RpgHudOverlay {
 
     private static void drawLevelText(GuiGraphics g, Snap s, Box b, long now, BarConfig cfg, float a) {
         float scale = b.h() / 18f;
-        text(g, Component.literal("Ex." + s.xpLevel() + " / Lv." + s.level()), b.cx(), b.y() + b.h() * 0.27f, scale, WHITE, a, true);
+        int exColor = HudDraw.lerpRgb(0xFFFFFF, 0x5BE35B, s.xpProgress());
+
+        MutableComponent line1 = Component.empty()
+                .append(Component.literal("Ex." + s.xpLevel()).withStyle(st -> st.withColor(exColor)))
+                .append(Component.literal(" / ").withStyle(st -> st.withColor(exColor)))
+                .append(Component.literal("Lv." + s.level()).withStyle(st -> st.withColor(0xFFFFFF)));
+
+        text(g, line1, b.cx(), b.y() + b.h() * 0.27f, scale, 0xFFFFFF, a, true);
         text(g, Component.literal("EXP:" + Math.round(T_XP.shown()) + " / " + s.xpNeed()), b.cx(), b.y() + b.h() * 0.77f,
-                scale * 0.9f * pop(T_XP, now, cfg), 0xD8FFD8, a, true);
+                scale * 0.9f * pop(T_XP, now, cfg), exColor, a, true);
     }
 
     private static void drawVitals(GuiGraphics g, Snap s, BarConfig cfg, long now, float a) {
@@ -228,7 +235,7 @@ public final class RpgHudOverlay {
             Strip abs = Strip.of(BAR_ABSORB);
             abs.seg(g, abs.i.core(), b, main, extra, argb(a, WHITE));
         }
-        t.forEachWhite((s0, s1, wa) -> st.seg(g, st.i.white(), b, s0, s1, argb(a * wa, WHITE)));
+        t.forEachWhite((s0, s1, wa) -> st.seg(g, st.i.white(), b, s0, s1, argb(a * wa * 0.4f, WHITE)));
         float sa = t.smallAlpha(now, cfg);
         if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa, WHITE));
         st.outline(g, b, a * OUTLINE_ALPHA);
@@ -241,7 +248,7 @@ public final class RpgHudOverlay {
             HudGeom.rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * cfg.shieldBgAlpha, HudDraw.scaleRgb(c, cfg.shieldBgBrightness)));
             float x0 = b.x(), span = b.w();
             HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a, c));
-            B_SHIELD.forEachWhite((s0, s1, wa) -> HudGeom.rect(g, x0 + span * s0, b.y(), x0 + span * s1, b.y2(), argb(a * wa, WHITE)));
+            B_SHIELD.forEachWhite((s0, s1, wa) -> HudGeom.rect(g, x0 + span * s0, b.y(), x0 + span * s1, b.y2(), argb(a * wa * 0.4f, WHITE)));
             float sa = B_SHIELD.smallAlpha(now, cfg);
             if (sa > 0.01f) HudGeom.rect(g, x0, b.y(), x0 + span * B_SHIELD.main(), b.y2(), argb(a * sa, WHITE));
         });
@@ -277,10 +284,13 @@ public final class RpgHudOverlay {
 
         if (zt > zm) st.seg(g, st.i.white(), bar, zm, zt, argb(a, WHITE));
         st.seg(g, st.i.tint(), bar, 0f, zm, argb(a, HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg))));
-        sweep(g, st, bar, 0f, zm, now, 0f, a);
+
+        int sweepColor = HudDraw.scaleRgb(mc, 0.75f);
+        sweep(g, st, bar, 0f, zm, now, 0f, a, sweepColor);
+
         if (mt > mm) st.seg(g, st.i.white(), bar, 1f - mt, 1f - mm, argb(a, WHITE));
         st.seg(g, st.i.tint(), bar, 1f - mm, 1f, argb(a, HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg))));
-        sweep(g, st, bar, 1f - mm, 1f, now, 0.5f, a);
+        sweep(g, st, bar, 1f - mm, 1f, now, 0.5f, a, sweepColor);
 
         ClashResult clash = z.clash();
         if (clash == null) return;
@@ -298,7 +308,7 @@ public final class RpgHudOverlay {
         GuiQuad.blit(g, ZM_TRIANGLE, mx - ts / 2f, ty, mx + ts / 2f, ty + ts, 0f, 0f, 1f, 1f, argb(a * fade, WHITE));
     }
 
-    private static void sweep(GuiGraphics g, Strip st, Box bar, float lo, float hi, long now, float phase, float a) {
+    private static void sweep(GuiGraphics g, Strip st, Box bar, float lo, float hi, long now, float phase, float a, int color) {
         if (hi - lo <= 0.02f) return;
         float t = (now / 1000f * SWEEP_HZ + phase) % 1f;
         float c = Mth.lerp(t, lo - SWEEP_WIDTH, hi + SWEEP_WIDTH);
@@ -306,7 +316,7 @@ public final class RpgHudOverlay {
         for (int i = 0; i < steps; i++) {
             float s0 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * i / steps, s1 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * (i + 1) / steps;
             float w = 1f - Math.abs((s0 + s1) / 2f - c) / SWEEP_WIDTH;
-            st.seg(g, st.i.white(), bar, Math.max(lo, s0), Math.min(hi, s1), argb(a * SWEEP_ALPHA * w, WHITE));
+            st.seg(g, st.i.white(), bar, Math.max(lo, s0), Math.min(hi, s1), argb(a * SWEEP_ALPHA * w, color));
         }
     }
 
@@ -325,12 +335,7 @@ public final class RpgHudOverlay {
     static void label(GuiGraphics g, Box signed, Component c, float pop, float a) {
         Box b = signed.abs();
         float scale = Mth.clamp(b.h() * 0.14f, 0.3f, 0.5f) * pop;
-        if (signed.flipX()) {
-            float w = Minecraft.getInstance().font.width(c) * scale;
-            text(g, c, b.x() - 2f - w, b.cy(), scale, WHITE, a, false);
-        } else {
-            text(g, c, b.x2() + 2f, b.cy(), scale, WHITE, a, false);
-        }
+        text(g, c, b.cx(), b.cy(), scale, WHITE, a, true);
     }
 
     static MutableComponent colored(String s, int rgb) { return Component.literal(s).withStyle(st -> st.withColor(rgb)); }

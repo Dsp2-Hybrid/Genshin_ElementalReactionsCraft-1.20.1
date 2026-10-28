@@ -191,7 +191,7 @@ public class BarConfig {
     @SerialEntry public boolean rpgModelStencil = true;
     @SerialEntry public float rpgModelPivot = 1.00f;
     @SerialEntry public float rpgCamX = 0f;
-    @SerialEntry public float rpgCamY = 0f;
+    @SerialEntry public float rpgCamY = 7.5f;
     @SerialEntry public float rpgCamZ = 0f;
     @SerialEntry public float rpgCamYaw = 0f;
     @SerialEntry public float rpgCamPitch = -8f;
@@ -212,6 +212,9 @@ public class BarConfig {
     @SerialEntry public float rpgShieldX = 50f, rpgShieldY = -29f, rpgShieldW = 106f, rpgShieldH = 2f;
     @SerialEntry public int rpgFrameSlice = 0;
     @SerialEntry public float rpgFrameCornerPx = 0f;
+    @SerialEntry public float rpgOrbHz = 1.2f;
+    @SerialEntry public float rpgOrbBrightness = 1.0f;
+    @SerialEntry public float rpgOrbMinAlpha = 0.3f;
     @SerialEntry public Map<String, float[]> rpgLayout = new LinkedHashMap<>();
 
     public Map<String, float[]> layout() {
@@ -431,7 +434,7 @@ public class BarConfig {
                 .option(boolOpt("rpg_model_stencil", true, () -> c.rpgModelStencil, v -> c.rpgModelStencil = v))
                 .option(floatOptCustomStep("rpg_model_pivot", 1.00f, () -> c.rpgModelPivot, v -> c.rpgModelPivot = v, 0f, 2f, 0.01f, "%.2f"))
                 .option(floatOptCustomStep("rpg_cam_x", 0f, () -> c.rpgCamX, v -> c.rpgCamX = v, -40f, 40f, 0.5f, "%.1f"))
-                .option(floatOptCustomStep("rpg_cam_y", 0f, () -> c.rpgCamY, v -> c.rpgCamY = v, -40f, 40f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("rpg_cam_y", 7.5f, () -> c.rpgCamY, v -> c.rpgCamY = v, -40f, 50f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_cam_z", 0f, () -> c.rpgCamZ, v -> c.rpgCamZ = v, -100f, 80f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_cam_yaw", 0f, () -> c.rpgCamYaw, v -> c.rpgCamYaw = v, -180f, 180f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_cam_pitch", -8f, () -> c.rpgCamPitch, v -> c.rpgCamPitch = v, -90f, 90f, 1f, "%.0f"))
@@ -447,6 +450,10 @@ public class BarConfig {
                 .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
                 .option(intOpt("rpg_frame_slice", 0, () -> c.rpgFrameSlice, v -> c.rpgFrameSlice = v, 0, 32))
                 .option(floatOptCustomStep("rpg_frame_corner", 0f, () -> c.rpgFrameCornerPx, v -> c.rpgFrameCornerPx = v, 0f, 16f, 0.5f, "%.1f"))
+                .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
+                .option(floatOptCustomStep("rpg_orb_hz", 1.2f, () -> c.rpgOrbHz, v -> c.rpgOrbHz = v, 0.1f, 5f, 0.1f, "%.1f"))
+                .option(floatOptCustomStep("rpg_orb_brightness", 1.0f, () -> c.rpgOrbBrightness, v -> c.rpgOrbBrightness = v, 0.1f, 2f, 0.1f, "%.1f"))
+                .option(floatOptCustomStep("rpg_orb_min_alpha", 0.3f, () -> c.rpgOrbMinAlpha, v -> c.rpgOrbMinAlpha = v, 0f, 1f, 0.05f, "%.2f"))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("rpg_hud_editor")))
                         .description(OptionDescription.of(td(P("rpg_hud_editor"))))

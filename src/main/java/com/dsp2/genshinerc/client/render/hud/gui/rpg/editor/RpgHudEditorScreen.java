@@ -27,6 +27,7 @@ public final class RpgHudEditorScreen extends Screen {
     private float grabX, grabY;
     private Box start;
     private boolean dirty;
+    private boolean hideBoxes = false;
 
     public RpgHudEditorScreen(@Nullable Screen parent) {
         super(Component.translatable("genshinerc.hud_editor.title"));
@@ -35,7 +36,7 @@ public final class RpgHudEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        int w = 80, gap = 4, x = width / 2 - (w * 3 + gap * 2) / 2, y = 6;
+        int w = 60, gap = 4, x = width / 2 - (w * 4 + gap * 3) / 2, y = 6;
         addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.reset_selected"), b -> {
             if (selected != null) { selected.reset(cfg()); changed(); }
         }).bounds(x, y, w, 20).build());
@@ -43,20 +44,24 @@ public final class RpgHudEditorScreen extends Screen {
             for (RpgHudElement e : RpgHudElement.values()) e.reset(cfg());
             changed();
         }).bounds(x + w + gap, y, w, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("Hide Boxes"), b -> {
+            hideBoxes = !hideBoxes;
+        }).bounds(x + (w + gap) * 2, y, w, 20).build());
         addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.done"), b -> onClose())
-                .bounds(x + (w + gap) * 2, y, w, 20).build());
+                .bounds(x + (w + gap) * 3, y, w, 20).build());
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fill(0, 0, width, height, DIM);
+        g.fill(0, 0, width, height, hideBoxes ? 0x40000000 : DIM);
         if (minecraft != null && minecraft.player != null) RpgHudOverlay.draw(g, height, true);
         else g.drawCenteredString(font, Component.translatable("genshinerc.hud_editor.no_world"), width / 2, height / 2, HELP);
 
-        RpgHudElement hover = drag == Drag.NONE ? hit(mouseX, mouseY) : null;
-        for (RpgHudElement e : RpgHudElement.values()) drawGizmo(g, e, e == selected, e == hover);
-
-        g.drawCenteredString(font, Component.translatable("genshinerc.hud_editor.help"), width / 2, 30, HELP);
+        if (!hideBoxes) {
+            RpgHudElement hover = drag == Drag.NONE ? hit(mouseX, mouseY) : null;
+            for (RpgHudElement e : RpgHudElement.values()) drawGizmo(g, e, e == selected, e == hover);
+            g.drawCenteredString(font, Component.translatable("genshinerc.hud_editor.help"), width / 2, 30, HELP);
+        }
         super.render(g, mouseX, mouseY, partialTick);
     }
 
@@ -82,7 +87,7 @@ public final class RpgHudEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (super.mouseClicked(mx, my, button)) return true;
-        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
+        if (hideBoxes || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
 
         if (selected != null && onHandle(selected, mx, my)) {
             start = selected.get(cfg());
@@ -100,7 +105,7 @@ public final class RpgHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
-        if (drag == Drag.NONE || selected == null || button != GLFW.GLFW_MOUSE_BUTTON_LEFT)
+        if (hideBoxes || drag == Drag.NONE || selected == null || button != GLFW.GLFW_MOUSE_BUTTON_LEFT)
             return super.mouseDragged(mx, my, button, dx, dy);
         BarConfig c = cfg();
         if (drag == Drag.MOVE) selected.set(c, start.withPos(snap(localX(mx) - grabX), snap(localY(my) - grabY)));
@@ -140,6 +145,7 @@ public final class RpgHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double delta) {
+        if (hideBoxes) return super.mouseScrolled(mx, my, delta);
         RpgHudElement e = selected != null && contains(screenRect(selected), mx, my) ? selected : hit(mx, my);
         if (e == null || delta == 0) return super.mouseScrolled(mx, my, delta);
         BarConfig c = cfg();
@@ -154,6 +160,11 @@ public final class RpgHudEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
+        if (key == GLFW.GLFW_KEY_B) {
+            hideBoxes = !hideBoxes;
+            return true;
+        }
+        if (hideBoxes) return super.keyPressed(key, scan, mods);
         if (selected != null) {
             BarConfig c = cfg();
             Box b = selected.get(c);

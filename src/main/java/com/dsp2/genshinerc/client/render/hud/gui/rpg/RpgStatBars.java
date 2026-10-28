@@ -88,33 +88,40 @@ final class RpgStatBars {
             layered(g, RpgHudElement.TOUGHNESS.get(cfg), TOUGH, RpgPalette.TOUGHNESS, Math.round(T_TOUGH.shown()), now, a);
         hunger(g, s, RpgHudElement.HUNGER.get(cfg), now, cfg, a);
         exhaustion(g, RpgHudElement.EXHAUSTION.get(cfg), a);
+
+        HudMirror.draw(g, RpgHudElement.ARMOR_ICON.get(cfg),
+                b -> HudGeom.icon(g, HudGeom.ICONS, 43, 9, b, argb(a, WHITE)));
+        HudMirror.draw(g, RpgHudElement.TOUGHNESS_ICON.get(cfg),
+                b -> HudGeom.icon(g, HudGeom.ICONS, 43, 9, b, argb(a, 0xAAAAAA)));
+        HudMirror.draw(g, RpgHudElement.HUNGER_ICON.get(cfg),
+                b -> HudGeom.icon(g, HudGeom.ICONS, 52, 27, b, argb(a, WHITE)));
+
         drawMount(g, cfg, now, preview ? a : a * F_MOUNT.v);
         drawOxygen(g, cfg, preview ? a : a * F_AIR.v);
     }
 
     private static void layered(GuiGraphics g, Box signed, PointAnim anim, int[] colors, int number, long now, float a) {
-        HudMirror.draw(g, signed, b -> {
-            Strip st = Strip.of(BAR_STAT);
-            int cap = colors.length;
-            float v = Mth.clamp(anim.shown(), 0f, cap * LAYER);
-            int full = (int) Math.floor(v / LAYER + 1.0e-4f);
-            float rem = Math.max(0f, v - full * LAYER);
-            if (full >= cap) { full = cap; rem = 0f; }
+        Box b = signed.abs();
+        Strip st = Strip.of(BAR_STAT);
+        int cap = colors.length;
+        float v = Mth.clamp(anim.shown(), 0f, cap * LAYER);
+        int full = (int) Math.floor(v / LAYER + 1.0e-4f);
+        float rem = Math.max(0f, v - full * LAYER);
+        if (full >= cap) { full = cap; rem = 0f; }
 
-            st.background(g, b, HudDraw.scaleRgb(colors[0], RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
-            if (full > 0) st.seg(g, st.i.tint(), b, 0f, 1f, argb(a, colors[full - 1]));
-            if (rem > 0.001f) st.seg(g, st.i.tint(), b, 0f, rem / LAYER, argb(a, colors[full]));
+        st.background(g, b, HudDraw.scaleRgb(colors[0], RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
+        if (full > 0) st.seg(g, st.i.tint(), b, 0f, 1f, argb(a, colors[full - 1]));
+        if (rem > 0.001f) st.seg(g, st.i.tint(), b, 0f, rem / LAYER, argb(a, colors[full]));
 
-            int cur = rem > 0.001f ? full : full - 1;
-            if (cur >= 0 && cur < cap) {
-                float base = cur * LAYER;
-                anim.emitWhite(now, (lo, hi, wa) -> {
-                    float s0 = Math.max(lo, base), s1 = Math.min(hi, base + LAYER);
-                    if (s1 > s0) st.seg(g, st.i.white(), b, (s0 - base) / LAYER, (s1 - base) / LAYER, argb(a * wa, WHITE));
-                });
-            }
-            st.outline(g, b, a * OUTLINE_ALPHA);
-        });
+        int cur = rem > 0.001f ? full : full - 1;
+        if (cur >= 0 && cur < cap) {
+            float base = cur * LAYER;
+            anim.emitWhite(now, (lo, hi, wa) -> {
+                float s0 = Math.max(lo, base), s1 = Math.min(hi, base + LAYER);
+                if (s1 > s0) st.seg(g, st.i.white(), b, (s0 - base) / LAYER, (s1 - base) / LAYER, argb(a * wa * 0.4f, WHITE));
+            });
+        }
+        st.outline(g, b, a * OUTLINE_ALPHA);
         label(g, signed, Component.literal(String.valueOf(number)), 1f, a);
     }
 
@@ -125,17 +132,16 @@ final class RpgStatBars {
         int pf = held == null ? s.food() : Math.min(20, s.food() + held.getNutrition());
         float psat = held == null ? s.sat() : Math.min(pf, s.sat() + held.getNutrition() * held.getSaturationModifier() * 2f);
 
-        HudMirror.draw(g, signed, b -> {
-            Strip st = Strip.of(BAR_STAT);
-            float food = FOOD.shown() / FOOD_MAX, sat = SAT.shown() / FOOD_MAX;
-            st.background(g, b, HudDraw.scaleRgb(fc, RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
-            if (held != null) st.seg(g, st.i.tint(), b, food, pf / FOOD_MAX, argb(a * pulse * PREVIEW_ALPHA, fc));
-            st.seg(g, st.i.tint(), b, 0f, food, argb(a, fc));
-            FOOD.emitWhite(now, (lo, hi, wa) -> st.seg(g, st.i.white(), b, lo / FOOD_MAX, hi / FOOD_MAX, argb(a * wa, WHITE)));
-            if (held != null) st.seg(g, st.i.tint(), b, sat, psat / FOOD_MAX, argb(a * pulse * PREVIEW_ALPHA, sc));
-            st.seg(g, st.i.tint(), b, 0f, sat, argb(a, sc));
-            st.outline(g, b, a * OUTLINE_ALPHA);
-        });
+        Box b = signed.abs();
+        Strip st = Strip.of(BAR_STAT);
+        float food = FOOD.shown() / FOOD_MAX, sat = SAT.shown() / FOOD_MAX;
+        st.background(g, b, HudDraw.scaleRgb(fc, RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
+        if (held != null) st.seg(g, st.i.tint(), b, food, pf / FOOD_MAX, argb(a * pulse * PREVIEW_ALPHA, fc));
+        st.seg(g, st.i.tint(), b, 0f, food, argb(a, fc));
+        FOOD.emitWhite(now, (lo, hi, wa) -> st.seg(g, st.i.white(), b, lo / FOOD_MAX, hi / FOOD_MAX, argb(a * wa * 0.4f, WHITE)));
+        if (held != null) st.seg(g, st.i.tint(), b, sat, psat / FOOD_MAX, argb(a * pulse * PREVIEW_ALPHA, sc));
+        st.seg(g, st.i.tint(), b, 0f, sat, argb(a, sc));
+        st.outline(g, b, a * OUTLINE_ALPHA);
 
         float ta = a * Math.max(N_FOOD.alpha(), N_SAT.alpha());
         float pop = Math.max(N_FOOD.scale(now), N_SAT.scale(now));
@@ -181,7 +187,7 @@ final class RpgStatBars {
             st.seg(g, st.i.core(), b, oxygen.bar(), oxygen.gainTop(), argb(a * 0.35f, WHITE));
             st.seg(g, st.i.core(), b, 0f, oxygen.bar(), argb(a, WHITE));
             if (oxygen.ghostAlpha() > 0.01f)
-                st.seg(g, st.i.white(), b, oxygen.bar(), oxygen.ghostTop(), argb(a * oxygen.ghostAlpha(), WHITE));
+                st.seg(g, st.i.white(), b, oxygen.bar(), oxygen.ghostTop(), argb(a * oxygen.ghostAlpha() * 0.4f, WHITE));
             st.outline(g, b, a * OUTLINE_ALPHA);
             float ic = Math.max(5f, b.h() * 1.6f);
             HudGeom.icon(g, HudGeom.ICONS, 16, 18, new Box(b.x() - ic - 1f, b.cy() - ic / 2f, ic, ic), argb(a, WHITE));
