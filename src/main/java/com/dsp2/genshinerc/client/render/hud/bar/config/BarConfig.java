@@ -212,7 +212,6 @@ public class BarConfig {
     @SerialEntry public float rpgShieldX = 68.0f, rpgShieldY = -38.0f, rpgShieldW = 122.0f, rpgShieldH = 2.0f;
     @SerialEntry public boolean rpgPortraitFlipX = false, rpgPortraitFlipY = false;
     @SerialEntry public boolean rpgLevelTextFlipX = false, rpgLevelTextFlipY = false;
-    @SerialEntry public boolean rpgExpFlipX = false, rpgExpFlipY = false;
     @SerialEntry public boolean rpgHpFlipX = false, rpgHpFlipY = false;
     @SerialEntry public boolean rpgStaminaFlipX = false, rpgStaminaFlipY = false;
     @SerialEntry public boolean rpgShieldFlipX = false, rpgShieldFlipY = false;
@@ -221,6 +220,8 @@ public class BarConfig {
     @SerialEntry public float rpgOrbHz = 1.2f;
     @SerialEntry public float rpgOrbBrightness = 0.6f;
     @SerialEntry public float rpgOrbMinAlpha = 0.3f;
+    @SerialEntry public float rpgHpTextScale = 0.90f;
+    @SerialEntry public float rpgFoodTextScale = 1.50f;
     @SerialEntry public Map<String, float[]> rpgLayout = new LinkedHashMap<>();
 
     public Map<String, float[]> layout() {
@@ -458,7 +459,9 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_frame_corner", 0f, () -> c.rpgFrameCornerPx, v -> c.rpgFrameCornerPx = v, 0f, 16f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_orb_hz", 1.2f, () -> c.rpgOrbHz, v -> c.rpgOrbHz = v, 0.1f, 5f, 0.1f, "%.1f"))
                 .option(floatOptCustomStep("rpg_orb_brightness", 0.6f, () -> c.rpgOrbBrightness, v -> c.rpgOrbBrightness = v, 0.1f, 2.5f, 0.1f, "%.1f"))
-                .option(floatOptCustomStep("rpg_orb_min_alpha", 0.3f, () -> c.rpgOrbMinAlpha, v -> c.rpgOrbMinAlpha = v, 0f, 1f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_orb_min_alpha", 0.3f, () -> c.rpgOrbMinAlpha, v -> c.rpgOrbMinAlpha = v, 0f, 1f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_hp_text_scale", 0.90f, () -> c.rpgHpTextScale, v -> c.rpgHpTextScale = v, 0.3f, 2.0f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_food_text_scale", 1.50f, () -> c.rpgFoodTextScale, v -> c.rpgFoodTextScale = v, 0.5f, 3.0f, 0.01f, "%.2f"))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("rpg_hud_editor")))
                         .description(OptionDescription.of(td(P("rpg_hud_editor"))))

@@ -349,8 +349,7 @@ public class CustomHealthBar extends EntityUI {
                 smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
                 float liveEnd = Math.max(renderHealthEnd, renderAbsEnd);
                 if (liveEnd > 0.001f) {
-                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY,
-                            0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * 0.7f * alpha);
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY, 0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * 0.7f * alpha);
                 }
             } else {
                 tracker.isSmallChangeActive = false;
@@ -367,8 +366,7 @@ public class CustomHealthBar extends EntityUI {
         RenderSystem.disableBlend();
     }
 
-    private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2,
-                                         float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a) {
+    private static void drawTexturedQuad(Matrix4f matrix, MultiBufferSource buffers, ResourceLocation tex, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float r, float g, float b, float a) {
         VertexConsumer vc = buffers.getBuffer(getBarRenderType(tex));
         int rInt = (int)(r * 255);
         int gInt = (int)(g * 255);
@@ -490,8 +488,8 @@ public class CustomHealthBar extends EntityUI {
                     float fadeStartMs = dynamicDuration - actualFadeTimeMs;
 
                     if (shrinkElapsed > fadeStartMs) {
-                        alpha = 1.0f - (shrinkElapsed - fadeStartMs) / actualFadeTimeMs;
-                        if (alpha < 0) alpha = 0;
+                        float fadeProgress = (shrinkElapsed - fadeStartMs) / actualFadeTimeMs;
+                        alpha = 1.0f - 0.7f * fadeProgress;
                     } else {
                         alpha = 1.0f;
                     }

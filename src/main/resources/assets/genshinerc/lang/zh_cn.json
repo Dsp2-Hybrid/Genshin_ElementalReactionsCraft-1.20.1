@@ -528,5 +528,9 @@
   "genshinerc.hud_editor.element.hunger_icon": "饥饿图标",
   "genshinerc.hud_editor.element.stamina_icon": "体力图标",
   "genshinerc.hud_editor.element.oxygen_icon": "氧气图标",
-  "genshinerc.hud_editor.confirm_reset_all": "再次点击确认重置"
+  "genshinerc.hud_editor.confirm_reset_all": "再次点击确认重置",
+  "genshinerc.bar.config.rpg_hp_text_scale": "生命值文本缩放",
+  "genshinerc.bar.config.rpg_hp_text_scale.desc": "控制生命值数字在生命条上的显示大小比例。",
+  "genshinerc.bar.config.rpg_food_text_scale": "饥饿值文本缩放",
+  "genshinerc.bar.config.rpg_food_text_scale.desc": "控制饥饿值与饱和度数字在饥饿条上的显示大小比例。"
 }

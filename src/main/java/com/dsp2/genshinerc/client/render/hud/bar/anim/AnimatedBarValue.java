@@ -19,9 +19,6 @@ public final class AnimatedBarValue {
         } else if (value < target && trailOnDrop) {
             trail = Math.max(trail, main);
             holdUntilMs = nowMs + (long) (Math.max(0f, holdSeconds) * 1000f);
-        } else if (value > target) {
-            main = value;
-            trail = value;
         }
         snapDown = trailOnDrop;
         target = value;

@@ -196,9 +196,9 @@ public final class RpgHudOverlay {
         float scale = b.h() / 18f;
 
         MutableComponent line1 = Component.empty()
-                .append(Component.literal("Ex." + s.xpLevel()).withStyle(st -> st.withColor(0x00FF00)))
+                .append(Component.literal("Lv." + s.level()).withStyle(st -> st.withColor(0xFFFFFF)))
                 .append(Component.literal(" / ").withStyle(st -> st.withColor(0x00FF00)))
-                .append(Component.literal("Lv." + s.level()).withStyle(st -> st.withColor(0xFFFFFF)));
+                .append(Component.literal("Ex." + s.xpLevel()).withStyle(st -> st.withColor(0x00FF00)));
 
         int expColor = HudDraw.lerpRgb(0xFFFFFF, 0x00FF00, s.xpProgress());
         MutableComponent line2 = Component.empty()
@@ -231,7 +231,7 @@ public final class RpgHudOverlay {
         Box hp = hpB.abs(), sta = staB.abs();
         float top = hp.y(), bottom = hp.y2();
         if (hasSta && sta.y() > top && sta.y() < bottom && sta.x() < hp.x2() && sta.x2() > hp.x()) bottom = sta.y();
-        float scale = Mth.clamp((bottom - top) / 8f * 0.8f, 0.35f, 1.5f);
+        float scale = Mth.clamp((bottom - top) / 8f * 0.8f, 0.35f, 1.5f) * cfg.rpgHpTextScale;
         hpText(g, s, hp.cx(), (top + bottom) / 2f, scale, now, a);
     }
 
@@ -314,7 +314,7 @@ public final class RpgHudOverlay {
 
             float sa = B_SHIELD.smallAlpha(now, cfg);
             if (sa > 0.01f) {
-                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * B_SHIELD.main, absBox.y2(), argb(a * sa * 0.7f, WHITE));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * B_SHIELD.main, absBox.y2(), argb(a * sa * 1.0f, WHITE));
             }
 
             B_SHIELD.forEachWhite((ws0, ws1, wa) -> {
@@ -454,7 +454,14 @@ public final class RpgHudOverlay {
             case KNOCKDOWN -> (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
             default -> WHITE;
         };
-        g.enableScissor((int)(ox + absBox.x() * cfg.rpgHudScale), (int)(oy + absBox.y() * cfg.rpgHudScale), (int)(ox + absBox.x2() * cfg.rpgHudScale), (int)(oy + absBox.y2() * cfg.rpgHudScale));
+
+        float rightEdge = (clash == ClashResult.KNOCKDOWN) ? (absBox.x() + absBox.w() * (1f - mm)) : absBox.x2();
+        int sx1 = (int)(ox + absBox.x() * cfg.rpgHudScale);
+        int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
+        int sx2 = (int)(ox + rightEdge * cfg.rpgHudScale);
+        int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
+
+        g.enableScissor(sx1, sy1, sx2, sy2);
         GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * fade * ca * CLASH_ALPHA, color));
         g.disableScissor();
 

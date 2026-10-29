@@ -153,10 +153,14 @@ final class RpgStatBars {
 
         float ta = a * Math.max(N_FOOD.alpha(), N_SAT.alpha());
         float pop = Math.max(N_FOOD.scale(now), N_SAT.scale(now));
+
         Component cur = foodLabel(N_FOOD.shown(), N_SAT.shown(), s.exhaustion());
-        if (held == null) { label(g, signedBox, cur, pop, ta); return; }
-        label(g, signedBox, cur, pop, ta * (1f - pulse));
-        label(g, signedBox, colored(oneDecimal(pf) + "+" + oneDecimal(psat), PREVIEW_RGB), pop, ta * pulse);
+
+        float scale = Mth.clamp(b.h() * 0.14f, 0.3f, 0.5f) * pop * cfg.rpgFoodTextScale;
+
+        if (held == null) { text(g, cur, b.cx(), b.cy(), scale, WHITE, ta, true); return; }
+        text(g, cur, b.cx(), b.cy(), scale, WHITE, ta * (1f - pulse), true);
+        text(g, colored(oneDecimal(pf) + "+" + oneDecimal(psat), PREVIEW_RGB), b.cx(), b.cy(), scale, WHITE, ta * pulse, true);
     }
 
     private static Component foodLabel(float food, float sat, float exh) {

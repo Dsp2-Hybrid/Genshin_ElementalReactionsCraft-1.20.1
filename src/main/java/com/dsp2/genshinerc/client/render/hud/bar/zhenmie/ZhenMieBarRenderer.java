@@ -7,11 +7,15 @@ import com.dsp2.genshinerc.client.render.hud.bar.layout.BarTextureInfo;
 import com.dsp2.genshinerc.client.render.hud.bar.layout.BarTextures;
 import com.dsp2.genshinerc.client.render.hud.bar.layout.SlicedBar;
 import com.dsp2.genshinerc.client.render.hud.HudDraw;
+import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.WhiteOverlay;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Matrix4f;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public final class ZhenMieBarRenderer {
     private static final float CLASH_OVERLAY_ALPHA = 0.85f;
@@ -23,6 +27,11 @@ public final class ZhenMieBarRenderer {
     private static final float MIE_RIGHT_OFFSET = 0.003f;
     private static final float MIE_TOP_OFFSET = 0.10f;
     private static final float MIE_BOTTOM_OFFSET = 0.088f;
+
+    private static final Map<Integer, WhiteOverlay> ZHEN_OVERLAYS = new HashMap<>();
+    private static final Map<Integer, WhiteOverlay> MIE_OVERLAYS = new HashMap<>();
+    private static final Map<Integer, Float> ZHEN_LASTS = new HashMap<>();
+    private static final Map<Integer, Float> MIE_LASTS = new HashMap<>();
 
     private ZhenMieBarRenderer() {}
 
@@ -61,10 +70,26 @@ public final class ZhenMieBarRenderer {
         int zc = s.zhenBuff ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
         int mc = s.mieBuff ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : mieBase;
 
-        float zm = Mth.clamp(s.zhen.main(), 0f, 1f), zt = Mth.clamp(s.zhen.trail(), 0f, 1f);
-        float mm = Mth.clamp(s.mie.main(), 0f, 1f), mt = Mth.clamp(s.mie.trail(), 0f, 1f);
+        float zm = Mth.clamp(s.zhen.main(), 0f, 1f);
+        float mm = Mth.clamp(s.mie.main(), 0f, 1f);
 
-        if (zt > zm) SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, l, l + span * zt, z, 0xFFFFFF, alpha);
+        WhiteOverlay zhOverlay = ZHEN_OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
+        WhiteOverlay miOverlay = MIE_OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
+        float zhLast = ZHEN_LASTS.getOrDefault(entity.getId(), zm);
+        float miLast = MIE_LASTS.getOrDefault(entity.getId(), mm);
+
+        if (Math.abs(zm - zhLast) > 0.001f) {
+            zhOverlay.trigger(zhLast, zm, now);
+        }
+        if (Math.abs(mm - miLast) > 0.001f) {
+            miOverlay.trigger(miLast, mm, now);
+        }
+        ZHEN_LASTS.put(entity.getId(), zm);
+        MIE_LASTS.put(entity.getId(), mm);
+
+        zhOverlay.update(now, zm, cfg);
+        miOverlay.update(now, mm, cfg);
+
         if (zm > 0f) SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, l, l + span * zm, z,
                 HudDraw.lerpRgb(zc, 0xFFFFFF, s.zhen.whiteness(now, cfg.subBarFlashTime)), alpha);
 
@@ -72,24 +97,30 @@ public final class ZhenMieBarRenderer {
         float topMie = topY - MIE_TOP_OFFSET;
         float bottomMie = bottomY + MIE_BOTTOM_OFFSET;
 
-        if (mt > mm) {
-            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * mt, bottomMie, rMie, topMie,
-                    uRight - uSpan * mt, 0f, uRight, 1f, z, 0xFFFFFF, alpha);
-        }
         if (mm > 0f) {
             int c = HudDraw.lerpRgb(mc, 0xFFFFFF, s.mie.whiteness(now, cfg.subBarFlashTime));
             HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * mm, bottomMie, rMie, topMie,
                     uRight - uSpan * mm, 0f, uRight, 1f, z, c, alpha);
         }
 
+        zhOverlay.emit((lo, hi, wa) -> {
+            HudDraw.quad(m, buffers, BarTextures.FILL, l + span * lo, bottomY, l + span * hi, topY,
+                    uLeft + uSpan * lo, 0f, uLeft + uSpan * hi, 1f, z, 0xFFFFFF, alpha * wa);
+        });
+
+        miOverlay.emit((lo, hi, wa) -> {
+            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * hi, bottomMie, rMie - span * lo, topMie,
+                    uRight - uSpan * hi, 0f, uRight - uSpan * lo, 1f, z, 0xFFFFFF, alpha * wa);
+        });
+
         if (s.clash != null) {
-            drawClash(m, buffers, s, fill, l, rMie, bottomMie, topMie, z, zhenBase, mieBase, uLeft, uRight, alpha, now, span, mm);
+            drawClash(m, buffers, s, fill, l, rMie, bottomMie, topMie, z, zhenBase, mieBase, uLeft, uRight, alpha, now, mm, span);
         }
     }
 
     private static void drawClash(Matrix4f m, MultiBufferSource buffers, ClientZhenMieState s, BarTextureInfo fill,
                                   float l, float r, float bottomY, float topY, float z,
-                                  int zhenBase, int mieBase, float uLeft, float uRight, float alpha, long now, float span, float mm) {
+                                  int zhenBase, int mieBase, float uLeft, float uRight, float alpha, long now, float mm, float span) {
         float t = (now - s.clashStartMs) / (s.clash.visualSeconds() * 1000f);
         float fade = 1f - Mth.clamp(t, 0f, 1f);
         int color;
@@ -103,7 +134,7 @@ public final class ZhenMieBarRenderer {
             default -> color = 0xFFFFFF;
         }
 
-        float rightX = (s.clash == com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult.KNOCKDOWN) ? r - span * (1f - mm) : r;
+        float rightX = (s.clash == com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult.KNOCKDOWN) ? r - span * mm : r;
 
         HudDraw.quad(m, buffers, BarTextures.FILL, l, bottomY, rightX, topY, uLeft, 0f, uRight, 1f, z, color, alpha * fade * a * CLASH_OVERLAY_ALPHA);
 

@@ -3,6 +3,7 @@ package com.dsp2.genshinerc.common.core.combat.zhenmie;
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
 import com.dsp2.genshinerc.common.core.combat.epicfight.EfCombatBridge;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,6 +14,7 @@ import java.util.*;
 
 public final class ZhenMieManager {
     private static final float EPS = 1.0e-4f;
+    private static final String NBT_KEY = "GenshinZhenMie";
     private static final Map<LivingEntity, State> STATES = new WeakHashMap<>();
     private static final Set<LivingEntity> DIRTY = Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -118,6 +120,7 @@ public final class ZhenMieManager {
         for (LivingEntity e : DIRTY) {
             State s = STATES.get(e);
             if (s == null || e.isRemoved()) continue;
+            save(e);
             GenshinercNetwork.CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> e), snapshot(e, s, true));
             s.pendingClash = null;
             if (s.idle()) STATES.remove(e);
@@ -133,6 +136,37 @@ public final class ZhenMieManager {
     private static SyncZhenMiePacket snapshot(LivingEntity e, State s, boolean withClash) {
         return new SyncZhenMiePacket(e.getId(), s.zhen, s.mie, s.zhenBuff, s.mieBuff, s.decaying,
                 withClash ? s.pendingClash : null, s.clashPoint);
+    }
+
+    public static void save(LivingEntity entity) {
+        State s = STATES.get(entity);
+        CompoundTag nbt = entity.getPersistentData();
+        if (s == null || s.idle()) {
+            nbt.remove(NBT_KEY);
+        } else {
+            CompoundTag tag = new CompoundTag();
+            tag.putFloat("zhen", s.zhen);
+            tag.putFloat("mie", s.mie);
+            tag.putBoolean("zhenBuff", s.zhenBuff);
+            tag.putBoolean("mieBuff", s.mieBuff);
+            tag.putLong("lastCombatTick", s.lastCombatTick);
+            nbt.put(NBT_KEY, tag);
+        }
+    }
+
+    public static void load(LivingEntity entity) {
+        CompoundTag nbt = entity.getPersistentData();
+        if (nbt.contains(NBT_KEY)) {
+            CompoundTag tag = nbt.getCompound(NBT_KEY);
+            State s = STATES.computeIfAbsent(entity, k -> new State());
+            s.zhen = tag.getFloat("zhen");
+            s.mie = tag.getFloat("mie");
+            s.zhenBuff = tag.getBoolean("zhenBuff");
+            s.mieBuff = tag.getBoolean("mieBuff");
+            s.lastCombatTick = tag.getLong("lastCombatTick");
+            s.decaying = true;
+            DIRTY.add(entity);
+        }
     }
 
     public static void reset() {

@@ -90,9 +90,7 @@ public final class WhiteOverlay {
                 end = Math.max(Mth.lerp(e, base, lo), lo);
             }
 
-            float fadeMs = Math.max(1f, cfg.overlayFadeTime * 1000f);
-            float fadeStart = durMs - fadeMs;
-            alpha = elapsed > fadeStart ? Math.max(0f, 1f - (elapsed - fadeStart) / fadeMs) : 1f;
+            alpha = 1.0f - 0.7f * e;
         }
     }
 

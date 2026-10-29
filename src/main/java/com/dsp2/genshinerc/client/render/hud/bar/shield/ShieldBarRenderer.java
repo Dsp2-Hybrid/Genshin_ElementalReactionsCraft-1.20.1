@@ -22,6 +22,7 @@ public final class ShieldBarRenderer {
 
     private static final Map<Integer, WhiteOverlay> OVERLAYS = new HashMap<>();
     private static final Map<Integer, Float> LASTS = new HashMap<>();
+    private static final Map<Integer, Float> LAST_HPMAX = new HashMap<>();
 
     public static void render(LivingEntity entity, Matrix4f m, MultiBufferSource buffers,
                               BarConfig cfg, BarAnchor anchor, float alpha) {
@@ -33,14 +34,14 @@ public final class ShieldBarRenderer {
         float hpMax = entity.getMaxHealth();
         if (hpMax <= 0f) return;
 
-        float totalMax = hpMax * 3f;
-        float target = Math.min(s.bar.target(), totalMax);
-        float main = Math.min(s.bar.main(), totalMax);
+        float main3 = s.bar.main() * 3f;
+        float target3 = s.bar.target() * 3f;
 
-        if (s.bar.isIdle(now, cfg.subBarFlashTime) && main <= 0.001f) {
+        if (s.bar.isIdle(now, cfg.subBarFlashTime) && main3 <= 0.001f) {
             ClientCombatBars.removeShield(entity.getId());
             OVERLAYS.remove(entity.getId());
             LASTS.remove(entity.getId());
+            LAST_HPMAX.remove(entity.getId());
             return;
         }
 
@@ -55,21 +56,27 @@ public final class ShieldBarRenderer {
 
         SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx2, z, 0xFF404040, alpha);
 
-        float main3 = main / hpMax;
-        float target3 = target / hpMax;
-        float lastTarget = LASTS.getOrDefault(entity.getId(), target3);
+        Float lastHpMax = LAST_HPMAX.get(entity.getId());
+        if (lastHpMax == null || Math.abs(hpMax - lastHpMax) > 0.001f) {
+            LAST_HPMAX.put(entity.getId(), hpMax);
+            LASTS.put(entity.getId(), target3);
+            OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay()).reset();
+        }
 
+        float lastTarget = LASTS.getOrDefault(entity.getId(), target3);
         WhiteOverlay overlay = OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
 
         if (Math.abs(target3 - lastTarget) > 0.001f) {
-            float delta = Math.abs(target3 - lastTarget);
+            float delta = Math.abs(target3 - lastTarget) / 3f;
             boolean small = cfg.smallChangeEnabled && delta < cfg.smallChangeThreshold;
             if (!small) {
-                overlay.trigger(lastTarget, target3, now);
+                overlay.trigger(lastTarget / 3f, target3 / 3f, now);
+            } else {
+                s.bar.flash(now);
             }
         }
         LASTS.put(entity.getId(), target3);
-        overlay.update(now, main3, cfg);
+        overlay.update(now, main3 / 3f, cfg);
 
         float l1 = Mth.clamp(main3, 0f, 1f);
         float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
@@ -88,8 +95,13 @@ public final class ShieldBarRenderer {
             SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * (2f / 3f), vx1 + w * (2f / 3f + l3 / 3f), z, c, alpha);
         }
 
+        float sa = s.bar.whiteness(now, cfg.subBarFlashTime);
+        if (sa > 0.01f) {
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * (main3 / 3f), z, 0xFFFFFF, alpha * sa);
+        }
+
         overlay.emit((lo, hi, wa) -> {
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * (lo / 3f), vx1 + w * (hi / 3f), z, 0xFFFFFF, alpha * wa);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, alpha * wa);
         });
     }
 }

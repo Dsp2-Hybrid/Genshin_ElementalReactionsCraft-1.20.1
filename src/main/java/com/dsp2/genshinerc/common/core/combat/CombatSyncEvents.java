@@ -4,8 +4,9 @@ import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -31,13 +32,35 @@ public final class CombatSyncEvents {
     }
 
     @SubscribeEvent
+    public static void onEntityJoin(EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide() && event.getEntity() instanceof LivingEntity living) {
+            ZhenMieManager.load(living);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onEntityLeave(EntityLeaveLevelEvent event) {
+        if (!event.getLevel().isClientSide() && event.getEntity() instanceof LivingEntity living) {
+            ZhenMieManager.save(living);
+        }
+    }
+
+    @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         ShieldManager.load(event.getEntity());
+        ZhenMieManager.load(event.getEntity());
     }
 
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         ShieldManager.save(event.getEntity());
+        ZhenMieManager.save(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onClone(PlayerEvent.Clone event) {
+        if (!event.isWasDeath()) return;
+        ZhenMieManager.load(event.getEntity());
     }
 
     @SubscribeEvent

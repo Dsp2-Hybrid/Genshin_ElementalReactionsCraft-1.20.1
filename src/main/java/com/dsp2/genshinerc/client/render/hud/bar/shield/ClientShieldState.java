@@ -6,6 +6,7 @@ import com.dsp2.genshinerc.client.render.hud.bar.element.ElementHudRenderer;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import com.dsp2.genshinerc.common.network.base.combat.SyncShieldPacket;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -48,11 +49,13 @@ public final class ClientShieldState {
         int baseColor = (kind == ShieldKind.ELEMENTAL && element != null)
                 ? ElementHudRenderer.elementColor(element)
                 : 0xC3E1FF;
+
         if (layer <= 0) return baseColor;
-        float brightness = 1.0f + layer * 0.15f;
-        int r = (int) Math.min(255, ((baseColor >> 16) & 0xFF) * brightness);
-        int g = (int) Math.min(255, ((baseColor >> 8) & 0xFF) * brightness);
-        int b = (int) Math.min(255, (baseColor & 0xFF) * brightness);
+
+        float mix = layer == 1 ? 0.35f : 0.70f;
+        int r = (int) Mth.lerp(mix, (baseColor >> 16) & 0xFF, 255);
+        int g = (int) Mth.lerp(mix, (baseColor >> 8) & 0xFF, 255);
+        int b = (int) Mth.lerp(mix, baseColor & 0xFF, 255);
         return (r << 16) | (g << 8) | b;
     }
 

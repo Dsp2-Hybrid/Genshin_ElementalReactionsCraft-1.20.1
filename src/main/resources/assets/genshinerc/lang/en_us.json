@@ -521,5 +521,9 @@
   "genshinerc.hud_editor.element.hunger_icon": "Hunger Icon",
   "genshinerc.hud_editor.element.stamina_icon": "Stamina Icon",
   "genshinerc.hud_editor.element.oxygen_icon": "Oxygen Icon",
-  "genshinerc.hud_editor.confirm_reset_all": "Click again to confirm reset"
+  "genshinerc.hud_editor.confirm_reset_all": "Click again to confirm reset",
+  "genshinerc.bar.config.rpg_hp_text_scale": "Health Text Scale",
+  "genshinerc.bar.config.rpg_hp_text_scale.desc": "Controls the size scale of the health numbers on the health bar.",
+  "genshinerc.bar.config.rpg_food_text_scale": "Hunger Text Scale",
+  "genshinerc.bar.config.rpg_food_text_scale.desc": "Controls the size scale of the hunger and saturation numbers on the hunger bar."
 }

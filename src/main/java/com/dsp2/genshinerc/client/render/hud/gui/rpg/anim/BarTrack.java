@@ -40,10 +40,8 @@ public final class BarTrack {
         main = 1.0f;
         extra = 1.0f;
         mainAnimating = false;
-        mainWhite.active = false;
-        mainWhite.oldActive = false;
-        extraWhite.active = false;
-        extraWhite.oldActive = false;
+        mainWhite.reset();
+        extraWhite.reset();
         isSmallChangeActive = false;
         isShaking = false;
     }
@@ -332,15 +330,7 @@ public final class BarTrack {
                         endOverlay = baseScale - (maxWidth * eased);
                     }
 
-                    float actualFadeTimeMs = Math.max(1f, fadeTimeSec * 1000f);
-                    float fadeStartMs = dynamicDuration - actualFadeTimeMs;
-
-                    if (shrinkElapsed > fadeStartMs) {
-                        alpha = 1.0f - (shrinkElapsed - fadeStartMs) / actualFadeTimeMs;
-                        if (alpha < 0) alpha = 0;
-                    } else {
-                        alpha = 1.0f;
-                    }
+                    alpha = 1.0f - 0.7f * eased;
                 }
             }
         }
