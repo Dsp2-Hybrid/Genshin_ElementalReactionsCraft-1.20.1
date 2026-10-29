@@ -6,29 +6,29 @@ import java.util.List;
 import java.util.Locale;
 
 public enum RpgHudElement {
-    PORTRAIT(0, -52, 52, 52, 16, 16, Kind.FREE, false),
-    LEVEL_TEXT(0, -66, 52, 12, 16, 6, Kind.FREE, false),
-    EXP(1, -48, 23.5f, 46, 6, 10, Kind.ASPECT, true),
-    HEALTH(48, -26, 110, 9, 20, 3, Kind.FREE, true),
-    HP_ICON(38, -26, 8, 8, 3, 3, Kind.ASPECT, false),
-    STAMINA(54, -19, 92, 5, 20, 2, Kind.FREE, true),
-    STAMINA_ICON(44, -19, 5, 5, 3, 3, Kind.ASPECT, false),
-    SHIELD(50, -29, 106, 2, 10, 1, Kind.FREE, true),
-    ARMOR(54, -47, 92, 3.5f, 20, 1.5f, Kind.FREE, true),
-    ARMOR_ICON(44, -47, 8, 8, 3, 3, Kind.ASPECT, false),
-    TOUGHNESS(54, -43, 92, 3.5f, 20, 1.5f, Kind.FREE, true),
-    TOUGHNESS_ICON(44, -43, 8, 8, 3, 3, Kind.ASPECT, false),
-    HUNGER(54, -39, 92, 3.5f, 20, 1.5f, Kind.FREE, true),
-    HUNGER_ICON(44, -39, 8, 8, 3, 3, Kind.ASPECT, false),
-    EXHAUSTION(54, -35.5f, 92, 1, 10, 0.5f, Kind.FREE, true),
-    ZHEN_MIE_BORDER(65, -63, 55, 14, 8, 6, Kind.NINE_SLICE, true),
-    ZHEN_MIE(56, -61, 62, 10, 20, 4, Kind.FREE, true),
-    ZHEN_MIE_LOGO(56, -61, 10, 10, 4, 4, Kind.ASPECT, false),
-    ZHEN_MIE_TRIANGLE(89, -66, 7, 6, 3, 3, Kind.ASPECT, false),
-    MOUNT(58, -10, 60, 3.5f, 20, 1.5f, Kind.FREE, true),
-    MOUNT_ICON(51, -10.75f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, false),
-    OXYGEN(58, -4, 60, 3.5f, 20, 1.5f, Kind.FREE, true),
-    OXYGEN_ICON(51, -4.5f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, false);
+    PORTRAIT(-8.0f, -87.0f, 81.0f, 77.0f, 16, 16, Kind.FREE, false, false, false),
+    LEVEL_TEXT(1.0f, -11.0f, 58.0f, 15.0f, 16, 6, Kind.FREE, false, false, false),
+    EXP(-6.0f, -81.0f, 35.0f, 69.0f, 6, 10, Kind.ASPECT, true, false, false),
+    HEALTH(59.0f, -36.0f, 138.0f, 10.0f, 20, 3, Kind.FREE, true, false, false),
+    HP_ICON(55.0f, -36.0f, 8.0f, 8.0f, 3, 3, Kind.ASPECT, false, false, false),
+    STAMINA(57.0f, -27.0f, 141.0f, 4.0f, 20, 2, Kind.FREE, true, false, false),
+    STAMINA_ICON(55.0f, -28.0f, 7.0f, 7.0f, 3, 3, Kind.ASPECT, false, false, false),
+    SHIELD(68.0f, -38.0f, 122.0f, 2.0f, 10, 1, Kind.FREE, true, false, false),
+    ARMOR(66.0f, -59.0f, 93.0f, 6.0f, 20, 1.5f, Kind.FREE, true, true, false),
+    ARMOR_ICON(62.0f, -59.0f, 7.0f, 7.0f, 3, 3, Kind.ASPECT, false, false, false),
+    TOUGHNESS(72.0f, -63.0f, 89.0f, 5.0f, 20, 1.5f, Kind.FREE, true, true, false),
+    TOUGHNESS_ICON(68.0f, -64.0f, 7.0f, 7.0f, 3, 3, Kind.ASPECT, false, false, false),
+    HUNGER(68.0f, -51.0f, 107.0f, 8.0f, 20, 1.5f, Kind.FREE, true, false, false),
+    HUNGER_ICON(65.0f, -51.0f, 8.0f, 8.0f, 3, 3, Kind.ASPECT, false, false, false),
+    EXHAUSTION(69.0f, -52.0f, 99.0f, 1.0f, 10, 0.5f, Kind.FREE, true, false, false),
+    ZHEN_MIE_BORDER(45.0f, -19.0f, 167.0f, 9.0f, 8, 6, Kind.NINE_SLICE, true, false, false),
+    ZHEN_MIE(42.0f, -19.0f, 176.0f, 9.0f, 20, 4, Kind.FREE, true, false, false),
+    ZHEN_MIE_LOGO(36.0f, -21.0f, 11.0f, 11.0f, 4, 4, Kind.ASPECT, false, false, false),
+    ZHEN_MIE_TRIANGLE(113.0f, -26.0f, 28.0f, 24.0f, 3, 3, Kind.ASPECT, false, false, false),
+    MOUNT(61.0f, -76.0f, 81.0f, 5.0f, 20, 1.5f, Kind.FREE, true, false, false),
+    MOUNT_ICON(57.0f, -76.8f, 7.0f, 7.0f, 3, 3, Kind.ASPECT, false, false, false),
+    OXYGEN(61.0f, -72.0f, 83.0f, 7.0f, 20, 1.5f, Kind.FREE, true, false, false),
+    OXYGEN_ICON(56.0f, -72.0f, 8.0f, 8.0f, 3, 3, Kind.ASPECT, false, false, false);
 
     public enum Kind { FREE, ASPECT, NINE_SLICE }
 
@@ -52,7 +52,11 @@ public enum RpgHudElement {
     public final boolean mirrorable;
 
     RpgHudElement(float x, float y, float w, float h, float minW, float minH, Kind kind, boolean mirrorable) {
-        this.def = new Box(x, y, w, h);
+        this(x, y, w, h, minW, minH, kind, mirrorable, false, false);
+    }
+
+    RpgHudElement(float x, float y, float w, float h, float minW, float minH, Kind kind, boolean mirrorable, boolean fx, boolean fy) {
+        this.def = new Box(x, y, w, h, fx, fy);
         this.minW = minW;
         this.minH = minH;
         this.kind = kind;

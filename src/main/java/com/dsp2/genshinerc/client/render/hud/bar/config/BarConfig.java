@@ -205,11 +205,11 @@ public class BarConfig {
     @SerialEntry public float rpgCountSpeed = 12.0f;
     @SerialEntry public float rpgFoodPreviewHz = 1.2f;
     @SerialEntry public Color rpgExpColor = new Color(0x5BE35B);
-    @SerialEntry public float rpgPortraitX = 0f, rpgPortraitY = -52f, rpgPortraitW = 52f, rpgPortraitH = 52f;
-    @SerialEntry public float rpgLevelTextX = 0f, rpgLevelTextY = -66f, rpgLevelTextW = 52f, rpgLevelTextH = 12f;
-    @SerialEntry public float rpgHpX = 48f, rpgHpY = -26f, rpgHpW = 110f, rpgHpH = 9f;
-    @SerialEntry public float rpgStaminaX = 54f, rpgStaminaY = -19f, rpgStaminaW = 92f, rpgStaminaH = 5f;
-    @SerialEntry public float rpgShieldX = 50f, rpgShieldY = -29f, rpgShieldW = 106f, rpgShieldH = 2f;
+    @SerialEntry public float rpgPortraitX = -8.0f, rpgPortraitY = -87.0f, rpgPortraitW = 81.0f, rpgPortraitH = 77.0f;
+    @SerialEntry public float rpgLevelTextX = 1.0f, rpgLevelTextY = -11.0f, rpgLevelTextW = 58.0f, rpgLevelTextH = 15.0f;
+    @SerialEntry public float rpgHpX = 59.0f, rpgHpY = -36.0f, rpgHpW = 138.0f, rpgHpH = 10.0f;
+    @SerialEntry public float rpgStaminaX = 57.0f, rpgStaminaY = -27.0f, rpgStaminaW = 141.0f, rpgStaminaH = 4.0f;
+    @SerialEntry public float rpgShieldX = 68.0f, rpgShieldY = -38.0f, rpgShieldW = 122.0f, rpgShieldH = 2.0f;
     @SerialEntry public boolean rpgPortraitFlipX = false, rpgPortraitFlipY = false;
     @SerialEntry public boolean rpgLevelTextFlipX = false, rpgLevelTextFlipY = false;
     @SerialEntry public boolean rpgExpFlipX = false, rpgExpFlipY = false;
@@ -450,13 +450,12 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_oxygen_retract_time", 0.30f, () -> c.rpgOxygenRetractTime, v -> c.rpgOxygenRetractTime = v, 0.05f, 2f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_oxygen_settle_time", 0.35f, () -> c.rpgOxygenSettleTime, v -> c.rpgOxygenSettleTime = v, 0.05f, 2f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_oxygen_gain_idle_time", 0.50f, () -> c.rpgOxygenGainIdleTime, v -> c.rpgOxygenGainIdleTime = v, 0.1f, 3f, 0.05f, "%.2f"))
-                .option(floatOptCustomStep("rpg_shake_pixels", 4f, () -> c.rpgShakePixels, v -> c.rpgShakePixels = v, 0f, 20f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("rpg_shake_pixels", 12.0f, () -> c.rpgShakePixels, v -> c.rpgShakePixels = v, 0f, 20f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_count_speed", 12f, () -> c.rpgCountSpeed, v -> c.rpgCountSpeed = v, 1f, 40f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_food_preview_hz", 1.2f, () -> c.rpgFoodPreviewHz, v -> c.rpgFoodPreviewHz = v, 0.2f, 4f, 0.1f, "%.1f"))
                 .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
                 .option(intOpt("rpg_frame_slice", 0, () -> c.rpgFrameSlice, v -> c.rpgFrameSlice = v, 0, 32))
                 .option(floatOptCustomStep("rpg_frame_corner", 0f, () -> c.rpgFrameCornerPx, v -> c.rpgFrameCornerPx = v, 0f, 16f, 0.5f, "%.1f"))
-                .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
                 .option(floatOptCustomStep("rpg_orb_hz", 1.2f, () -> c.rpgOrbHz, v -> c.rpgOrbHz = v, 0.1f, 5f, 0.1f, "%.1f"))
                 .option(floatOptCustomStep("rpg_orb_brightness", 0.6f, () -> c.rpgOrbBrightness, v -> c.rpgOrbBrightness = v, 0.1f, 2.5f, 0.1f, "%.1f"))
                 .option(floatOptCustomStep("rpg_orb_min_alpha", 0.3f, () -> c.rpgOrbMinAlpha, v -> c.rpgOrbMinAlpha = v, 0f, 1f, 0.05f, "%.2f"))

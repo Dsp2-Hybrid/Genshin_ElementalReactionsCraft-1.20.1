@@ -76,7 +76,6 @@ public final class RpgHudEditorScreen extends Screen {
         if (!hideBoxes) {
             RpgHudElement hover = drag == Drag.NONE ? hit(mouseX, mouseY) : null;
             for (RpgHudElement e : RpgHudElement.values()) drawGizmo(g, e, e == selected, e == hover);
-
             g.drawCenteredString(font, Component.translatable("genshinerc.hud_editor.help"), width / 2, 44, HELP);
         }
         super.render(g, mouseX, mouseY, partialTick);
@@ -85,7 +84,7 @@ public final class RpgHudEditorScreen extends Screen {
             Component hint = Component.translatable("genshinerc.hud_editor.confirm_reset_all");
             int tw = font.width(hint);
             int tx = resetAllButton.getX() + resetAllButton.getWidth() / 2 - tw / 2;
-            int ty = resetAllButton.getY() + resetAllButton.getHeight() + 2; // Y=28
+            int ty = resetAllButton.getY() + resetAllButton.getHeight() + 2;
             g.drawString(font, hint, tx, ty, CONFIRM_COLOR, true);
         }
     }
@@ -119,13 +118,15 @@ public final class RpgHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        boolean wasConfirming = confirmResetAll;
-        if (super.mouseClicked(mx, my, button)) {
-            if (wasConfirming && confirmResetAll) {
+        if (confirmResetAll) {
+            boolean overResetAllButton = resetAllButton != null && resetAllButton.isMouseOver(mx, my);
+            if (!overResetAllButton) {
                 confirmResetAll = false;
             }
-            return true;
         }
+
+        if (super.mouseClicked(mx, my, button)) return true;
+
         if (hideBoxes || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
 
         if (selected != null && onHandle(selected, mx, my)) {
