@@ -349,7 +349,7 @@ public class CustomHealthBar extends EntityUI {
                 smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
                 float liveEnd = Math.max(renderHealthEnd, renderAbsEnd);
                 if (liveEnd > 0.001f) {
-                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY, 0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * 0.7f * alpha);
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY, 0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
                 }
             } else {
                 tracker.isSmallChangeActive = false;
@@ -448,7 +448,7 @@ public class CustomHealthBar extends EntityUI {
 
             if (extending) {
                 float progress = Math.min(1.0f, elapsed / 350f);
-                float eased = BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
+                float eased = BarConfig.interpolate(progress, easing);
                 if (isHealing) {
                     endOverlay = baseScale + (maxWidth * eased);
                 } else {

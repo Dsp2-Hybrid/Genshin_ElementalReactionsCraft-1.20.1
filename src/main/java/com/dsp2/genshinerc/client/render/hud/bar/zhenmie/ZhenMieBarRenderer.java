@@ -73,19 +73,22 @@ public final class ZhenMieBarRenderer {
         float zm = Mth.clamp(s.zhen.main(), 0f, 1f);
         float mm = Mth.clamp(s.mie.main(), 0f, 1f);
 
+        float zt = Mth.clamp(s.zhenTarget(), 0f, 1f);
+        float mt = Mth.clamp(s.mieTarget(), 0f, 1f);
+
         WhiteOverlay zhOverlay = ZHEN_OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
         WhiteOverlay miOverlay = MIE_OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
-        float zhLast = ZHEN_LASTS.getOrDefault(entity.getId(), zm);
-        float miLast = MIE_LASTS.getOrDefault(entity.getId(), mm);
+        float zhLast = ZHEN_LASTS.getOrDefault(entity.getId(), 0f);
+        float miLast = MIE_LASTS.getOrDefault(entity.getId(), 0f);
 
-        if (Math.abs(zm - zhLast) > 0.001f) {
-            zhOverlay.trigger(zhLast, zm, now);
+        if (Math.abs(zt - zhLast) > 0.001f) {
+            zhOverlay.trigger(zhLast, zt, now);
         }
-        if (Math.abs(mm - miLast) > 0.001f) {
-            miOverlay.trigger(miLast, mm, now);
+        if (Math.abs(mt - miLast) > 0.001f) {
+            miOverlay.trigger(miLast, mt, now);
         }
-        ZHEN_LASTS.put(entity.getId(), zm);
-        MIE_LASTS.put(entity.getId(), mm);
+        ZHEN_LASTS.put(entity.getId(), zt);
+        MIE_LASTS.put(entity.getId(), mt);
 
         zhOverlay.update(now, zm, cfg);
         miOverlay.update(now, mm, cfg);

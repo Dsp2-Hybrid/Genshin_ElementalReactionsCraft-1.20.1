@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public final class ClientShieldState {
-    final AnimatedBarValue bar = new AnimatedBarValue();
+    public final AnimatedBarValue bar = new AnimatedBarValue();
     float max;
     ShieldKind kind = ShieldKind.SPECIAL;
     @Nullable ElementType element;
@@ -45,18 +45,26 @@ public final class ClientShieldState {
         return max;
     }
 
+    public ShieldKind kind() {
+        return kind;
+    }
+
     public int color(BarConfig cfg, float hpMax, int layer) {
-        int baseColor = (kind == ShieldKind.ELEMENTAL && element != null)
-                ? ElementHudRenderer.elementColor(element)
-                : 0xC3E1FF;
-
-        if (layer <= 0) return baseColor;
-
-        float mix = layer == 1 ? 0.35f : 0.70f;
-        int r = (int) Mth.lerp(mix, (baseColor >> 16) & 0xFF, 255);
-        int g = (int) Mth.lerp(mix, (baseColor >> 8) & 0xFF, 255);
-        int b = (int) Mth.lerp(mix, baseColor & 0xFF, 255);
-        return (r << 16) | (g << 8) | b;
+        if (kind == ShieldKind.ELEMENTAL && element != null) {
+            int baseColor = ElementHudRenderer.elementColor(element);
+            if (layer <= 0) return baseColor;
+            float mix = layer == 1 ? 0.53f : 0.88f;
+            int r = (int) Mth.lerp(mix, (baseColor >> 16) & 0xFF, 255);
+            int g = (int) Mth.lerp(mix, (baseColor >> 8) & 0xFF, 255);
+            int b = (int) Mth.lerp(mix, baseColor & 0xFF, 255);
+            return (r << 16) | (g << 8) | b;
+        } else {
+            return switch (layer) {
+                case 0 -> 150 << 16 | 150 << 8 | 150;
+                case 1 -> 180 << 16 | 180 << 8 | 180;
+                default -> 210 << 16 | 210 << 8 | 210;
+            };
+        }
     }
 
     public float amount() { return bar.main(); }

@@ -16,6 +16,7 @@ import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.GuiQuad;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.HudGeom;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.NineSlice;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.Strip;
+import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import com.dsp2.genshinerc.common.network.sync.PlayerHudSync;
@@ -71,7 +72,7 @@ public final class RpgHudOverlay {
     private static final int MIE_MIN_PEAK = 0x30;
     private static final float BASE_DARKEN = 0.30f;
 
-    private static final BarTrack B_HEALTH = new BarTrack(), B_STAMINA = new BarTrack(), B_SHIELD = new BarTrack();
+    private static final BarTrack B_HEALTH = new BarTrack(), B_STAMINA = new BarTrack();
     private static final NumberFx N_HP = new NumberFx(400L, 100L, 400L);
     private static final NumberFx N_SHIELD = new NumberFx(400L, 100L, 400L);
     private static final TextAnim T_ABS = new TextAnim(), T_XP = new TextAnim();
@@ -79,7 +80,9 @@ public final class RpgHudOverlay {
     private static final RpgPalette.Tween C_HP = new RpgPalette.Tween();
 
     private static final WhiteOverlay ZH_W = new WhiteOverlay(), MI_W = new WhiteOverlay();
+    private static final WhiteOverlay SHIELD_O1 = new WhiteOverlay(), SHIELD_O2 = new WhiteOverlay(), SHIELD_O3 = new WhiteOverlay();
     private static float zhLast = -1f, miLast = -1f;
+    private static float lastT1 = -1f, lastT2 = -1f, lastT3 = -1f;
 
     @Nullable private static LocalPlayer lastPlayer;
     private static long deathStart = -1L;
@@ -139,9 +142,11 @@ public final class RpgHudOverlay {
     }
 
     private static void resetAll() {
-        B_HEALTH.reset(); B_STAMINA.reset(); B_SHIELD.reset();
+        B_HEALTH.reset(); B_STAMINA.reset();
         N_HP.reset(); N_SHIELD.reset(); T_ABS.reset(); T_XP.reset(); XP.reset(); C_HP.reset();
         ZH_W.reset(); MI_W.reset(); zhLast = miLast = -1f;
+        SHIELD_O1.reset(); SHIELD_O2.reset(); SHIELD_O3.reset();
+        lastT1 = lastT2 = lastT3 = -1f;
         RpgStatBars.reset();
         deathStart = -1L;
     }
@@ -157,7 +162,6 @@ public final class RpgHudOverlay {
     private static void tick(Snap s, long now, BarConfig cfg) {
         B_HEALTH.update(now, s.hp(), s.abs(), s.maxHp(), cfg, true, true);
         B_STAMINA.update(now, s.sta(), 0f, Math.max(1f, s.maxSta()), cfg, false, false);
-        B_SHIELD.update(now, s.shield(), 0f, Math.max(s.maxHp(), s.shieldInit()) * 3f, cfg, false, false);
         N_HP.set(s.hp(), now);
         N_HP.update(now);
         N_SHIELD.set(s.shield(), now);
@@ -276,62 +280,82 @@ public final class RpgHudOverlay {
         t.forEachWhite((ws0, ws1, wa) -> st.seg(g, st.i.white(), b, ws0, ws1, argb(a * wa, WHITE)));
 
         float sa = t.smallAlpha(now, cfg);
-        if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa * 0.7f, WHITE));
+        if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa, WHITE));
     }
 
     private static void drawShield(GuiGraphics g, BarConfig cfg, long now, float a, boolean preview) {
-        if (!preview && B_SHIELD.main <= 0.001f && !B_SHIELD.busy()) return;
         LocalPlayer lp = Minecraft.getInstance().player;
         if (lp == null) return;
         ClientShieldState ss = ClientCombatBars.shield(lp.getId());
         float hpMax = (float) lp.getMaxHealth();
 
+        if (!preview && (ss == null || (ss.amount() <= 0.001f && !SHIELD_O1.busy() && !SHIELD_O2.busy() && !SHIELD_O3.busy()))) return;
+
         Box absBox = RpgHudElement.SHIELD.get(cfg).abs();
-        float main3 = B_SHIELD.main * 3f;
 
-        HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), argb(a, 0xFF404040));
+        float currentShield = ss != null ? ss.amount() : 0f;
+        float targetShield = ss != null ? ss.bar.target() : 0f;
+        float maxShield = hpMax * 3f;
 
-        if (ss != null) {
-            float l1 = Mth.clamp(main3, 0f, 1f);
-            float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
-            float l3 = Mth.clamp(main3 - 2f, 0f, 1f);
+        float main3 = (currentShield / maxShield) * 3f;
+        float target3 = (targetShield / maxShield) * 3f;
 
+        float l1 = Mth.clamp(main3, 0f, 1f);
+        float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
+        float l3 = Mth.clamp(main3 - 2f, 0f, 1f);
+
+        float t1 = Mth.clamp(target3, 0f, 1f);
+        float t2 = Mth.clamp(target3 - 1f, 0f, 1f);
+        float t3 = Mth.clamp(target3 - 2f, 0f, 1f);
+
+        if (lastT1 < 0) { lastT1 = 0f; lastT2 = 0f; lastT3 = 0f; }
+
+        if (Math.abs(t1 - lastT1) > 0.001f) SHIELD_O1.trigger(lastT1, t1, now);
+        if (Math.abs(t2 - lastT2) > 0.001f) SHIELD_O2.trigger(lastT2, t2, now);
+        if (Math.abs(t3 - lastT3) > 0.001f) SHIELD_O3.trigger(lastT3, t3, now);
+
+        lastT1 = t1; lastT2 = t2; lastT3 = t3;
+
+        SHIELD_O1.update(now, l1, cfg);
+        SHIELD_O2.update(now, l2, cfg);
+        SHIELD_O3.update(now, l3, cfg);
+
+        int bgColor = (ss != null && ss.kind() == ShieldKind.ELEMENTAL)
+                ? HudDraw.scaleRgb(ss.color(cfg, hpMax, 0), 0.3f)
+                : 0xFF404040;
+        HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), argb(a, bgColor));
+
+        if (ss != null && main3 > 0.001f) {
             if (l1 > 0.001f) {
                 int c = ss.color(cfg, hpMax, 0);
-                HudGeom.rect(g, absBox.x(), absBox.y(),
-                        absBox.x() + absBox.w() * (l1 / 3f), absBox.y2(), argb(a, c));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l1, absBox.y2(), argb(a, c));
             }
             if (l2 > 0.001f) {
                 int c = ss.color(cfg, hpMax, 1);
-                HudGeom.rect(g, absBox.x() + absBox.w() * (1f / 3f), absBox.y(),
-                        absBox.x() + absBox.w() * (1f / 3f + l2 / 3f), absBox.y2(), argb(a, c));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l2, absBox.y2(), argb(a, c));
             }
             if (l3 > 0.001f) {
                 int c = ss.color(cfg, hpMax, 2);
-                HudGeom.rect(g, absBox.x() + absBox.w() * (2f / 3f), absBox.y(),
-                        absBox.x() + absBox.w() * (2f / 3f + l3 / 3f), absBox.y2(), argb(a, c));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l3, absBox.y2(), argb(a, c));
             }
 
-            float sa = B_SHIELD.smallAlpha(now, cfg);
+            float sa = ss.bar.whiteness(now, cfg.subBarFlashTime);
             if (sa > 0.01f) {
-                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * B_SHIELD.main, absBox.y2(), argb(a * sa * 1.0f, WHITE));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l1, absBox.y2(), argb(a * sa, WHITE));
             }
 
-            B_SHIELD.forEachWhite((ws0, ws1, wa) -> {
-                HudGeom.rect(g, absBox.x() + absBox.w() * ws0, absBox.y(),
-                        absBox.x() + absBox.w() * ws1, absBox.y2(), argb(a * wa, WHITE));
-            });
+            SHIELD_O1.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
+            SHIELD_O2.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
+            SHIELD_O3.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
 
             float shownVal = N_SHIELD.shown();
             float pop = N_SHIELD.scale(now);
             float ta = a * N_SHIELD.alpha();
 
-            if (B_SHIELD.main > 0.01f) {
-                int topLayer = main3 > 2f ? 2 : (main3 > 1f ? 1 : 0);
-                int numColor = ss.color(cfg, hpMax, topLayer);
-                String numStr = String.valueOf(Math.round(shownVal));
-                text(g, Component.literal(numStr), absBox.cx(), absBox.cy(), 0.6f * pop, numColor, ta, true);
-            }
+            int topLayer = main3 > 2f ? 2 : (main3 > 1f ? 1 : 0);
+            int numColor = HudDraw.lerpRgb(ss.color(cfg, hpMax, topLayer), 0xFFFFFF, 0.20f);
+            String numStr = String.valueOf(Math.round(shownVal));
+            text(g, Component.literal(numStr), absBox.cx(), absBox.cy(), 0.6f * pop, numColor, ta, true);
         }
     }
 
@@ -371,7 +395,7 @@ public final class RpgHudOverlay {
     private static float watch(WhiteOverlay w, float last, float target, float visual, ClientZhenMieState z, BarConfig cfg, long now) {
         float delta = Math.abs(target - last);
         boolean small = cfg.smallChangeEnabled && delta < cfg.smallChangeThreshold;
-        if (last >= 0f && delta > 0.001f && !z.decaying() && !small) w.trigger(visual, target, now);
+        if (last >= 0f && delta > 0.001f && !z.decaying() && !small) w.trigger(last, target, now);
         w.update(now, visual, cfg);
         return target;
     }
@@ -384,7 +408,7 @@ public final class RpgHudOverlay {
         int zc = z != null && z.zhenBuff() ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
         int mc = z != null && z.mieBuff() ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : mieBase;
 
-        GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a, dim(0xFFFFFF, BASE_DARKEN)));
+        GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * 0.5f, dim(0xFFFFFF, BASE_DARKEN)));
 
         if (z == null) { ZH_W.reset(); MI_W.reset(); zhLast = miLast = -1f; return; }
 

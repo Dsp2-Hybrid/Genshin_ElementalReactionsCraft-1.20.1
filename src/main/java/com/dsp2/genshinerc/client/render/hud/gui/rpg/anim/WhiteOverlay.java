@@ -62,7 +62,7 @@ public final class WhiteOverlay {
         long elapsed = now - animStart;
         if (extending) {
             float p = Math.min(1f, elapsed / EXTEND_MS);
-            float e = BarConfig.interpolate(p, BarConfig.EasingType.EASE_OUT_CUBIC);
+            float e = BarConfig.interpolate(p, cfg.whiteEasing);
             if (healing) end = base + maxWidth * e; else start = base - maxWidth * e;
             if (p >= 1f) {
                 if (healing) { start = base; end = base + maxWidth; }
@@ -89,7 +89,6 @@ public final class WhiteOverlay {
                 start = lo;
                 end = Math.max(Mth.lerp(e, base, lo), lo);
             }
-
             alpha = 1.0f - 0.7f * e;
         }
     }

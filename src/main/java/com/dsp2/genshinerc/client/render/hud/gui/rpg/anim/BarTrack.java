@@ -46,6 +46,9 @@ public final class BarTrack {
         isShaking = false;
     }
 
+    public float getTargetMain() { return targetMain; }
+    public float getTargetExtra() { return targetExtra; }
+
     public float shakeOffset(long now, BarConfig config) {
         if (!isShaking) return 0f;
         long elapsed = now - shakeStartTime;
@@ -294,7 +297,7 @@ public final class BarTrack {
 
             if (extending) {
                 float progress = Math.min(1.0f, elapsed / 350f);
-                float eased = BarConfig.interpolate(progress, BarConfig.EasingType.EASE_OUT_CUBIC);
+                float eased = BarConfig.interpolate(progress, easing);
                 if (isHealing) {
                     endOverlay = baseScale + (maxWidth * eased);
                 } else {
