@@ -44,9 +44,16 @@ public final class ClientShieldState {
         return max;
     }
 
-    public int color(BarConfig cfg) {
-        if (kind == ShieldKind.ELEMENTAL && element != null) return ElementHudRenderer.elementColor(element);
-        return cfg.shieldSpecialColor.getRGB() & 0xFFFFFF;
+    public int color(BarConfig cfg, float hpMax, int layer) {
+        int baseColor = (kind == ShieldKind.ELEMENTAL && element != null)
+                ? ElementHudRenderer.elementColor(element)
+                : 0xC3E1FF;
+        if (layer <= 0) return baseColor;
+        float brightness = 1.0f + layer * 0.15f;
+        int r = (int) Math.min(255, ((baseColor >> 16) & 0xFF) * brightness);
+        int g = (int) Math.min(255, ((baseColor >> 8) & 0xFF) * brightness);
+        int b = (int) Math.min(255, (baseColor & 0xFF) * brightness);
+        return (r << 16) | (g << 8) | b;
     }
 
     public float amount() { return bar.main(); }

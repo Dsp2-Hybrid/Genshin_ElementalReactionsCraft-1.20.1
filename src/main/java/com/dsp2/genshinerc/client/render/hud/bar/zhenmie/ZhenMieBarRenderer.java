@@ -83,13 +83,13 @@ public final class ZhenMieBarRenderer {
         }
 
         if (s.clash != null) {
-            drawClash(m, buffers, s, fill, l, rMie, bottomMie, topMie, z, zhenBase, mieBase, uLeft, uRight, alpha, now);
+            drawClash(m, buffers, s, fill, l, rMie, bottomMie, topMie, z, zhenBase, mieBase, uLeft, uRight, alpha, now, span, mm);
         }
     }
 
     private static void drawClash(Matrix4f m, MultiBufferSource buffers, ClientZhenMieState s, BarTextureInfo fill,
                                   float l, float r, float bottomY, float topY, float z,
-                                  int zhenBase, int mieBase, float uLeft, float uRight, float alpha, long now) {
+                                  int zhenBase, int mieBase, float uLeft, float uRight, float alpha, long now, float span, float mm) {
         float t = (now - s.clashStartMs) / (s.clash.visualSeconds() * 1000f);
         float fade = 1f - Mth.clamp(t, 0f, 1f);
         int color;
@@ -103,7 +103,9 @@ public final class ZhenMieBarRenderer {
             default -> color = 0xFFFFFF;
         }
 
-        HudDraw.quad(m, buffers, BarTextures.FILL, l, bottomY, r, topY, uLeft, 0f, uRight, 1f, z, color, alpha * fade * a * CLASH_OVERLAY_ALPHA);
+        float rightX = (s.clash == com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult.KNOCKDOWN) ? r - span * (1f - mm) : r;
+
+        HudDraw.quad(m, buffers, BarTextures.FILL, l, bottomY, rightX, topY, uLeft, 0f, uRight, 1f, z, color, alpha * fade * a * CLASH_OVERLAY_ALPHA);
 
         float x = Mth.lerp(s.clashPoint, l, r);
         float half = (topY - bottomY) * MARKER_WIDTH / 2f;

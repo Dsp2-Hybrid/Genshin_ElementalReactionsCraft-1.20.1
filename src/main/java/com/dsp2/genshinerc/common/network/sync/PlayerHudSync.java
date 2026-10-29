@@ -1,5 +1,6 @@
-package com.dsp2.genshinerc.common.level;
+package com.dsp2.genshinerc.common.network.sync;
 
+import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import com.dsp2.genshinerc.common.network.sync.packet.SyncPlayerHudPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -8,6 +9,8 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
+import yesman.epicfight.world.capabilities.EpicFightCapabilities;
+import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,17 +50,42 @@ public final class PlayerHudSync {
     }
 
     @SubscribeEvent
-    public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) { if (e.getEntity() instanceof ServerPlayer sp) markDirty(sp); }
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
+        if (e.getEntity() instanceof ServerPlayer sp) {
+            markDirty(sp);
+            float stamina = sp.getPersistentData().getFloat("GenshinStamina");
+            if (stamina > 0) {
+                PlayerPatch<?> patch = EpicFightCapabilities.getEntityPatch(sp, PlayerPatch.class);
+                if (patch != null) patch.setStamina(stamina);
+            }
+        }
+    }
+
     @SubscribeEvent
-    public static void onRespawn(PlayerEvent.PlayerRespawnEvent e) { if (e.getEntity() instanceof ServerPlayer sp) markDirty(sp); }
+    public static void onRespawn(PlayerEvent.PlayerRespawnEvent e) {
+        if (e.getEntity() instanceof ServerPlayer sp) markDirty(sp);
+    }
+
     @SubscribeEvent
-    public static void onDimension(PlayerEvent.PlayerChangedDimensionEvent e) { if (e.getEntity() instanceof ServerPlayer sp) markDirty(sp); }
+    public static void onDimension(PlayerEvent.PlayerChangedDimensionEvent e) {
+        if (e.getEntity() instanceof ServerPlayer sp) markDirty(sp);
+    }
+
     @SubscribeEvent
-    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent e) { LAST_SENT.remove(e.getEntity().getUUID()); }
+    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
+        LAST_SENT.remove(e.getEntity().getUUID());
+        if (e.getEntity() instanceof ServerPlayer sp) {
+            PlayerPatch<?> patch = EpicFightCapabilities.getEntityPatch(sp, PlayerPatch.class);
+            if (patch != null) sp.getPersistentData().putFloat("GenshinStamina", patch.getStamina());
+        }
+    }
+
     @SubscribeEvent
     public static void onClone(PlayerEvent.Clone e) {
         if (!e.isWasDeath()) return;
         int level = e.getOriginal().getPersistentData().getInt("GenshinPlayerLevel");
         if (level > 0) e.getEntity().getPersistentData().putInt("GenshinPlayerLevel", level);
+        float stamina = e.getOriginal().getPersistentData().getFloat("GenshinStamina");
+        if (stamina > 0) e.getEntity().getPersistentData().putFloat("GenshinStamina", stamina);
     }
 }

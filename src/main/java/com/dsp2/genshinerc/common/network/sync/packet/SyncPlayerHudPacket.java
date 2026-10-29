@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.common.network.sync.packet;
 
-import com.dsp2.genshinerc.common.level.PlayerHudSync;
+import com.dsp2.genshinerc.common.network.sync.PlayerHudSync;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 

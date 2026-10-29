@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.client.render.hud.gui.rpg;
 
-import com.dsp2.genshinerc.common.level.PlayerHudSync;
+import com.dsp2.genshinerc.common.network.sync.PlayerHudSync;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

@@ -29,15 +29,20 @@ public final class ShieldBarRenderer {
         if (s == null) return;
         long now = Util.getMillis();
         s.bar.update(now, cfg.subBarFillSpeed, cfg.subBarWhiteDrainSpeed);
-        if (s.bar.isIdle(now, cfg.subBarFlashTime)) {
+
+        float hpMax = entity.getMaxHealth();
+        if (hpMax <= 0f) return;
+
+        float totalMax = hpMax * 3f;
+        float target = Math.min(s.bar.target(), totalMax);
+        float main = Math.min(s.bar.main(), totalMax);
+
+        if (s.bar.isIdle(now, cfg.subBarFlashTime) && main <= 0.001f) {
             ClientCombatBars.removeShield(entity.getId());
             OVERLAYS.remove(entity.getId());
             LASTS.remove(entity.getId());
             return;
         }
-
-        float denom = Math.max(entity.getMaxHealth(), s.max);
-        if (denom <= 0f) return;
 
         float w = anchor.width();
         float h = anchor.height() * cfg.shieldBarHeight / 100f;
@@ -47,29 +52,33 @@ public final class ShieldBarRenderer {
         BarTextureInfo fill = BarTextureInfo.get(BarTextures.FILL);
         float[] q = fill.quadForVisible(vx1, vy1, vx2, vy2);
         float z = anchor.z();
-        int color = s.color(cfg);
 
-        float main = Mth.clamp(s.bar.main() / denom, 0f, 1f);
-        float lastMain = LASTS.getOrDefault(entity.getId(), main);
+        SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx2, z, 0xFF404040, alpha);
+
+        float mainNorm = main / totalMax;
+        float targetNorm = target / totalMax;
+        float lastTarget = LASTS.getOrDefault(entity.getId(), targetNorm);
 
         WhiteOverlay overlay = OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
 
-        if (Math.abs(main - lastMain) > 0.001f) {
-            float delta = Math.abs(main - lastMain);
+        if (Math.abs(targetNorm - lastTarget) > 0.001f) {
+            float delta = Math.abs(targetNorm - lastTarget);
             boolean small = cfg.smallChangeEnabled && delta < cfg.smallChangeThreshold;
             if (!small) {
-                overlay.trigger(lastMain, main, now);
+                overlay.trigger(lastTarget, targetNorm, now);
             }
         }
-        LASTS.put(entity.getId(), main);
-        overlay.update(now, main, cfg);
+        LASTS.put(entity.getId(), targetNorm);
+        overlay.update(now, mainNorm, cfg);
 
-        SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx2, z,
-                HudDraw.scaleRgb(color, cfg.shieldBgBrightness), alpha * cfg.shieldBgAlpha);
-
-        if (main > 0f) {
-            int c = HudDraw.lerpRgb(color, 0xFFFFFF, s.bar.whiteness(now, cfg.subBarFlashTime));
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * main, z, c, alpha);
+        int layers = (int) Math.ceil(mainNorm * 3f);
+        for (int i = 0; i < Math.min(3, layers); i++) {
+            float layerStart = i / 3f;
+            float layerEnd = Math.min((i + 1) / 3f, mainNorm);
+            if (layerEnd > layerStart) {
+                int c = s.color(cfg, hpMax, i);
+                SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * layerStart, vx1 + w * layerEnd, z, c, alpha);
+            }
         }
 
         overlay.emit((lo, hi, wa) -> {

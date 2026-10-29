@@ -30,6 +30,20 @@ public final class CombatSyncEvents {
     }
 
     @SubscribeEvent
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof LivingEntity living) {
+            ShieldManager.load(living);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof LivingEntity living) {
+            ShieldManager.save(living);
+        }
+    }
+
+    @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         ShieldManager.reset();
         ZhenMieManager.reset();

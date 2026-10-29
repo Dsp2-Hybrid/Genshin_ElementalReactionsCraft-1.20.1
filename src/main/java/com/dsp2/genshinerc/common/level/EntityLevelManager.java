@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.common.level;
 
+import com.dsp2.genshinerc.common.network.sync.PlayerHudSync;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
