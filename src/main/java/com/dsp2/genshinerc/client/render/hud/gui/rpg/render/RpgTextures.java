@@ -23,7 +23,9 @@ public final class RpgTextures {
     private static final int VISIBLE_ALPHA = 8;
     private static final int OUTLINE_MAX_CHANNEL = 40;
 
-    private static final Map<ResourceLocation, Info> CACHE = new HashMap<>();
+    private record Key(ResourceLocation tex, boolean fx, boolean fy) {}
+
+    private static final Map<Key, Info> CACHE = new HashMap<>();
     private static final List<ResourceLocation> OWNED = new ArrayList<>();
     private static ResourceLocation pixel, hatch;
 
@@ -37,7 +39,11 @@ public final class RpgTextures {
         public float aspect() { return h / (float) w; }
     }
 
-    public static Info info(ResourceLocation tex) { return CACHE.computeIfAbsent(tex, RpgTextures::build); }
+    public static Info info(ResourceLocation tex) { return info(tex, false, false); }
+
+    public static Info info(ResourceLocation tex, boolean flipX, boolean flipY) {
+        return CACHE.computeIfAbsent(new Key(tex, flipX, flipY), RpgTextures::build);
+    }
 
     public static ResourceLocation pixel() {
         if (pixel == null) {
@@ -70,59 +76,79 @@ public final class RpgTextures {
 
     private static Info missing(ResourceLocation tex) { return new Info(1, 1, 0, 0, 1, 1, 0, 1, tex, tex, tex, tex); }
 
-    private static Info build(ResourceLocation tex) {
+    private static NativeImage mirrored(NativeImage src, boolean fx, boolean fy) {
+        int w = src.getWidth(), h = src.getHeight();
+        NativeImage out = new NativeImage(w, h, true);
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+                out.setPixelRGBA(x, y, src.getPixelRGBA(fx ? w - 1 - x : x, fy ? h - 1 - y : y));
+        return out;
+    }
+
+    private static Info build(Key k) {
+        ResourceLocation tex = k.tex();
         Optional<Resource> res = Minecraft.getInstance().getResourceManager().getResource(tex);
         if (res.isEmpty()) {
             LOG.warn("[genshinerc] Missing HUD texture {}", tex);
             return missing(tex);
         }
-        try (InputStream in = res.get().open(); NativeImage img = NativeImage.read(in)) {
-            int w = img.getWidth(), h = img.getHeight();
-            boolean[] inside = interior(img, w, h);
-            int ax0 = w, ay0 = h, ax1 = 0, ay1 = 0, ix0 = w, ix1 = 0, maxLum = 1;
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    int p = img.getPixelRGBA(x, y);
-                    if ((p >>> 24) > VISIBLE_ALPHA) {
-                        ax0 = Math.min(ax0, x); ax1 = Math.max(ax1, x + 1);
-                        ay0 = Math.min(ay0, y); ay1 = Math.max(ay1, y + 1);
-                    }
-                    if (inside[y * w + x]) {
-                        ix0 = Math.min(ix0, x); ix1 = Math.max(ix1, x + 1);
-                        maxLum = Math.max(maxLum, lum(p));
-                    }
-                }
+        try (InputStream in = res.get().open(); NativeImage src = NativeImage.read(in)) {
+            NativeImage img = (k.fx() || k.fy()) ? mirrored(src, k.fx(), k.fy()) : src;
+            try {
+                return analyse(k, img);
+            } finally {
+                if (img != src) img.close();
             }
-            if (ax1 <= ax0) { ax0 = 0; ay0 = 0; ax1 = w; ay1 = h; }
-            if (ix1 <= ix0) { ix0 = ax0; ix1 = ax1; }
-
-            NativeImage white = new NativeImage(w, h, true), tint = new NativeImage(w, h, true),
-                    core = new NativeImage(w, h, true), outline = new NativeImage(w, h, true);
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    int p = img.getPixelRGBA(x, y), a = p >>> 24;
-                    if (inside[y * w + x]) {
-                        int l = Math.min(255, lum(p) * 255 / maxLum);
-                        white.setPixelRGBA(x, y, (a << 24) | 0xFFFFFF);
-                        tint.setPixelRGBA(x, y, (a << 24) | (l << 16) | (l << 8) | l);
-                        core.setPixelRGBA(x, y, p);
-                        outline.setPixelRGBA(x, y, 0);
-                    } else {
-                        white.setPixelRGBA(x, y, 0);
-                        tint.setPixelRGBA(x, y, 0);
-                        core.setPixelRGBA(x, y, 0);
-                        outline.setPixelRGBA(x, y, a > VISIBLE_ALPHA ? p : 0);
-                    }
-                }
-            }
-            String key = tex.getNamespace() + "/" + tex.getPath();
-            return new Info(w, h, ax0, ay0, ax1, ay1, ix0, ix1,
-                    register("white/" + key, white), register("tint/" + key, tint),
-                    register("core/" + key, core), register("outline/" + key, outline));
         } catch (IOException e) {
             LOG.warn("[genshinerc] Failed to read HUD texture {}", tex, e);
             return missing(tex);
         }
+    }
+
+    private static Info analyse(Key k, NativeImage img) {
+        ResourceLocation tex = k.tex();
+        int w = img.getWidth(), h = img.getHeight();
+        boolean[] inside = interior(img, w, h);
+        int ax0 = w, ay0 = h, ax1 = 0, ay1 = 0, ix0 = w, ix1 = 0, maxLum = 1;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int p = img.getPixelRGBA(x, y);
+                if ((p >>> 24) > VISIBLE_ALPHA) {
+                    ax0 = Math.min(ax0, x); ax1 = Math.max(ax1, x + 1);
+                    ay0 = Math.min(ay0, y); ay1 = Math.max(ay1, y + 1);
+                }
+                if (inside[y * w + x]) {
+                    ix0 = Math.min(ix0, x); ix1 = Math.max(ix1, x + 1);
+                    maxLum = Math.max(maxLum, lum(p));
+                }
+            }
+        }
+        if (ax1 <= ax0) { ax0 = 0; ay0 = 0; ax1 = w; ay1 = h; }
+        if (ix1 <= ix0) { ix0 = ax0; ix1 = ax1; }
+
+        NativeImage white = new NativeImage(w, h, true), tint = new NativeImage(w, h, true),
+                core = new NativeImage(w, h, true), outline = new NativeImage(w, h, true);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int p = img.getPixelRGBA(x, y), a = p >>> 24;
+                if (inside[y * w + x]) {
+                    int l = Math.min(255, lum(p) * 255 / maxLum);
+                    white.setPixelRGBA(x, y, (a << 24) | 0xFFFFFF);
+                    tint.setPixelRGBA(x, y, (a << 24) | (l << 16) | (l << 8) | l);
+                    core.setPixelRGBA(x, y, p);
+                    outline.setPixelRGBA(x, y, 0);
+                } else {
+                    white.setPixelRGBA(x, y, 0);
+                    tint.setPixelRGBA(x, y, 0);
+                    core.setPixelRGBA(x, y, 0);
+                    outline.setPixelRGBA(x, y, a > VISIBLE_ALPHA ? p : 0);
+                }
+            }
+        }
+        String key = tex.getNamespace() + "/" + tex.getPath() + (k.fx() ? "_fx" : "") + (k.fy() ? "_fy" : "");
+        return new Info(w, h, ax0, ay0, ax1, ay1, ix0, ix1,
+                register("white/" + key, white), register("tint/" + key, tint),
+                register("core/" + key, core), register("outline/" + key, outline));
     }
 
     private static boolean[] interior(NativeImage img, int w, int h) {

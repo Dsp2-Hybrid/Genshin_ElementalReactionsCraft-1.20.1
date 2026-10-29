@@ -11,6 +11,18 @@ public final class OxygenAnim {
     private float last = -1f, bar, ghostTop, ghostAlpha, gainTop, from;
     private long phaseStart, lastRise;
 
+    private boolean blinkOn = false;
+    private long lastBlinkTime = 0L;
+
+    public void reset() {
+        phase = Phase.IDLE;
+        last = -1f;
+        bar = ghostTop = ghostAlpha = gainTop = from = 0f;
+        phaseStart = lastRise = 0L;
+        blinkOn = false;
+        lastBlinkTime = 0L;
+    }
+
     public void update(long now, float air, BarConfig cfg) {
         air = Mth.clamp(air, 0f, 1f);
         if (last < 0f) last = bar = ghostTop = gainTop = air;
@@ -60,6 +72,40 @@ public final class OxygenAnim {
     public float ghostAlpha() { return phase == Phase.DRAIN || phase == Phase.RETRACT ? ghostAlpha : 0f; }
     public float gainTop() { return gainTop; }
     public boolean visible(boolean underwater) { return underwater || phase != Phase.IDLE || bar < 1f - EPS; }
+
+    public int textColor(long now, float airPercentage) {
+        if (airPercentage < 30.0f) {
+            if (lastBlinkTime == 0L) {
+                lastBlinkTime = now;
+                blinkOn = false;
+            }
+            double factor = airPercentage / 30.0f;
+            long blinkIntervalMs = (long) ((1.5 + 5.5 * factor) * 50);
+            blinkIntervalMs = Math.max(100L, blinkIntervalMs);
+            if (now - lastBlinkTime >= blinkIntervalMs) {
+                blinkOn = !blinkOn;
+                lastBlinkTime = now;
+            }
+        } else {
+            blinkOn = false;
+            lastBlinkTime = 0L;
+        }
+        return blinkOn ? 0xFFFFFF : calculateAirColor(airPercentage);
+    }
+
+    private int calculateAirColor(double percentage) {
+        if (percentage >= 30.0) {
+            double factor = (percentage - 30.0) / 70.0;
+            factor = Math.max(0.0, Math.min(1.0, factor));
+            int rgb = (int)(255 * factor);
+            return (rgb << 16) | (rgb << 8) | 255;
+        } else {
+            double factor = percentage / 30.0;
+            factor = Math.max(0.0, Math.min(1.0, factor));
+            int blue = (int)(120 + 135 * factor);
+            return blue;
+        }
+    }
 
     private void enter(Phase p, long now) { phase = p; phaseStart = now; }
     private float progress(long now, float seconds) { return seconds <= 0f ? 1f : Mth.clamp((now - phaseStart) / (seconds * 1000f), 0f, 1f); }

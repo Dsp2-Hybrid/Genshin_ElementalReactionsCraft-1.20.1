@@ -518,5 +518,7 @@
   "genshinerc.hud_editor.element.zhen_mie_logo": "Zhen-Mie Icon",
   "genshinerc.hud_editor.element.armor_icon": "Armor Icon",
   "genshinerc.hud_editor.element.toughness_icon": "Toughness Icon",
-  "genshinerc.hud_editor.element.hunger_icon": "Hunger Icon"
+  "genshinerc.hud_editor.element.hunger_icon": "Hunger Icon",
+  "genshinerc.hud_editor.element.stamina_icon": "Stamina Icon",
+  "genshinerc.hud_editor.element.oxygen_icon": "Oxygen Icon"
 }

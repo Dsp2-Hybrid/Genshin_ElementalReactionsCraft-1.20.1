@@ -10,45 +10,40 @@ public enum RpgHudElement {
     LEVEL_TEXT(0, -66, 52, 12, 16, 6, Kind.FREE, false),
     EXP(1, -48, 23.5f, 46, 6, 10, Kind.ASPECT, true),
     HEALTH(48, -26, 110, 9, 20, 3, Kind.FREE, true),
-    HP_ICON(38, -26, 8, 8, 3, 3, Kind.ASPECT, true),
+    HP_ICON(38, -26, 8, 8, 3, 3, Kind.ASPECT, false),
     STAMINA(54, -19, 92, 5, 20, 2, Kind.FREE, true),
-    STAMINA_ICON(44, -19, 5, 5, 3, 3, Kind.ASPECT, true),
+    STAMINA_ICON(44, -19, 5, 5, 3, 3, Kind.ASPECT, false),
     SHIELD(50, -29, 106, 2, 10, 1, Kind.FREE, true),
     ARMOR(54, -47, 92, 3.5f, 20, 1.5f, Kind.FREE, true),
-    ARMOR_ICON(44, -47, 8, 8, 3, 3, Kind.ASPECT, true),
+    ARMOR_ICON(44, -47, 8, 8, 3, 3, Kind.ASPECT, false),
     TOUGHNESS(54, -43, 92, 3.5f, 20, 1.5f, Kind.FREE, true),
-    TOUGHNESS_ICON(44, -43, 8, 8, 3, 3, Kind.ASPECT, true),
+    TOUGHNESS_ICON(44, -43, 8, 8, 3, 3, Kind.ASPECT, false),
     HUNGER(54, -39, 92, 3.5f, 20, 1.5f, Kind.FREE, true),
-    HUNGER_ICON(44, -39, 8, 8, 3, 3, Kind.ASPECT, true),
+    HUNGER_ICON(44, -39, 8, 8, 3, 3, Kind.ASPECT, false),
     EXHAUSTION(54, -35.5f, 92, 1, 10, 0.5f, Kind.FREE, true),
     ZHEN_MIE_BORDER(65, -63, 55, 14, 8, 6, Kind.NINE_SLICE, true),
     ZHEN_MIE(56, -61, 62, 10, 20, 4, Kind.FREE, true),
-    ZHEN_MIE_LOGO(56, -61, 10, 10, 4, 4, Kind.ASPECT, true),
-    ZHEN_MIE_TRIANGLE(89, -66, 7, 6, 3, 3, Kind.ASPECT, true),
+    ZHEN_MIE_LOGO(56, -61, 10, 10, 4, 4, Kind.ASPECT, false),
+    ZHEN_MIE_TRIANGLE(89, -66, 7, 6, 3, 3, Kind.ASPECT, false),
     MOUNT(58, -10, 60, 3.5f, 20, 1.5f, Kind.FREE, true),
-    MOUNT_ICON(51, -10.75f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, true),
+    MOUNT_ICON(51, -10.75f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, false),
     OXYGEN(58, -4, 60, 3.5f, 20, 1.5f, Kind.FREE, true),
-    OXYGEN_ICON(51, -4.5f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, true);
+    OXYGEN_ICON(51, -4.5f, 4.5f, 4.5f, 3, 3, Kind.ASPECT, false);
 
     public enum Kind { FREE, ASPECT, NINE_SLICE }
 
-    public record Box(float x, float y, float w, float h) {
+    public record Box(float x, float y, float w, float h, boolean flipX, boolean flipY) {
+        public Box(float x, float y, float w, float h) { this(x, y, w, h, false, false); }
         public float aw() { return Math.abs(w); }
         public float ah() { return Math.abs(h); }
-        public float x2() { return Math.max(x, x + w); }
-        public float y2() { return Math.max(y, y + h); }
-        public float cx() { return Math.min(x, x + w) + aw() / 2f; }
-        public float cy() { return Math.min(y, y + h) + ah() / 2f; }
-        public boolean flipX() { return w < 0f; }
-        public boolean flipY() { return h < 0f; }
-        public Box abs() { return new Box(Math.min(x, x + w), Math.min(y, y + h), aw(), ah()); }
-        public Box withPos(float nx, float ny) { return new Box(nx, ny, w, h); }
-        public Box withSize(float nw, float nh) {
-            return new Box(x, y, flipX() ? -Math.abs(nw) : Math.abs(nw), flipY() ? -Math.abs(nh) : Math.abs(nh));
-        }
-        public Box withFlip(boolean fx, boolean fy) {
-            return new Box(x, y, fx ? -Math.abs(w) : Math.abs(w), fy ? -Math.abs(h) : Math.abs(h));
-        }
+        public float x2() { return x + aw(); }
+        public float y2() { return y + ah(); }
+        public float cx() { return x + aw() / 2f; }
+        public float cy() { return y + ah() / 2f; }
+        public Box abs() { return new Box(x, y, aw(), ah(), flipX, flipY); }
+        public Box withPos(float nx, float ny) { return new Box(nx, ny, w, h, flipX, flipY); }
+        public Box withSize(float nw, float nh) { return new Box(x, y, Math.abs(nw), Math.abs(nh), flipX, flipY); }
+        public Box withFlip(boolean fx, boolean fy) { return new Box(x, y, w, h, fx, fy); }
     }
 
     private final Box def;
@@ -92,29 +87,30 @@ public enum RpgHudElement {
     }
 
     public Box get(BarConfig c) {
-        return switch (this) {
-            case PORTRAIT -> new Box(c.rpgPortraitX, c.rpgPortraitY, c.rpgPortraitW, c.rpgPortraitH);
-            case LEVEL_TEXT -> new Box(c.rpgLevelTextX, c.rpgLevelTextY, c.rpgLevelTextW, c.rpgLevelTextH);
-            case HEALTH -> new Box(c.rpgHpX, c.rpgHpY, c.rpgHpW, c.rpgHpH);
-            case STAMINA -> new Box(c.rpgStaminaX, c.rpgStaminaY, c.rpgStaminaW, c.rpgStaminaH);
-            case SHIELD -> new Box(c.rpgShieldX, c.rpgShieldY, c.rpgShieldW, c.rpgShieldH);
+        Box b = switch (this) {
+            case PORTRAIT -> new Box(c.rpgPortraitX, c.rpgPortraitY, c.rpgPortraitW, c.rpgPortraitH, c.rpgPortraitFlipX, c.rpgPortraitFlipY);
+            case LEVEL_TEXT -> new Box(c.rpgLevelTextX, c.rpgLevelTextY, c.rpgLevelTextW, c.rpgLevelTextH, c.rpgLevelTextFlipX, c.rpgLevelTextFlipY);
+            case HEALTH -> new Box(c.rpgHpX, c.rpgHpY, c.rpgHpW, c.rpgHpH, c.rpgHpFlipX, c.rpgHpFlipY);
+            case STAMINA -> new Box(c.rpgStaminaX, c.rpgStaminaY, c.rpgStaminaW, c.rpgStaminaH, c.rpgStaminaFlipX, c.rpgStaminaFlipY);
+            case SHIELD -> new Box(c.rpgShieldX, c.rpgShieldY, c.rpgShieldW, c.rpgShieldH, c.rpgShieldFlipX, c.rpgShieldFlipY);
             default -> {
                 float[] v = c.layout().get(key());
-                yield v != null && v.length == 4 ? new Box(v[0], v[1], v[2], v[3]) : def;
+                yield v != null && v.length >= 6 ? new Box(v[0], v[1], v[2], v[3], v[4] != 0, v[5] != 0) : def;
             }
         };
+        return mirrorable ? b : b.withFlip(false, false);
     }
 
     public void set(BarConfig c, Box b) {
         float w = Math.max(minW(c), b.aw()), h = Math.max(minH(c), b.ah());
-        Box n = new Box(b.x(), b.y(), mirrorable && b.flipX() ? -w : w, mirrorable && b.flipY() ? -h : h);
+        boolean fx = mirrorable && b.flipX(), fy = mirrorable && b.flipY();
         switch (this) {
-            case PORTRAIT -> { c.rpgPortraitX = n.x(); c.rpgPortraitY = n.y(); c.rpgPortraitW = n.w(); c.rpgPortraitH = n.h(); }
-            case LEVEL_TEXT -> { c.rpgLevelTextX = n.x(); c.rpgLevelTextY = n.y(); c.rpgLevelTextW = n.w(); c.rpgLevelTextH = n.h(); }
-            case HEALTH -> { c.rpgHpX = n.x(); c.rpgHpY = n.y(); c.rpgHpW = n.w(); c.rpgHpH = n.h(); }
-            case STAMINA -> { c.rpgStaminaX = n.x(); c.rpgStaminaY = n.y(); c.rpgStaminaW = n.w(); c.rpgStaminaH = n.h(); }
-            case SHIELD -> { c.rpgShieldX = n.x(); c.rpgShieldY = n.y(); c.rpgShieldW = n.w(); c.rpgShieldH = n.h(); }
-            default -> c.layout().put(key(), new float[]{n.x(), n.y(), n.w(), n.h()});
+            case PORTRAIT -> { c.rpgPortraitX = b.x(); c.rpgPortraitY = b.y(); c.rpgPortraitW = w; c.rpgPortraitH = h; c.rpgPortraitFlipX = fx; c.rpgPortraitFlipY = fy; }
+            case LEVEL_TEXT -> { c.rpgLevelTextX = b.x(); c.rpgLevelTextY = b.y(); c.rpgLevelTextW = w; c.rpgLevelTextH = h; c.rpgLevelTextFlipX = fx; c.rpgLevelTextFlipY = fy; }
+            case HEALTH -> { c.rpgHpX = b.x(); c.rpgHpY = b.y(); c.rpgHpW = w; c.rpgHpH = h; c.rpgHpFlipX = fx; c.rpgHpFlipY = fy; }
+            case STAMINA -> { c.rpgStaminaX = b.x(); c.rpgStaminaY = b.y(); c.rpgStaminaW = w; c.rpgStaminaH = h; c.rpgStaminaFlipX = fx; c.rpgStaminaFlipY = fy; }
+            case SHIELD -> { c.rpgShieldX = b.x(); c.rpgShieldY = b.y(); c.rpgShieldW = w; c.rpgShieldH = h; c.rpgShieldFlipX = fx; c.rpgShieldFlipY = fy; }
+            default -> c.layout().put(key(), new float[]{b.x(), b.y(), w, h, fx ? 1f : 0f, fy ? 1f : 0f});
         }
     }
 }

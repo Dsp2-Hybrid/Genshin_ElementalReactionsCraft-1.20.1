@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.common.core.element;
 
-import com.dsp2.genshinerc.common.level.LevelCommand;
+import com.dsp2.genshinerc.common.level.command.LevelDebugCommand;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -96,7 +96,7 @@ public final class ElementDebugCommand {
 
     @Nullable
     private static LivingEntity target(CommandContext<CommandSourceStack> ctx) {
-        Entity e = LevelCommand.findTarget(ctx.getSource());
+        Entity e = LevelDebugCommand.findTarget(ctx.getSource());
         return e instanceof LivingEntity living ? living : null;
     }
 

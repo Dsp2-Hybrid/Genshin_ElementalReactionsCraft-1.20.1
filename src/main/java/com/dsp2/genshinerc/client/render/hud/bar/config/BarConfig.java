@@ -187,7 +187,7 @@ public class BarConfig {
     @SerialEntry public float rpgHudOffsetY = 6f;
     @SerialEntry public float rpgModelYaw = -10f;
     @SerialEntry public float rpgModelZoom = 1.00f;
-    @SerialEntry public float rpgDiamondBgAlpha = 0.85f;
+    @SerialEntry public float rpgDiamondBgAlpha = 0.7f;
     @SerialEntry public boolean rpgModelStencil = true;
     @SerialEntry public float rpgModelPivot = 1.00f;
     @SerialEntry public float rpgCamX = 0f;
@@ -210,10 +210,16 @@ public class BarConfig {
     @SerialEntry public float rpgHpX = 48f, rpgHpY = -26f, rpgHpW = 110f, rpgHpH = 9f;
     @SerialEntry public float rpgStaminaX = 54f, rpgStaminaY = -19f, rpgStaminaW = 92f, rpgStaminaH = 5f;
     @SerialEntry public float rpgShieldX = 50f, rpgShieldY = -29f, rpgShieldW = 106f, rpgShieldH = 2f;
+    @SerialEntry public boolean rpgPortraitFlipX = false, rpgPortraitFlipY = false;
+    @SerialEntry public boolean rpgLevelTextFlipX = false, rpgLevelTextFlipY = false;
+    @SerialEntry public boolean rpgExpFlipX = false, rpgExpFlipY = false;
+    @SerialEntry public boolean rpgHpFlipX = false, rpgHpFlipY = false;
+    @SerialEntry public boolean rpgStaminaFlipX = false, rpgStaminaFlipY = false;
+    @SerialEntry public boolean rpgShieldFlipX = false, rpgShieldFlipY = false;
     @SerialEntry public int rpgFrameSlice = 0;
     @SerialEntry public float rpgFrameCornerPx = 0f;
     @SerialEntry public float rpgOrbHz = 1.2f;
-    @SerialEntry public float rpgOrbBrightness = 1.0f;
+    @SerialEntry public float rpgOrbBrightness = 0.6f;
     @SerialEntry public float rpgOrbMinAlpha = 0.3f;
     @SerialEntry public Map<String, float[]> rpgLayout = new LinkedHashMap<>();
 
@@ -430,7 +436,7 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_hud_offset_y", 6f, () -> c.rpgHudOffsetY, v -> c.rpgHudOffsetY = v, 0f, 400f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_model_yaw", -10f, () -> c.rpgModelYaw, v -> c.rpgModelYaw = v, -90f, 90f, 1f, "%.0f"))
                 .option(floatOptCustomStep("rpg_model_zoom", 1.00f, () -> c.rpgModelZoom, v -> c.rpgModelZoom = v, 0.50f, 2.00f, 0.01f, "%.2f"))
-                .option(floatOptCustomStep("rpg_diamond_bg_alpha", 0.85f, () -> c.rpgDiamondBgAlpha, v -> c.rpgDiamondBgAlpha = v, 0f, 1f, 0.05f, "%.2f"))
+                .option(floatOptCustomStep("rpg_diamond_bg_alpha", 0.7f, () -> c.rpgDiamondBgAlpha, v -> c.rpgDiamondBgAlpha = v, 0f, 1f, 0.05f, "%.2f"))
                 .option(boolOpt("rpg_model_stencil", true, () -> c.rpgModelStencil, v -> c.rpgModelStencil = v))
                 .option(floatOptCustomStep("rpg_model_pivot", 1.00f, () -> c.rpgModelPivot, v -> c.rpgModelPivot = v, 0f, 2f, 0.01f, "%.2f"))
                 .option(floatOptCustomStep("rpg_cam_x", 0f, () -> c.rpgCamX, v -> c.rpgCamX = v, -40f, 40f, 0.5f, "%.1f"))
@@ -452,7 +458,7 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_frame_corner", 0f, () -> c.rpgFrameCornerPx, v -> c.rpgFrameCornerPx = v, 0f, 16f, 0.5f, "%.1f"))
                 .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
                 .option(floatOptCustomStep("rpg_orb_hz", 1.2f, () -> c.rpgOrbHz, v -> c.rpgOrbHz = v, 0.1f, 5f, 0.1f, "%.1f"))
-                .option(floatOptCustomStep("rpg_orb_brightness", 1.0f, () -> c.rpgOrbBrightness, v -> c.rpgOrbBrightness = v, 0.1f, 2f, 0.1f, "%.1f"))
+                .option(floatOptCustomStep("rpg_orb_brightness", 0.6f, () -> c.rpgOrbBrightness, v -> c.rpgOrbBrightness = v, 0.1f, 2.5f, 0.1f, "%.1f"))
                 .option(floatOptCustomStep("rpg_orb_min_alpha", 0.3f, () -> c.rpgOrbMinAlpha, v -> c.rpgOrbMinAlpha = v, 0f, 1f, 0.05f, "%.2f"))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("rpg_hud_editor")))

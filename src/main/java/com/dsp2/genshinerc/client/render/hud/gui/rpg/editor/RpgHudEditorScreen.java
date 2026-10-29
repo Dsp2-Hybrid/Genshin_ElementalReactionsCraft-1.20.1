@@ -169,7 +169,7 @@ public final class RpgHudEditorScreen extends Screen {
         float k = delta > 0 ? SCROLL_STEP : 1f / SCROLL_STEP;
         Box b = e.get(c);
         float w = Math.max(e.minW(c), b.aw() * k), h = Math.max(e.minH(c), b.ah() * k);
-        e.set(c, new Box(b.cx() - w / 2f, b.cy() - h / 2f, b.w(), b.h()).withSize(w, h));
+        e.set(c, new Box(b.cx() - w / 2f, b.cy() - h / 2f, w, h).withFlip(b.flipX(), b.flipY()));
         selected = e;
         changed();
         return true;
@@ -186,12 +186,17 @@ public final class RpgHudEditorScreen extends Screen {
             BarConfig c = cfg();
             Box b = selected.get(c);
             if (key == GLFW.GLFW_KEY_R) { selected.reset(c); changed(); return true; }
-            if (selected.mirrorable && (key == GLFW.GLFW_KEY_H || key == GLFW.GLFW_KEY_V)) {
-                boolean h = key == GLFW.GLFW_KEY_H;
-                selected.set(c, b.withFlip(h != b.flipX(), !h != b.flipY()));
+            if (key == GLFW.GLFW_KEY_H && selected.mirrorable) {
+                selected.set(c, b.withFlip(!b.flipX(), b.flipY()));
                 changed();
                 return true;
             }
+            if (key == GLFW.GLFW_KEY_V && selected.mirrorable) {
+                selected.set(c, b.withFlip(b.flipX(), !b.flipY()));
+                changed();
+                return true;
+            }
+
             int step = hasShiftDown() ? 5 : 1, dx = 0, dy = 0;
             switch (key) {
                 case GLFW.GLFW_KEY_LEFT -> dx = -step;

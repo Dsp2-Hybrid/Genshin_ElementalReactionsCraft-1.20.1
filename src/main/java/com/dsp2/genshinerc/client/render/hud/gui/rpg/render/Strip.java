@@ -9,15 +9,17 @@ public final class Strip {
     public final RpgTextures.Info i;
     private final float u0, u1, v0, v1;
 
-    private Strip(ResourceLocation tex) {
-        i = RpgTextures.info(tex);
+    private Strip(ResourceLocation tex, boolean flipX, boolean flipY) {
+        i = RpgTextures.info(tex, flipX, flipY);
         u0 = i.ax0() / (float) i.w();
         u1 = i.ax1() / (float) i.w();
         v0 = i.vTop();
         v1 = i.vBottom();
     }
 
-    public static Strip of(ResourceLocation tex) { return new Strip(tex); }
+    public static Strip of(ResourceLocation tex) { return new Strip(tex, false, false); }
+
+    public static Strip of(ResourceLocation tex, boolean flipX, boolean flipY) { return new Strip(tex, flipX, flipY); }
 
     public float xAt(Box b, float u) { return b.x() + b.w() * (u - u0) / Math.max(1.0e-6f, u1 - u0); }
 

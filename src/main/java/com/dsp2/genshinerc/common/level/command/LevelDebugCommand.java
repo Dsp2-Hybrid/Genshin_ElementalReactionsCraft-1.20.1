@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.level;
+package com.dsp2.genshinerc.common.level.command;
 
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
@@ -6,6 +6,7 @@ import com.dsp2.genshinerc.common.core.combat.zhenmie.AttackIntensity;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.DefenseOutcome;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;
 import com.dsp2.genshinerc.common.core.element.ElementType;
+import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Mod.EventBusSubscriber(modid = "genshinerc")
-public class LevelCommand {
+public class LevelDebugCommand {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
@@ -71,12 +72,31 @@ public class LevelCommand {
                                 .then(Commands.argument("seconds", FloatArgumentType.floatArg(0.05f, 3600f))
                                         .executes(ctx -> grantShield(ctx, Math.round(FloatArgumentType.getFloat(ctx, "seconds") * 20f)))))));
 
+        dispatcher.register(Commands.literal("dss").requires(s -> s.hasPermission(2))
+                .then(Commands.argument("type", IntegerArgumentType.integer(0, 7))
+                        .then(Commands.argument("amount", FloatArgumentType.floatArg(0.1f, 100000f))
+                                .executes(ctx -> grantShieldToSelf(ctx, -1))
+                                .then(Commands.argument("seconds", FloatArgumentType.floatArg(0.05f, 3600f))
+                                        .executes(ctx -> grantShieldToSelf(ctx, Math.round(FloatArgumentType.getFloat(ctx, "seconds") * 20f)))))));
+
         dispatcher.register(Commands.literal("dsh").requires(s -> s.hasPermission(2))
                 .then(Commands.argument("damage", FloatArgumentType.floatArg(0.01f, 100000f))
-                        .executes(LevelCommand::hitShield)));
+                        .executes(LevelDebugCommand::hitShield)));
 
         dispatcher.register(Commands.literal("dsc").requires(s -> s.hasPermission(2))
                 .executes(ctx -> withTarget(ctx, t -> { ShieldManager.clear(t); return "Cleared shields"; })));
+
+        dispatcher.register(Commands.literal("dscs").requires(s -> s.hasPermission(2))
+                .executes(ctx -> {
+                    Player player = ctx.getSource().getPlayer();
+                    if (player == null) {
+                        ctx.getSource().sendFailure(Component.literal("Must be run by a player!"));
+                        return 0;
+                    }
+                    ShieldManager.clear(player);
+                    ctx.getSource().sendSuccess(() -> Component.literal("Cleared own shields"), false);
+                    return 1;
+                }));
 
         dispatcher.register(Commands.literal("dz").requires(s -> s.hasPermission(2))
                 .then(Commands.argument("zhen", FloatArgumentType.floatArg(-1f, 1f))
@@ -113,15 +133,28 @@ public class LevelCommand {
     }
 
     private static int grantShield(CommandContext<CommandSourceStack> ctx, int durationTicks) {
+        return withTarget(ctx, t -> addShield(ctx, t, durationTicks));
+    }
+
+    private static int grantShieldToSelf(CommandContext<CommandSourceStack> ctx, int durationTicks) {
+        Player player = ctx.getSource().getPlayer();
+        if (player == null) {
+            ctx.getSource().sendFailure(Component.literal("Must be run by a player!"));
+            return 0;
+        }
+        String msg = addShield(ctx, player, durationTicks);
+        ctx.getSource().sendSuccess(() -> Component.literal(msg), false);
+        return 1;
+    }
+
+    private static String addShield(CommandContext<CommandSourceStack> ctx, LivingEntity target, int durationTicks) {
         int typeId = IntegerArgumentType.getInteger(ctx, "type");
         float amount = FloatArgumentType.getFloat(ctx, "amount");
         ElementType element = typeId == 0 ? null : ElementType.fromDebugId(typeId);
         ShieldKind kind = element == null ? ShieldKind.SPECIAL : ShieldKind.ELEMENTAL;
-        return withTarget(ctx, t -> {
-            ShieldManager.add(t, kind, element, amount, durationTicks);
-            return String.format(Locale.ROOT, "Granted %s shield %.1f (%s)", element == null ? "special" : element.name(),
-                    amount, durationTicks < 0 ? "permanent" : durationTicks / 20f + "s");
-        });
+        ShieldManager.add(target, kind, element, amount, durationTicks);
+        return String.format(Locale.ROOT, "Granted %s shield %.1f (%s)", element == null ? "special" : element.name(),
+                amount, durationTicks < 0 ? "permanent" : durationTicks / 20f + "s");
     }
 
     private static int hitShield(CommandContext<CommandSourceStack> ctx) {

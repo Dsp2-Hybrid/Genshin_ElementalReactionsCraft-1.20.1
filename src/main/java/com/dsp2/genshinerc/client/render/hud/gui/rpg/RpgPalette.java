@@ -21,8 +21,8 @@ final class RpgPalette {
 
     static final int MOUNT = 0x90EE90;
 
-    static final int EXH_LIGHT = 0x323232;
-    static final int EXH_DARK = 0x8E8E8E;
+    static final int EXH_START = 0x8E8E8E;
+    static final int EXH_END = 0x323232;
 
     static final float BG_DARKEN = 0.28f;
 

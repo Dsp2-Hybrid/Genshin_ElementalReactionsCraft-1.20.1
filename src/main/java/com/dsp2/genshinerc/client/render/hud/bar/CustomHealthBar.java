@@ -349,7 +349,7 @@ public class CustomHealthBar extends EntityUI {
                 smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
                 float liveEnd = Math.max(renderHealthEnd, renderAbsEnd);
                 if (liveEnd > 0.001f) {
-                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY, 0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);
+                    drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY, 0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * 0.5f * alpha);
                 }
             } else {
                 tracker.isSmallChangeActive = false;
@@ -361,7 +361,6 @@ public class CustomHealthBar extends EntityUI {
         BarAnchor anchor = BarAnchor.fromFrameQuad(minX, minY, maxX, maxY, 0f, BarTextureInfo.get(BarTextures.FRAME));
         ShieldBarRenderer.render(entity, matrix, buffers, config, anchor, alpha);
         ZhenMieBarRenderer.render(entity, matrix, buffers, config, anchor, alpha);
-
 
         StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
         RenderSystem.disableBlend();

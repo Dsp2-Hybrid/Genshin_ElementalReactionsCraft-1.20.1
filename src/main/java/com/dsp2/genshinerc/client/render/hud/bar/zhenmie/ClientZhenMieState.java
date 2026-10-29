@@ -14,8 +14,15 @@ public final class ClientZhenMieState {
     long clashStartMs;
     float clashPoint;
 
+    float zhenTarget, mieTarget;
+    boolean decaying;
+
     public void apply(SyncZhenMiePacket msg, long nowMs, BarConfig cfg) {
         boolean trail = !msg.decaying();
+        zhenTarget = (float) msg.zhen();
+        mieTarget = (float) msg.mie();
+        decaying = msg.decaying();
+
         zhen.set(msg.zhen(), nowMs, cfg.subBarWhiteHoldTime, trail);
         mie.set(msg.mie(), nowMs, cfg.subBarWhiteHoldTime, trail);
         zhenBuff = msg.zhenBuff();
@@ -44,14 +51,18 @@ public final class ClientZhenMieState {
 
     public float zhenTrail() { return zhen.trail(); }
     public float mieTrail()  { return mie.trail(); }
-    public float zhenWhite(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg) { return zhen.whiteness(nowMs, cfg.subBarFlashTime); }
-    public float mieWhite(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg)  { return mie.whiteness(nowMs, cfg.subBarFlashTime); }
+    public float zhenWhite(long nowMs, BarConfig cfg) { return zhen.whiteness(nowMs, cfg.subBarFlashTime); }
+    public float mieWhite(long nowMs, BarConfig cfg)  { return mie.whiteness(nowMs, cfg.subBarFlashTime); }
     public boolean zhenBuff() { return zhenBuff; }
     public boolean mieBuff()  { return mieBuff; }
 
-    @org.jetbrains.annotations.Nullable public com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult clash() { return clash; }
+    public float zhenTarget() { return zhenTarget; }
+    public float mieTarget()  { return mieTarget; }
+    public boolean decaying() { return decaying; }
+
+    @Nullable public ClashResult clash() { return clash; }
     public long clashStartMs() { return clashStartMs; }
     public float clashPoint()  { return clashPoint; }
-    public void tick(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg) { update(nowMs, cfg); }
-    public boolean idle(long nowMs, com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig cfg) { return isIdle(nowMs, cfg); }
+    public void tick(long nowMs, BarConfig cfg) { update(nowMs, cfg); }
+    public boolean idle(long nowMs, BarConfig cfg) { return isIdle(nowMs, cfg); }
 }

@@ -525,5 +525,7 @@
   "genshinerc.hud_editor.element.zhen_mie_logo": "震灭图标",
   "genshinerc.hud_editor.element.armor_icon": "护甲图标",
   "genshinerc.hud_editor.element.toughness_icon": "韧性图标",
-  "genshinerc.hud_editor.element.hunger_icon": "饥饿图标"
+  "genshinerc.hud_editor.element.hunger_icon": "饥饿图标",
+  "genshinerc.hud_editor.element.stamina_icon": "体力图标",
+  "genshinerc.hud_editor.element.oxygen_icon": "氧气图标"
 }

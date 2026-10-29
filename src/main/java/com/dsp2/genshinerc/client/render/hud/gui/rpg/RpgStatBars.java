@@ -21,6 +21,7 @@ final class RpgStatBars {
     private static final float LAYER = 20f, FOOD_MAX = 20f, EXH_MAX = 4f, ROW_FADE_S = 0.2f;
     private static final float PREVIEW_ALPHA = 0.6f, EXH_BG_ALPHA = 0.55f, FOOD_COLOR_SPEED = 8f;
     private static final int PREVIEW_RGB = 0x7CFF6A, EXH_BG = 0x101010;
+    private static final int EXH_FROM = 0xE1E1E1, EXH_TO = 0x969696;
 
     private static final PointAnim ARMOR = new PointAnim(PointAnim.Style.LAYERED, 700L),
             TOUGH = new PointAnim(PointAnim.Style.LAYERED, 700L),
@@ -82,11 +83,11 @@ final class RpgStatBars {
 
     static void draw(GuiGraphics g, Snap s, long now, BarConfig cfg, float a, boolean preview) {
         if (preview || s.armor() > 0 || ARMOR.busy())
-            layered(g, RpgHudElement.ARMOR.get(cfg).abs(), ARMOR, RpgPalette.ARMOR, Math.round(T_ARMOR.shown()), now, a);
+            layered(g, RpgHudElement.ARMOR.get(cfg), ARMOR, RpgPalette.ARMOR, Math.round(T_ARMOR.shown()), now, a);
         if (preview || s.toughness() > 0 || TOUGH.busy())
-            layered(g, RpgHudElement.TOUGHNESS.get(cfg).abs(), TOUGH, RpgPalette.TOUGHNESS, Math.round(T_TOUGH.shown()), now, a);
+            layered(g, RpgHudElement.TOUGHNESS.get(cfg), TOUGH, RpgPalette.TOUGHNESS, Math.round(T_TOUGH.shown()), now, a);
 
-        hunger(g, s, RpgHudElement.HUNGER.get(cfg).abs(), now, cfg, a);
+        hunger(g, s, RpgHudElement.HUNGER.get(cfg), now, cfg, a);
         exhaustion(g, RpgHudElement.EXHAUSTION.get(cfg).abs(), a);
 
         Box armorIcon = RpgHudElement.ARMOR_ICON.get(cfg).abs();
@@ -99,18 +100,22 @@ final class RpgStatBars {
         HudGeom.icon(g, HudGeom.ICONS, 52, 27, hungerIcon, argb(a, WHITE));
 
         drawMount(g, cfg, now, preview ? a : a * F_MOUNT.v);
-        drawOxygen(g, cfg, preview ? a : a * F_AIR.v);
+        drawOxygen(g, cfg, preview ? a : a * F_AIR.v, now);
     }
 
-    private static void layered(GuiGraphics g, Box b, PointAnim anim, int[] colors, int number, long now, float a) {
-        Strip st = Strip.of(BAR_STAT);
+    private static void layered(GuiGraphics g, Box signedBox, PointAnim anim, int[] colors, int number, long now, float a) {
+        Box b = signedBox.abs();
+        Strip st = Strip.of(BAR_STAT, signedBox.flipX(), signedBox.flipY());
+
+        st.background(g, b, HudDraw.scaleRgb(colors[0], RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
+        st.outline(g, b, a * OUTLINE_ALPHA);
+
         int cap = colors.length;
         float v = Mth.clamp(anim.shown(), 0f, cap * LAYER);
         int full = (int) Math.floor(v / LAYER + 1.0e-4f);
         float rem = Math.max(0f, v - full * LAYER);
         if (full >= cap) { full = cap; rem = 0f; }
 
-        st.background(g, b, HudDraw.scaleRgb(colors[0], RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
         if (full > 0) st.seg(g, st.i.tint(), b, 0f, 1f, argb(a, colors[full - 1]));
         if (rem > 0.001f) st.seg(g, st.i.tint(), b, 0f, rem / LAYER, argb(a, colors[full]));
 
@@ -122,20 +127,22 @@ final class RpgStatBars {
                 if (s1 > s0) st.seg(g, st.i.white(), b, (s0 - base) / LAYER, (s1 - base) / LAYER, argb(a * wa, WHITE));
             });
         }
-        st.outline(g, b, a * OUTLINE_ALPHA);
-        label(g, b, Component.literal(String.valueOf(number)), 1f, a);
+        label(g, signedBox, Component.literal(String.valueOf(number)), 1f, a);
     }
 
-    private static void hunger(GuiGraphics g, Snap s, Box b, long now, BarConfig cfg, float a) {
+    private static void hunger(GuiGraphics g, Snap s, Box signedBox, long now, BarConfig cfg, float a) {
         int fc = C_FOOD.rgb(), sc = C_SAT.rgb();
         FoodProperties held = s.held();
         float pulse = held == null ? 0f : 0.5f - 0.5f * Mth.cos(now / 1000f * cfg.rpgFoodPreviewHz * Mth.TWO_PI);
         int pf = held == null ? s.food() : Math.min(20, s.food() + held.getNutrition());
         float psat = held == null ? s.sat() : Math.min(pf, s.sat() + held.getNutrition() * held.getSaturationModifier() * 2f);
 
-        Strip st = Strip.of(BAR_STAT);
+        Box b = signedBox.abs();
+        Strip st = Strip.of(BAR_STAT, signedBox.flipX(), signedBox.flipY());
         float food = FOOD.shown() / FOOD_MAX, sat = SAT.shown() / FOOD_MAX;
+
         st.background(g, b, HudDraw.scaleRgb(fc, RpgPalette.BG_DARKEN), a * BAR_BG_ALPHA);
+        st.outline(g, b, a * OUTLINE_ALPHA);
 
         if (held != null) st.seg(g, st.i.tint(), b, food, pf / FOOD_MAX, argb(a * pulse * PREVIEW_ALPHA, fc));
         st.seg(g, st.i.tint(), b, 0f, food, argb(a, fc));
@@ -144,14 +151,12 @@ final class RpgStatBars {
         if (held != null) st.seg(g, st.i.tint(), b, 1f - psat / FOOD_MAX, 1f - sat, argb(a * pulse * PREVIEW_ALPHA, sc));
         st.seg(g, st.i.tint(), b, 1f - sat, 1f, argb(a, sc));
 
-        st.outline(g, b, a * OUTLINE_ALPHA);
-
         float ta = a * Math.max(N_FOOD.alpha(), N_SAT.alpha());
         float pop = Math.max(N_FOOD.scale(now), N_SAT.scale(now));
         Component cur = foodLabel(N_FOOD.shown(), N_SAT.shown(), s.exhaustion());
-        if (held == null) { label(g, b, cur, pop, ta); return; }
-        label(g, b, cur, pop, ta * (1f - pulse));
-        label(g, b, colored(oneDecimal(pf) + "+" + oneDecimal(psat), PREVIEW_RGB), pop, ta * pulse);
+        if (held == null) { label(g, signedBox, cur, pop, ta); return; }
+        label(g, signedBox, cur, pop, ta * (1f - pulse));
+        label(g, signedBox, colored(oneDecimal(pf) + "+" + oneDecimal(psat), PREVIEW_RGB), pop, ta * pulse);
     }
 
     private static Component foodLabel(float food, float sat, float exh) {
@@ -165,30 +170,40 @@ final class RpgStatBars {
         float f = Mth.clamp(EXH.shown() / EXH_MAX, 0f, 1f);
         HudGeom.rect(g, b.x(), b.y(), b.x2(), b.y2(), argb(a * EXH_BG_ALPHA, EXH_BG));
         HudGeom.rect(g, b.x(), b.y(), b.x() + b.w() * f, b.y2(),
-                argb(a, HudDraw.lerpRgb(RpgPalette.EXH_LIGHT, RpgPalette.EXH_DARK, f)));
+                argb(a, HudDraw.lerpRgb(EXH_FROM, EXH_TO, f)));
     }
 
     private static void drawMount(GuiGraphics g, BarConfig cfg, long now, float a) {
         if (a <= 0.01f) return;
-        Box b = RpgHudElement.MOUNT.get(cfg).abs();
-        drawBar(g, BAR_MOUNT, b, B_MOUNT, RpgPalette.MOUNT, false, now, cfg, a);
-        label(g, b, Component.literal(ceil(T_MOUNT.shown()) + "/" + ceil(mountMax)), 1f, a);
+        Box signedBox = RpgHudElement.MOUNT.get(cfg);
+        drawBar(g, BAR_MOUNT, signedBox, B_MOUNT, RpgPalette.MOUNT, false, now, cfg, a);
+        label(g, signedBox, Component.literal(ceil(T_MOUNT.shown()) + "/" + ceil(mountMax)), 1f, a);
 
-        Box icon = RpgHudElement.MOUNT_ICON.get(cfg).abs();
+        Box icon = RpgHudElement.MOUNT_ICON.get(cfg).abs().withFlip(false, false);
         HudGeom.icon(g, HudGeom.ICONS, 52, 9, icon, argb(a, WHITE));
         HudGeom.icon(g, HudGeom.ICONS, 88, 9, icon, argb(a, WHITE));
     }
 
-    private static void drawOxygen(GuiGraphics g, BarConfig cfg, float a) {
+    private static void drawOxygen(GuiGraphics g, BarConfig cfg, float a, long now) {
         if (a <= 0.01f) return;
-        Box b = RpgHudElement.OXYGEN.get(cfg).abs();
-        Strip st = Strip.of(BAR_OXYGEN);
+        Box signedBox = RpgHudElement.OXYGEN.get(cfg);
+        Box b = signedBox.abs();
+        Strip st = Strip.of(BAR_OXYGEN, signedBox.flipX(), signedBox.flipY());
+
         st.full(g, st.i.core(), b, argb(a * BAR_BG_ALPHA, HudDraw.scaleRgb(WHITE, RpgPalette.BG_DARKEN)));
+        st.outline(g, b, a * OUTLINE_ALPHA);
+
         st.seg(g, st.i.core(), b, oxygen.bar(), oxygen.gainTop(), argb(a * 0.35f, WHITE));
         st.seg(g, st.i.core(), b, 0f, oxygen.bar(), argb(a, WHITE));
         if (oxygen.ghostAlpha() > 0.01f)
             st.seg(g, st.i.white(), b, oxygen.bar(), oxygen.ghostTop(), argb(a * oxygen.ghostAlpha() * 0.5f, WHITE));
-        st.outline(g, b, a * OUTLINE_ALPHA);
-        label(g, b, Component.literal(Math.round(T_AIR.shown()) + "/100"), 1f, a);
+
+        float airPct = oxygen.bar() * 100f;
+        int textColor = oxygen.textColor(now, airPct);
+
+        text(g, Component.literal(Math.round(airPct) + "%"), b.cx(), b.cy(), 0.6f, textColor, a, true);
+
+        Box oxyIcon = RpgHudElement.OXYGEN_ICON.get(cfg).abs().withFlip(false, false);
+        HudGeom.icon(g, HudGeom.ICONS, 16, 18, oxyIcon, argb(a, WHITE));
     }
 }

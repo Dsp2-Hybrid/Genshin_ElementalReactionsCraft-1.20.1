@@ -71,10 +71,9 @@ public final class BarTrack {
             currentValue = value;
             currentExtra = extraVal;
             lastMax = max;
-            main = Mth.clamp(value / max, 0f, 1f);
-            extra = Mth.clamp((value + extraVal) / max, 0f, 1f);
-            targetMain = main;
-            targetExtra = extra;
+            calcTargets(value, extraVal, max);
+            main = targetMain;
+            extra = targetExtra;
             startMain = main;
             startExtra = extra;
         }
@@ -111,8 +110,7 @@ public final class BarTrack {
 
             startMain = main;
             startExtra = extra;
-            targetMain = Mth.clamp(value / max, 0f, 1f);
-            targetExtra = Mth.clamp((value + extraVal) / max, 0f, 1f);
+            calcTargets(value, extraVal, max);
 
             if (!isSmall) {
                 if (Math.abs(targetMain - main) > 0.001f) {
@@ -148,6 +146,16 @@ public final class BarTrack {
         float baseShrink = isPlayer ? cfg.playerOverlayShrinkTime : cfg.mobOverlayShrinkTime;
         mainWhite.update(now, main, baseShrink, cfg.overlayFadeTime, cfg.whiteEasing);
         extraWhite.update(now, extra, baseShrink, cfg.overlayFadeTime, cfg.whiteEasing);
+    }
+
+    private void calcTargets(float value, float extraVal, float max) {
+        if (value + extraVal <= max) {
+            targetMain = Mth.clamp(value / max, 0f, 1f);
+            targetExtra = Mth.clamp((value + extraVal) / max, 0f, 1f);
+        } else {
+            targetMain = Mth.clamp(value / (value + extraVal), 0f, 1f);
+            targetExtra = 1.0f;
+        }
     }
 
     public boolean busy() {
