@@ -520,5 +520,6 @@
   "genshinerc.hud_editor.element.toughness_icon": "Toughness Icon",
   "genshinerc.hud_editor.element.hunger_icon": "Hunger Icon",
   "genshinerc.hud_editor.element.stamina_icon": "Stamina Icon",
-  "genshinerc.hud_editor.element.oxygen_icon": "Oxygen Icon"
+  "genshinerc.hud_editor.element.oxygen_icon": "Oxygen Icon",
+  "genshinerc.hud_editor.confirm_reset_all": "Click again to confirm reset"
 }

@@ -18,7 +18,7 @@ import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.NineSlice;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.Strip;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
-import com.dsp2.genshinerc.common.level.PlayerHudSync;
+import com.dsp2.genshinerc.common.network.sync.PlayerHudSync;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.Util;
@@ -276,7 +276,7 @@ public final class RpgHudOverlay {
         t.forEachWhite((ws0, ws1, wa) -> st.seg(g, st.i.white(), b, ws0, ws1, argb(a * wa, WHITE)));
 
         float sa = t.smallAlpha(now, cfg);
-        if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa * 0.5f, WHITE));
+        if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa * 0.7f, WHITE));
     }
 
     private static void drawShield(GuiGraphics g, BarConfig cfg, long now, float a, boolean preview) {
@@ -314,7 +314,7 @@ public final class RpgHudOverlay {
 
             float sa = B_SHIELD.smallAlpha(now, cfg);
             if (sa > 0.01f) {
-                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * B_SHIELD.main, absBox.y2(), argb(a * sa * 0.5f, WHITE));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * B_SHIELD.main, absBox.y2(), argb(a * sa * 0.7f, WHITE));
             }
 
             B_SHIELD.forEachWhite((ws0, ws1, wa) -> {

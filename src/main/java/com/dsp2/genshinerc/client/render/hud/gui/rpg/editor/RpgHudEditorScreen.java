@@ -15,7 +15,8 @@ import java.util.Locale;
 
 public final class RpgHudEditorScreen extends Screen {
     private static final int DIM = 0xA0000000, BOX = 0x80FFFFFF, BOX_HOVER = 0xFFFFFFFF,
-            BOX_SEL = 0xFF4FD8FF, FILL_SEL = 0x204FD8FF, HELP = 0xFFCCCCCC;
+            BOX_SEL = 0xFF4FD8FF, FILL_SEL = 0x204FD8FF, HELP = 0xFFCCCCCC,
+            CONFIRM_COLOR = 0xFFFF5555;
     private static final int HANDLE = 5, MIN_HIT = 6;
     private static final float SCROLL_STEP = 1.05f;
 
@@ -29,6 +30,9 @@ public final class RpgHudEditorScreen extends Screen {
     private boolean dirty;
     private boolean hideBoxes = false;
 
+    @Nullable private Button resetAllButton;
+    private boolean confirmResetAll = false;
+
     public RpgHudEditorScreen(@Nullable Screen parent) {
         super(Component.translatable("genshinerc.hud_editor.title"));
         this.parent = parent;
@@ -36,17 +40,29 @@ public final class RpgHudEditorScreen extends Screen {
 
     @Override
     protected void init() {
+        confirmResetAll = false;
+
         int w = 60, gap = 4, x = width / 2 - (w * 4 + gap * 3) / 2, y = 6;
+
         addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.reset_selected"), b -> {
             if (selected != null) { selected.reset(cfg()); changed(); }
         }).bounds(x, y, w, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.reset_all"), b -> {
+
+        resetAllButton = Button.builder(Component.translatable("genshinerc.hud_editor.reset_all"), b -> {
+            if (!confirmResetAll) {
+                confirmResetAll = true;
+                return;
+            }
+            confirmResetAll = false;
             for (RpgHudElement e : RpgHudElement.values()) e.reset(cfg());
             changed();
-        }).bounds(x + w + gap, y, w, 20).build());
+        }).bounds(x + w + gap, y, w, 20).build();
+        addRenderableWidget(resetAllButton);
+
         addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.hide_boxes"), b -> {
             hideBoxes = !hideBoxes;
         }).bounds(x + (w + gap) * 2, y, w, 20).build());
+
         addRenderableWidget(Button.builder(Component.translatable("genshinerc.hud_editor.done"), b -> onClose())
                 .bounds(x + (w + gap) * 3, y, w, 20).build());
     }
@@ -60,9 +76,18 @@ public final class RpgHudEditorScreen extends Screen {
         if (!hideBoxes) {
             RpgHudElement hover = drag == Drag.NONE ? hit(mouseX, mouseY) : null;
             for (RpgHudElement e : RpgHudElement.values()) drawGizmo(g, e, e == selected, e == hover);
-            g.drawCenteredString(font, Component.translatable("genshinerc.hud_editor.help"), width / 2, 30, HELP);
+
+            g.drawCenteredString(font, Component.translatable("genshinerc.hud_editor.help"), width / 2, 44, HELP);
         }
         super.render(g, mouseX, mouseY, partialTick);
+
+        if (confirmResetAll && resetAllButton != null) {
+            Component hint = Component.translatable("genshinerc.hud_editor.confirm_reset_all");
+            int tw = font.width(hint);
+            int tx = resetAllButton.getX() + resetAllButton.getWidth() / 2 - tw / 2;
+            int ty = resetAllButton.getY() + resetAllButton.getHeight() + 2; // Y=28
+            g.drawString(font, hint, tx, ty, CONFIRM_COLOR, true);
+        }
     }
 
     private void drawGizmo(GuiGraphics g, RpgHudElement e, boolean sel, boolean hover) {
@@ -94,7 +119,13 @@ public final class RpgHudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        if (super.mouseClicked(mx, my, button)) return true;
+        boolean wasConfirming = confirmResetAll;
+        if (super.mouseClicked(mx, my, button)) {
+            if (wasConfirming && confirmResetAll) {
+                confirmResetAll = false;
+            }
+            return true;
+        }
         if (hideBoxes || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) return false;
 
         if (selected != null && onHandle(selected, mx, my)) {
@@ -222,7 +253,10 @@ public final class RpgHudEditorScreen extends Screen {
     }
 
     @Override
-    public void removed() { saveIfDirty(); }
+    public void removed() {
+        confirmResetAll = false;
+        saveIfDirty();
+    }
 
     private static BarConfig cfg() { return BarConfig.get(); }
     private float localX(double sx) { BarConfig c = cfg(); return (float) ((sx - RpgHudOverlay.originX(c)) / c.rpgHudScale); }

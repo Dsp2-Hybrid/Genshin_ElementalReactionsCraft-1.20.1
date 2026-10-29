@@ -201,8 +201,8 @@ public class BarConfig {
     @SerialEntry public float rpgOxygenRetractTime = 0.30f;
     @SerialEntry public float rpgOxygenSettleTime = 0.35f;
     @SerialEntry public float rpgOxygenGainIdleTime = 0.50f;
-    @SerialEntry public float rpgShakePixels = 4f;
-    @SerialEntry public float rpgCountSpeed = 12f;
+    @SerialEntry public float rpgShakePixels = 12.0f;
+    @SerialEntry public float rpgCountSpeed = 12.0f;
     @SerialEntry public float rpgFoodPreviewHz = 1.2f;
     @SerialEntry public Color rpgExpColor = new Color(0x5BE35B);
     @SerialEntry public float rpgPortraitX = 0f, rpgPortraitY = -52f, rpgPortraitW = 52f, rpgPortraitH = 52f;
@@ -450,7 +450,7 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_oxygen_retract_time", 0.30f, () -> c.rpgOxygenRetractTime, v -> c.rpgOxygenRetractTime = v, 0.05f, 2f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_oxygen_settle_time", 0.35f, () -> c.rpgOxygenSettleTime, v -> c.rpgOxygenSettleTime = v, 0.05f, 2f, 0.05f, "%.2f"))
                 .option(floatOptCustomStep("rpg_oxygen_gain_idle_time", 0.50f, () -> c.rpgOxygenGainIdleTime, v -> c.rpgOxygenGainIdleTime = v, 0.1f, 3f, 0.05f, "%.2f"))
-                .option(floatOptCustomStep("rpg_shake_pixels", 4f, () -> c.rpgShakePixels, v -> c.rpgShakePixels = v, 0f, 12f, 0.5f, "%.1f"))
+                .option(floatOptCustomStep("rpg_shake_pixels", 4f, () -> c.rpgShakePixels, v -> c.rpgShakePixels = v, 0f, 20f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_count_speed", 12f, () -> c.rpgCountSpeed, v -> c.rpgCountSpeed = v, 1f, 40f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("rpg_food_preview_hz", 1.2f, () -> c.rpgFoodPreviewHz, v -> c.rpgFoodPreviewHz = v, 0.2f, 4f, 0.1f, "%.1f"))
                 .option(colorOpt("rpg_exp_color", new Color(0x5BE35B), () -> c.rpgExpColor, v -> c.rpgExpColor = v))
