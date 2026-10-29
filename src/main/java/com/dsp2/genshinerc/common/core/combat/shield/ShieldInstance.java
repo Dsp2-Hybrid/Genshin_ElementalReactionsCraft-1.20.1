@@ -12,11 +12,15 @@ public final class ShieldInstance {
     private int ticksLeft;
 
     ShieldInstance(ShieldKind kind, @Nullable ElementType element, float amount, int durationTicks) {
+        this(kind, element, amount, amount, durationTicks);
+    }
+
+    public ShieldInstance(ShieldKind kind, @Nullable ElementType element, float amount, float max, int ticksLeft) {
         this.kind = kind;
         this.element = element;
         this.amount = amount;
-        this.max = amount;
-        this.ticksLeft = durationTicks;
+        this.max = max;
+        this.ticksLeft = ticksLeft;
     }
 
     public ShieldKind kind() { return kind; }

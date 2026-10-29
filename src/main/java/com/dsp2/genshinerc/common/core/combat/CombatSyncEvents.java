@@ -4,6 +4,7 @@ import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
@@ -31,16 +32,12 @@ public final class CombatSyncEvents {
 
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof LivingEntity living) {
-            ShieldManager.load(living);
-        }
+        ShieldManager.load(event.getEntity());
     }
 
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity() instanceof LivingEntity living) {
-            ShieldManager.save(living);
-        }
+        ShieldManager.save(event.getEntity());
     }
 
     @SubscribeEvent
