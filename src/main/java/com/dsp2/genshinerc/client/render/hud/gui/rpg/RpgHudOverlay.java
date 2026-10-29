@@ -18,7 +18,7 @@ import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.NineSlice;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.render.Strip;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
-import com.dsp2.genshinerc.common.network.sync.PlayerHudSync;
+import com.dsp2.genshinerc.common.level.PlayerHudSync;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.Util;
@@ -273,7 +273,7 @@ public final class RpgHudOverlay {
             abs.seg(g, abs.i.core(), b, main, extra, argb(a, WHITE));
         }
 
-        t.forEachWhite((ws0, ws1, wa) -> st.seg(g, st.i.white(), b, ws0, ws1, argb(a * wa * 0.5f, WHITE)));
+        t.forEachWhite((ws0, ws1, wa) -> st.seg(g, st.i.white(), b, ws0, ws1, argb(a * wa, WHITE)));
 
         float sa = t.smallAlpha(now, cfg);
         if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa * 0.5f, WHITE));
@@ -287,38 +287,47 @@ public final class RpgHudOverlay {
         float hpMax = (float) lp.getMaxHealth();
 
         Box absBox = RpgHudElement.SHIELD.get(cfg).abs();
-        float main = B_SHIELD.main;
+        float main3 = B_SHIELD.main * 3f;
 
         HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), argb(a, 0xFF404040));
 
         if (ss != null) {
-            int layers = (int) Math.ceil(main * 3f);
-            for (int i = 0; i < Math.min(3, layers); i++) {
-                float layerStart = i / 3f;
-                float layerEnd = Math.min((i + 1) / 3f, main);
-                if (layerEnd > layerStart) {
-                    int c = ss.color(cfg, hpMax, i);
-                    HudGeom.rect(g, absBox.x() + absBox.w() * layerStart, absBox.y(),
-                            absBox.x() + absBox.w() * layerEnd, absBox.y2(), argb(a, c));
-                }
+            float l1 = Mth.clamp(main3, 0f, 1f);
+            float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
+            float l3 = Mth.clamp(main3 - 2f, 0f, 1f);
+
+            if (l1 > 0.001f) {
+                int c = ss.color(cfg, hpMax, 0);
+                HudGeom.rect(g, absBox.x(), absBox.y(),
+                        absBox.x() + absBox.w() * (l1 / 3f), absBox.y2(), argb(a, c));
+            }
+            if (l2 > 0.001f) {
+                int c = ss.color(cfg, hpMax, 1);
+                HudGeom.rect(g, absBox.x() + absBox.w() * (1f / 3f), absBox.y(),
+                        absBox.x() + absBox.w() * (1f / 3f + l2 / 3f), absBox.y2(), argb(a, c));
+            }
+            if (l3 > 0.001f) {
+                int c = ss.color(cfg, hpMax, 2);
+                HudGeom.rect(g, absBox.x() + absBox.w() * (2f / 3f), absBox.y(),
+                        absBox.x() + absBox.w() * (2f / 3f + l3 / 3f), absBox.y2(), argb(a, c));
             }
 
             float sa = B_SHIELD.smallAlpha(now, cfg);
             if (sa > 0.01f) {
-                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * main, absBox.y2(), argb(a * sa * 0.5f, WHITE));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * B_SHIELD.main, absBox.y2(), argb(a * sa * 0.5f, WHITE));
             }
 
             B_SHIELD.forEachWhite((ws0, ws1, wa) -> {
                 HudGeom.rect(g, absBox.x() + absBox.w() * ws0, absBox.y(),
-                        absBox.x() + absBox.w() * ws1, absBox.y2(), argb(a * wa * 0.5f, WHITE));
+                        absBox.x() + absBox.w() * ws1, absBox.y2(), argb(a * wa, WHITE));
             });
 
             float shownVal = N_SHIELD.shown();
             float pop = N_SHIELD.scale(now);
             float ta = a * N_SHIELD.alpha();
 
-            if (main > 0.01f) {
-                int topLayer = Math.max(0, layers - 1);
+            if (B_SHIELD.main > 0.01f) {
+                int topLayer = main3 > 2f ? 2 : (main3 > 1f ? 1 : 0);
                 int numColor = ss.color(cfg, hpMax, topLayer);
                 String numStr = String.valueOf(Math.round(shownVal));
                 text(g, Component.literal(numStr), absBox.cx(), absBox.cy(), 0.6f * pop, numColor, ta, true);

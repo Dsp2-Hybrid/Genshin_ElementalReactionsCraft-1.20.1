@@ -397,6 +397,8 @@ public class CustomHealthBar extends EntityUI {
         float oldAlpha = 1.0f;
         long oldAnimStart = 0L;
 
+        void reset() { active = oldActive = false; }
+
         void interrupt(long now) {
             if (active) {
                 oldStart = Math.min(startOverlay, endOverlay);
@@ -589,40 +591,59 @@ public class CustomHealthBar extends EntityUI {
             boolean absorptionChanged = Math.abs(absorption - currentAbsorption) > 0.001f;
             boolean maxHealthChanged = Math.abs(maxHealth - lastMaxHealth) > 0.001f;
 
-            if (healthChanged || absorptionChanged || maxHealthChanged) {
+            if (maxHealthChanged) {
+                lastMaxHealth = maxHealth;
+                if (health + absorption <= maxHealth) {
+                    targetHealthEnd = Mth.clamp(health / maxHealth, 0.0F, 1.0F);
+                    targetAbsEnd = Mth.clamp((health + absorption) / maxHealth, 0.0F, 1.0F);
+                } else {
+                    targetHealthEnd = Mth.clamp(health / (health + absorption), 0.0F, 1.0F);
+                    targetAbsEnd = 1.0F;
+                }
+                visualHealthEnd = targetHealthEnd;
+                visualAbsEnd = targetAbsEnd;
+                startHealthEnd = targetHealthEnd;
+                startAbsEnd = targetAbsEnd;
+                mainBarAnimating = false;
+                hpWhite.reset();
+                absWhite.reset();
+                currentHealth = health;
+                currentAbsorption = absorption;
+                lastHealthChangeTime = now;
+                phase = Phase.HOLDING;
+                phaseStartTime = now;
+            } else if (healthChanged || absorptionChanged) {
                 long oldLastChangeTime = lastHealthChangeTime;
                 lastHealthChangeTime = now;
                 boolean isSmallChange = false;
 
-                if (healthChanged || absorptionChanged) {
-                    float hChange = Math.abs(health - currentHealth);
-                    float aChange = Math.abs(absorption - currentAbsorption);
-                    float maxChange = Math.max(hChange, aChange);
-                    float changePercent = maxChange / Math.max(1.0f, maxHealth);
+                float hChange = Math.abs(health - currentHealth);
+                float aChange = Math.abs(absorption - currentAbsorption);
+                float maxChange = Math.max(hChange, aChange);
+                float changePercent = maxChange / Math.max(1.0f, maxHealth);
 
-                    boolean isUltraHighFrequency = (now - oldLastChangeTime < 100L);
+                boolean isUltraHighFrequency = (now - oldLastChangeTime < 100L);
 
-                    if (isUltraHighFrequency) {
-                        isSmallChange = true;
-                        isSmallChangeActive = true;
-                        lastSmallChangeTime = now;
-                        smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
-                    } else if (health <= 0 && health < currentHealth) {
-                        isShaking = true;
-                        shakeStartTime = now;
-                        float remainingPercent = currentHealth / maxHealth;
-                        float calculatedMagnitude = remainingPercent * config.fatalShakeMultiplier;
-                        shakeMagnitude = Mth.clamp(calculatedMagnitude, config.fatalShakeMinPercent, config.fatalShakeMaxPercent);
-                    } else if (changePercent < config.smallChangeThreshold && config.smallChangeEnabled) {
-                        isSmallChange = true;
-                        isSmallChangeActive = true;
-                        lastSmallChangeTime = now;
-                        smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
-                    } else if (health < currentHealth) {
-                        isShaking = true;
-                        shakeStartTime = now;
-                        shakeMagnitude = Math.min(changePercent, 1.0f);
-                    }
+                if (isUltraHighFrequency) {
+                    isSmallChange = true;
+                    isSmallChangeActive = true;
+                    lastSmallChangeTime = now;
+                    smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
+                } else if (health <= 0 && health < currentHealth) {
+                    isShaking = true;
+                    shakeStartTime = now;
+                    float remainingPercent = currentHealth / maxHealth;
+                    float calculatedMagnitude = remainingPercent * config.fatalShakeMultiplier;
+                    shakeMagnitude = Mth.clamp(calculatedMagnitude, config.fatalShakeMinPercent, config.fatalShakeMaxPercent);
+                } else if (changePercent < config.smallChangeThreshold && config.smallChangeEnabled) {
+                    isSmallChange = true;
+                    isSmallChangeActive = true;
+                    lastSmallChangeTime = now;
+                    smallChangeWidth = Math.max(visualHealthEnd, visualAbsEnd);
+                } else if (health < currentHealth) {
+                    isShaking = true;
+                    shakeStartTime = now;
+                    shakeMagnitude = Math.min(changePercent, 1.0f);
                 }
 
                 startHealthEnd = visualHealthEnd;
@@ -651,7 +672,6 @@ public class CustomHealthBar extends EntityUI {
 
                 currentHealth = health;
                 currentAbsorption = absorption;
-                lastMaxHealth = maxHealth;
             }
 
             if (mainBarAnimating) {

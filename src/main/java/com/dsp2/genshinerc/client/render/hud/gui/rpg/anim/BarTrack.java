@@ -67,6 +67,8 @@ public final class BarTrack {
     }
 
     public void update(long now, float value, float extraVal, float max, BarConfig cfg, boolean isPlayer, boolean isAbs) {
+        boolean maxChanged = lastMax > 0f && Math.abs(max - lastMax) > 0.001f;
+
         if (currentValue == -1f) {
             currentValue = value;
             currentExtra = extraVal;
@@ -76,11 +78,23 @@ public final class BarTrack {
             extra = targetExtra;
             startMain = main;
             startExtra = extra;
+        } else if (maxChanged) {
+            lastMax = max;
+            calcTargets(value, extraVal, max);
+            main = targetMain;
+            extra = targetExtra;
+            startMain = main;
+            startExtra = extra;
+            mainAnimating = false;
+            mainWhite.reset();
+            extraWhite.reset();
+            currentValue = value;
+            currentExtra = extraVal;
         }
 
-        boolean changed = Math.abs(value - currentValue) > 0.001f || Math.abs(extraVal - currentExtra) > 0.001f || Math.abs(max - lastMax) > 0.001f;
+        boolean changed = Math.abs(value - currentValue) > 0.001f || Math.abs(extraVal - currentExtra) > 0.001f || maxChanged;
 
-        if (changed) {
+        if (changed && !maxChanged) {
             long oldLastChange = lastChangeTime;
             lastChangeTime = now;
             boolean isSmall = false;
@@ -233,6 +247,8 @@ public final class BarTrack {
         float oldEnd = 0f;
         float oldAlpha = 1.0f;
         long oldAnimStart = 0L;
+
+        void reset() { active = oldActive = false; }
 
         void interrupt(long now) {
             if (active) {

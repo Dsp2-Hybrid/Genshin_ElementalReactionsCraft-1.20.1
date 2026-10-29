@@ -55,34 +55,41 @@ public final class ShieldBarRenderer {
 
         SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx2, z, 0xFF404040, alpha);
 
-        float mainNorm = main / totalMax;
-        float targetNorm = target / totalMax;
-        float lastTarget = LASTS.getOrDefault(entity.getId(), targetNorm);
+        float main3 = main / hpMax;
+        float target3 = target / hpMax;
+        float lastTarget = LASTS.getOrDefault(entity.getId(), target3);
 
         WhiteOverlay overlay = OVERLAYS.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
 
-        if (Math.abs(targetNorm - lastTarget) > 0.001f) {
-            float delta = Math.abs(targetNorm - lastTarget);
+        if (Math.abs(target3 - lastTarget) > 0.001f) {
+            float delta = Math.abs(target3 - lastTarget);
             boolean small = cfg.smallChangeEnabled && delta < cfg.smallChangeThreshold;
             if (!small) {
-                overlay.trigger(lastTarget, targetNorm, now);
+                overlay.trigger(lastTarget, target3, now);
             }
         }
-        LASTS.put(entity.getId(), targetNorm);
-        overlay.update(now, mainNorm, cfg);
+        LASTS.put(entity.getId(), target3);
+        overlay.update(now, main3, cfg);
 
-        int layers = (int) Math.ceil(mainNorm * 3f);
-        for (int i = 0; i < Math.min(3, layers); i++) {
-            float layerStart = i / 3f;
-            float layerEnd = Math.min((i + 1) / 3f, mainNorm);
-            if (layerEnd > layerStart) {
-                int c = s.color(cfg, hpMax, i);
-                SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * layerStart, vx1 + w * layerEnd, z, c, alpha);
-            }
+        float l1 = Mth.clamp(main3, 0f, 1f);
+        float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
+        float l3 = Mth.clamp(main3 - 2f, 0f, 1f);
+
+        if (l1 > 0.001f) {
+            int c = s.color(cfg, hpMax, 0);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * (l1 / 3f), z, c, alpha);
+        }
+        if (l2 > 0.001f) {
+            int c = s.color(cfg, hpMax, 1);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * (1f / 3f), vx1 + w * (1f / 3f + l2 / 3f), z, c, alpha);
+        }
+        if (l3 > 0.001f) {
+            int c = s.color(cfg, hpMax, 2);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * (2f / 3f), vx1 + w * (2f / 3f + l3 / 3f), z, c, alpha);
         }
 
         overlay.emit((lo, hi, wa) -> {
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, alpha * wa * 0.5f);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * (lo / 3f), vx1 + w * (hi / 3f), z, 0xFFFFFF, alpha * wa);
         });
     }
 }
