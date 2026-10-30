@@ -1,10 +1,12 @@
 package com.dsp2.genshinerc.client.render.hud.gui.rpg;
 
 import com.dsp2.genshinerc.client.render.hud.HudDraw;
+import com.dsp2.genshinerc.client.render.hud.WhiteMaskTextures;
 import com.dsp2.genshinerc.client.render.hud.bar.ClientCombatBars;
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.client.render.hud.bar.shield.ClientShieldState;
 import com.dsp2.genshinerc.client.render.hud.bar.zhenmie.ClientZhenMieState;
+import com.dsp2.genshinerc.client.render.hud.bar.zhenmie.ClashFlash;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.RpgHudElement.Box;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.BarTrack;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.NumberFx;
@@ -379,8 +381,9 @@ public final class RpgHudOverlay {
 
     private static float watch(WhiteOverlay w, float last, float target, float visual, ClientZhenMieState z, BarConfig cfg, long now) {
         float delta = Math.abs(target - last);
-        boolean small = cfg.smallChangeEnabled && delta < cfg.smallChangeThreshold;
-        if (delta > 0.001f && !z.decaying() && !small) w.trigger(last, target, now);
+        if (delta > 0.001f) {
+            w.trigger(last, target, now);
+        }
         w.update(now, visual, cfg);
         return target;
     }
@@ -392,6 +395,9 @@ public final class RpgHudOverlay {
 
         if (z == null) { ZH_W.reset(); MI_W.reset(); zhLast = miLast = 0f; return; }
 
+        ClashFlash flash = z.flash();
+        boolean flashing = flash.active();
+
         int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF;
         int mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;
         int zc = z.zhenBuff() ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
@@ -399,16 +405,23 @@ public final class RpgHudOverlay {
 
         float zm = Mth.clamp(z.zhen(), 0f, 1f);
         float mm = Mth.clamp(z.mie(), 0f, 1f);
+        float md = flash.fill(mm);
 
-        zhLast = watch(ZH_W, zhLast, Mth.clamp(z.zhenTarget(), 0f, 1f), zm, z, cfg, now);
-        miLast = watch(MI_W, miLast, Mth.clamp(z.mieTarget(), 0f, 1f), mm, z, cfg, now);
+        if (flashing) {
+            ZH_W.reset(); MI_W.reset();
+            zhLast = Mth.clamp(z.zhenTarget(), 0f, 1f);
+            miLast = Mth.clamp(z.mieTarget(), 0f, 1f);
+        } else {
+            zhLast = watch(ZH_W, zhLast, Mth.clamp(z.zhenTarget(), 0f, 1f), zm, z, cfg, now);
+            miLast = watch(MI_W, miLast, Mth.clamp(z.mieTarget(), 0f, 1f), mm, z, cfg, now);
+        }
 
         int ox = (int) originX(cfg);
         int oy = (int) originY(cfg, sh);
 
         int bg = dim(0xFFFFFF, BASE_DARKEN);
         int zBase = HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg));
-        int mBase = HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg));
+        int mBase = flashing ? mc : HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg));
 
         int zFinal = HudDraw.lerpRgb(bg, applyBlend(bg, zBase, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
         int mFinal = HudDraw.lerpRgb(bg, applyBlend(bg, mBase, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
@@ -423,8 +436,8 @@ public final class RpgHudOverlay {
             g.disableScissor();
         }
 
-        if (mm > 0.001f) {
-            int sx1 = (int)(ox + (absBox.x() + absBox.w() * (1f - mm)) * cfg.rpgHudScale);
+        if (md > 0.001f) {
+            int sx1 = (int)(ox + (absBox.x() + absBox.w() * (1f - md)) * cfg.rpgHudScale);
             int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
             int sx2 = (int)(ox + absBox.x2() * cfg.rpgHudScale);
             int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
@@ -433,52 +446,40 @@ public final class RpgHudOverlay {
             g.disableScissor();
         }
 
+        ResourceLocation maskTex = WhiteMaskTextures.get(ZM_BAR);
+        ResourceLocation flashTex = maskTex != null ? maskTex : ZM_BAR;
+
+        if (flashing) {
+            int color = flash.color(now, zhenBase, mieBase, cfg);
+            int clashFinal = HudDraw.lerpRgb(bg, applyBlend(bg, color, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
+            float fa = a * flash.pulse(now, cfg) * CLASH_ALPHA;
+            int sx1 = (int)(ox + (absBox.x() + absBox.w() * flash.left()) * cfg.rpgHudScale);
+            int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
+            int sx2 = (int)(ox + absBox.x2() * cfg.rpgHudScale);
+            int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
+            g.enableScissor(sx1, sy1, sx2, sy2);
+            GuiQuad.blit(g, flashTex, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(fa, clashFinal));
+            g.disableScissor();
+        }
+
         ClashResult clash = z.clash();
         if (clash != null) {
-            float t = (now - z.clashStartMs()) / (clash.visualSeconds() * 1000f), fade = 1f - Mth.clamp(t, 0f, 1f), ca = 1f;
-            int color = switch (clash) {
-                case CRUSH -> {
-                    float periodMs = 1000f / cfg.zhenMieClashHueHz;
-                    ca = 0.5f + 0.5f * Mth.cos((now / 1000f) * cfg.zhenMieClashHueHz * Mth.TWO_PI);
-                    yield Mth.hsvToRgb((now % (long)periodMs) / periodMs, 0.85f, 1f);
-                }
-                case KNOCKDOWN -> (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
-                default -> WHITE;
-            };
-            int finalClash = HudDraw.lerpRgb(bg, applyBlend(bg, color, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
-
-            if (zm > 0.001f) {
-                int sx1 = (int)(ox + absBox.x() * cfg.rpgHudScale);
-                int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
-                int sx2 = (int)(ox + (absBox.x() + absBox.w() * zm) * cfg.rpgHudScale);
-                int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
-                g.enableScissor(sx1, sy1, sx2, sy2);
-                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * fade * ca * CLASH_ALPHA, finalClash));
-                g.disableScissor();
-            }
-            if (mm > 0.001f) {
-                int sx1 = (int)(ox + (absBox.x() + absBox.w() * (1f - mm)) * cfg.rpgHudScale);
-                int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
-                int sx2 = (int)(ox + absBox.x2() * cfg.rpgHudScale);
-                int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
-                g.enableScissor(sx1, sy1, sx2, sy2);
-                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * fade * ca * CLASH_ALPHA, finalClash));
-                g.disableScissor();
-            }
-
+            float fade = 1f - Mth.clamp((now - z.clashStartMs()) / (clash.visualSeconds() * 1000f), 0f, 1f);
             float mx = absBox.x() + absBox.w() * z.clashPoint();
             float half = absBox.h() * CLASH_MARKER_WIDTH / 2f;
             HudGeom.rect(g, mx - half, absBox.y(), mx + half, absBox.y2(), argb(a * fade, WHITE));
             float ts = absBox.h() * 0.8f, ty = absBox.y() - ts * 0.6f;
             GuiQuad.blit(g, ZM_TRIANGLE, mx - ts / 2f, ty, mx + ts / 2f, ty + ts, 0f, 0f, 1f, 1f, argb(a * fade, WHITE));
-        } else {
+        }
+
+        if (!flashing) {
             ZH_W.emit((lo, hi, wa) -> {
                 int sx1 = (int)(ox + (absBox.x() + absBox.w() * lo) * cfg.rpgHudScale);
                 int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
                 int sx2 = (int)(ox + (absBox.x() + absBox.w() * hi) * cfg.rpgHudScale);
                 int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
                 g.enableScissor(sx1, sy1, sx2, sy2);
-                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
+                GuiQuad.blit(g, flashTex, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
                 g.disableScissor();
             });
 
@@ -488,7 +489,7 @@ public final class RpgHudOverlay {
                 int sx2 = (int)(ox + (absBox.x() + absBox.w() * (1f - lo)) * cfg.rpgHudScale);
                 int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
                 g.enableScissor(sx1, sy1, sx2, sy2);
-                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
+                GuiQuad.blit(g, flashTex, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
                 g.disableScissor();
             });
 

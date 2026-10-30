@@ -4,11 +4,13 @@ import com.dsp2.genshinerc.client.render.hud.bar.anim.AnimatedBarValue;
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
 import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
 public final class ClientZhenMieState {
     final AnimatedBarValue zhen = new AnimatedBarValue();
     final AnimatedBarValue mie = new AnimatedBarValue();
+    private final ClashFlash flash = new ClashFlash();
     boolean zhenBuff, mieBuff;
     @Nullable ClashResult clash;
     long clashStartMs;
@@ -33,6 +35,7 @@ public final class ClientZhenMieState {
             clashPoint = msg.clashPoint();
             zhen.flash(nowMs);
             mie.flash(nowMs);
+            flash.start(msg.clash(), nowMs);
         }
     }
 
@@ -43,10 +46,12 @@ public final class ClientZhenMieState {
         zhen.update(nowMs, cfg.subBarFillSpeed, cfg.subBarWhiteDrainSpeed);
         mie.update(nowMs, cfg.subBarFillSpeed, cfg.subBarWhiteDrainSpeed);
         if (clash != null && nowMs - clashStartMs > clash.visualSeconds() * 1000f) clash = null;
+
+        flash.update(nowMs, Mth.clamp(mieTarget, 0f, 1f));
     }
 
     boolean isIdle(long nowMs, BarConfig cfg) {
-        return clash == null && zhen.isIdle(nowMs, cfg.subBarFlashTime) && mie.isIdle(nowMs, cfg.subBarFlashTime);
+        return clash == null && !flash.active() && zhen.isIdle(nowMs, cfg.subBarFlashTime) && mie.isIdle(nowMs, cfg.subBarFlashTime);
     }
 
     public float zhenTrail() { return zhen.trail(); }
@@ -59,6 +64,8 @@ public final class ClientZhenMieState {
     public float zhenTarget() { return zhenTarget; }
     public float mieTarget()  { return mieTarget; }
     public boolean decaying() { return decaying; }
+
+    public ClashFlash flash() { return flash; }
 
     @Nullable public ClashResult clash() { return clash; }
     public long clashStartMs() { return clashStartMs; }

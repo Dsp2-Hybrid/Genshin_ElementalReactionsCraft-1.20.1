@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.client.render.hud.bar.zhenmie;
 
+import com.dsp2.genshinerc.client.render.hud.WhiteMaskTextures;
 import com.dsp2.genshinerc.client.render.hud.bar.ClientCombatBars;
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.client.render.hud.bar.layout.BarAnchor;
@@ -10,6 +11,7 @@ import com.dsp2.genshinerc.client.render.hud.HudDraw;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.anim.WhiteOverlay;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Matrix4f;
@@ -19,7 +21,6 @@ import java.util.Map;
 
 public final class ZhenMieBarRenderer {
     private static final float CLASH_OVERLAY_ALPHA = 0.85f;
-    private static final long KNOCKDOWN_SWAP_MS = 90L;
     private static final float MARKER_WIDTH = 0.6f;
 
     private static final float MIE_RIGHT_OFFSET = 0.003f;
@@ -72,6 +73,9 @@ public final class ZhenMieBarRenderer {
 
         float zm = Mth.clamp(s.zhen.main(), 0f, 1f);
         float mm = Mth.clamp(s.mie.main(), 0f, 1f);
+        ClashFlash flash = s.flash();
+        boolean flashing = flash.active();
+        float md = flash.fill(mm);
 
         float zt = Mth.clamp(s.zhenTarget(), 0f, 1f);
         float mt = Mth.clamp(s.mieTarget(), 0f, 1f);
@@ -81,18 +85,21 @@ public final class ZhenMieBarRenderer {
         float zhLast = ZHEN_LASTS.getOrDefault(entity.getId(), 0f);
         float miLast = MIE_LASTS.getOrDefault(entity.getId(), 0f);
 
-        boolean isDecaying = s.decaying();
-        if (Math.abs(zt - zhLast) > 0.001f && !isDecaying) zhOverlay.trigger(zhLast, zt, now);
-        if (Math.abs(mt - miLast) > 0.001f && !isDecaying) miOverlay.trigger(miLast, mt, now);
+        if (flashing) {
+            zhOverlay.reset();
+            miOverlay.reset();
+        } else {
+            if (Math.abs(zt - zhLast) > 0.001f) zhOverlay.trigger(zhLast, zt, now);
+            if (Math.abs(mt - miLast) > 0.001f) miOverlay.trigger(miLast, mt, now);
+            zhOverlay.update(now, zm, cfg);
+            miOverlay.update(now, mm, cfg);
+        }
         ZHEN_LASTS.put(entity.getId(), zt);
         MIE_LASTS.put(entity.getId(), mt);
 
-        zhOverlay.update(now, zm, cfg);
-        miOverlay.update(now, mm, cfg);
-
         int bgColor = 0xFF404040;
         int zBase = HudDraw.lerpRgb(zc, 0xFFFFFF, s.zhen.whiteness(now, cfg.subBarFlashTime));
-        int mBase = HudDraw.lerpRgb(mc, 0xFFFFFF, s.mie.whiteness(now, cfg.subBarFlashTime));
+        int mBase = flashing ? mc : HudDraw.lerpRgb(mc, 0xFFFFFF, s.mie.whiteness(now, cfg.subBarFlashTime));
 
         int zFinal = HudDraw.lerpRgb(bgColor, applyBlend(bgColor, zBase, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
         int mFinal = HudDraw.lerpRgb(bgColor, applyBlend(bgColor, mBase, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
@@ -103,49 +110,35 @@ public final class ZhenMieBarRenderer {
         float topMie = topY - MIE_TOP_OFFSET;
         float bottomMie = bottomY + MIE_BOTTOM_OFFSET;
 
-        if (mm > 0f) {
-            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * mm, bottomMie, rMie, topMie,
-                    uRight - uSpan * mm, 0f, uRight, 1f, z, mFinal, alpha);
+        if (md > 0f) {
+            HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * md, bottomMie, rMie, topMie,
+                    uRight - uSpan * md, 0f, uRight, 1f, z, mFinal, alpha);
+        }
+
+        ResourceLocation maskTex = WhiteMaskTextures.get(BarTextures.FILL);
+        ResourceLocation flashTex = maskTex != null ? maskTex : BarTextures.FILL;
+
+        if (flashing) {
+            int color = flash.color(now, zhenBase, mieBase, cfg);
+            int clashFinal = HudDraw.lerpRgb(bgColor, applyBlend(bgColor, color, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
+            float fl = flash.left();
+            HudDraw.quad(m, buffers, flashTex, rMie - span * (1f - fl), bottomMie, rMie, topMie,
+                    uRight - uSpan * (1f - fl), 0f, uRight, 1f, z, clashFinal,
+                    alpha * flash.pulse(now, cfg) * CLASH_OVERLAY_ALPHA);
         }
 
         if (s.clash != null) {
-            float t = (now - s.clashStartMs) / (s.clash.visualSeconds() * 1000f);
-            float fade = 1f - Mth.clamp(t, 0f, 1f);
-            int color;
-            float ca = 1f;
-            switch (s.clash) {
-                case CRUSH -> {
-                    float periodMs = 1000f / cfg.zhenMieClashHueHz;
-                    color = Mth.hsvToRgb((now % (long)periodMs) / periodMs, 0.85f, 1f);
-                    ca = 0.5f + 0.5f * Mth.cos((now / 1000f) * cfg.zhenMieClashHueHz * Mth.TWO_PI);
-                }
-                case KNOCKDOWN -> color = (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
-                default -> color = 0xFFFFFF;
-            }
-
-            int clashFinal = HudDraw.lerpRgb(bgColor, applyBlend(bgColor, color, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
-
-            if (zm > 0.001f) {
-                HudDraw.quad(m, buffers, BarTextures.FILL, l, bottomY, l + span * zm, topY, uLeft, 0f, uLeft + uSpan * zm, 1f, z, clashFinal, alpha * fade * ca * CLASH_OVERLAY_ALPHA);
-            }
-            if (mm > 0.001f) {
-                HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * mm, bottomMie, rMie, topMie, uRight - uSpan * mm, 0f, uRight, 1f, z, clashFinal, alpha * fade * ca * CLASH_OVERLAY_ALPHA);
-            }
-
+            float fade = 1f - Mth.clamp((now - s.clashStartMs) / (s.clash.visualSeconds() * 1000f), 0f, 1f);
             float x = Mth.lerp(s.clashPoint, l, r);
             float half = (topY - bottomY) * MARKER_WIDTH / 2f;
             HudDraw.rect(m, buffers, x - half, bottomY, x + half, topY, z, 0xFFFFFF, alpha * fade);
-        } else {
-            zhOverlay.emit((lo, hi, wa) -> {
-                HudDraw.quad(m, buffers, BarTextures.FILL, l + span * lo, bottomY, l + span * hi, topY,
-                        uLeft + uSpan * lo, 0f, uLeft + uSpan * hi, 1f, z, 0xFFFFFF, alpha * wa);
-            });
+        }
 
-            miOverlay.emit((lo, hi, wa) -> {
-                HudDraw.quad(m, buffers, BarTextures.FILL, rMie - span * hi, bottomMie, rMie - span * lo, topMie,
-                        uRight - uSpan * hi, 0f, uRight - uSpan * lo, 1f, z, 0xFFFFFF, alpha * wa);
-            });
-
+        if (!flashing) {
+            zhOverlay.emit((lo, hi, wa) -> HudDraw.quad(m, buffers, flashTex, l + span * lo, bottomY, l + span * hi, topY,
+                    uLeft + uSpan * lo, 0f, uLeft + uSpan * hi, 1f, z, 0xFFFFFF, alpha * wa));
+            miOverlay.emit((lo, hi, wa) -> HudDraw.quad(m, buffers, flashTex, rMie - span * hi, bottomMie, rMie - span * lo, topMie,
+                    uRight - uSpan * hi, 0f, uRight - uSpan * lo, 1f, z, 0xFFFFFF, alpha * wa));
             if (mm > 0.01f) {
                 int breathColor = cfg.zhenMieBreathColor.getRGB() & 0xFFFFFF;
                 sweep(m, buffers, fill, l, span, uLeft, uSpan, bottomMie, topMie, z, 1f - mm, 1f, now, alpha, breathColor, cfg);
