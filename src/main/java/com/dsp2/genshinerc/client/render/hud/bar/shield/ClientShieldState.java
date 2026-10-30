@@ -53,7 +53,7 @@ public final class ClientShieldState {
         if (kind == ShieldKind.ELEMENTAL && element != null) {
             int baseColor = ElementHudRenderer.elementColor(element);
             if (layer <= 0) return baseColor;
-            float mix = layer == 1 ? 0.53f : 0.88f;
+            float mix = layer == 1 ? cfg.shieldLayer2WhiteMix : cfg.shieldLayer3WhiteMix;
             int r = (int) Mth.lerp(mix, (baseColor >> 16) & 0xFF, 255);
             int g = (int) Mth.lerp(mix, (baseColor >> 8) & 0xFF, 255);
             int b = (int) Mth.lerp(mix, baseColor & 0xFF, 255);

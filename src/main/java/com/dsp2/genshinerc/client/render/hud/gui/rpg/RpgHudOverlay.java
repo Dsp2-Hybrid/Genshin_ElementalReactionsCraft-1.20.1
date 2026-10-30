@@ -67,9 +67,7 @@ public final class RpgHudOverlay {
     private static final float LOW_HP_BLINK = 0.15f, CLASH_MARKER_WIDTH = 0.6f;
     private static final long CRUSH_HUE_MS = 600L, KNOCKDOWN_SWAP_MS = 90L;
 
-    private static final float BREATH_HZ = 0.5f, BREATH_MIN_A = 0.25f, BREATH_MAX_A = 0.70f;
-    private static final float MIE_DARKEN = 0.35f;
-    private static final int MIE_MIN_PEAK = 0x30;
+    private static final float SWEEP_WIDTH = 0.18f, SWEEP_ALPHA = 0.45f;
     private static final float BASE_DARKEN = 0.30f;
 
     private static final BarTrack B_HEALTH = new BarTrack(), B_STAMINA = new BarTrack();
@@ -81,8 +79,8 @@ public final class RpgHudOverlay {
 
     private static final WhiteOverlay ZH_W = new WhiteOverlay(), MI_W = new WhiteOverlay();
     private static final WhiteOverlay SHIELD_O1 = new WhiteOverlay(), SHIELD_O2 = new WhiteOverlay(), SHIELD_O3 = new WhiteOverlay();
-    private static float zhLast = -1f, miLast = -1f;
-    private static float lastT1 = -1f, lastT2 = -1f, lastT3 = -1f;
+    private static float zhLast = 0f, miLast = 0f;
+    private static float lastT1 = 0f, lastT2 = 0f, lastT3 = 0f;
 
     @Nullable private static LocalPlayer lastPlayer;
     private static long deathStart = -1L;
@@ -144,9 +142,9 @@ public final class RpgHudOverlay {
     private static void resetAll() {
         B_HEALTH.reset(); B_STAMINA.reset();
         N_HP.reset(); N_SHIELD.reset(); T_ABS.reset(); T_XP.reset(); XP.reset(); C_HP.reset();
-        ZH_W.reset(); MI_W.reset(); zhLast = miLast = -1f;
+        ZH_W.reset(); MI_W.reset(); zhLast = miLast = 0f;
         SHIELD_O1.reset(); SHIELD_O2.reset(); SHIELD_O3.reset();
-        lastT1 = lastT2 = lastT3 = -1f;
+        lastT1 = lastT2 = lastT3 = 0f;
         RpgStatBars.reset();
         deathStart = -1L;
     }
@@ -164,7 +162,7 @@ public final class RpgHudOverlay {
         B_STAMINA.update(now, s.sta(), 0f, Math.max(1f, s.maxSta()), cfg, false, false);
         N_HP.set(s.hp(), now);
         N_HP.update(now);
-        N_SHIELD.set(s.shield(), now);
+        N_SHIELD.set(s.shieldTarget(), now);
         N_SHIELD.update(now);
         T_ABS.set(s.abs(), now);
         T_XP.set(s.xpPoints(), now);
@@ -308,8 +306,6 @@ public final class RpgHudOverlay {
         float t2 = Mth.clamp(target3 - 1f, 0f, 1f);
         float t3 = Mth.clamp(target3 - 2f, 0f, 1f);
 
-        if (lastT1 < 0) { lastT1 = 0f; lastT2 = 0f; lastT3 = 0f; }
-
         if (Math.abs(t1 - lastT1) > 0.001f) SHIELD_O1.trigger(lastT1, t1, now);
         if (Math.abs(t2 - lastT2) > 0.001f) SHIELD_O2.trigger(lastT2, t2, now);
         if (Math.abs(t3 - lastT3) > 0.001f) SHIELD_O3.trigger(lastT3, t3, now);
@@ -377,17 +373,6 @@ public final class RpgHudOverlay {
         GuiQuad.blit(g, ZM_TRIANGLE, triB.x(), triB.y(), triB.x2(), triB.y2(), 0f, 0f, 1f, 1f, argb(a, WHITE));
     }
 
-    private static int darkMie(int rgb) {
-        int r = (int) (((rgb >> 16) & 0xFF) * MIE_DARKEN), gr = (int) (((rgb >> 8) & 0xFF) * MIE_DARKEN), b = (int) ((rgb & 0xFF) * MIE_DARKEN);
-        int peak = Math.max(r, Math.max(gr, b));
-        if (peak <= 0) return (MIE_MIN_PEAK << 16) | (MIE_MIN_PEAK << 8) | MIE_MIN_PEAK;
-        if (peak < MIE_MIN_PEAK) {
-            float k = MIE_MIN_PEAK / (float) peak;
-            r = Math.min(255, Math.round(r * k)); gr = Math.min(255, Math.round(gr * k)); b = Math.min(255, Math.round(b * k));
-        }
-        return (r << 16) | (gr << 8) | b;
-    }
-
     private static int dim(int rgb, float k) {
         return (Math.round(((rgb >> 16) & 0xFF) * k) << 16) | (Math.round(((rgb >> 8) & 0xFF) * k) << 8) | Math.round((rgb & 0xFF) * k);
     }
@@ -395,7 +380,7 @@ public final class RpgHudOverlay {
     private static float watch(WhiteOverlay w, float last, float target, float visual, ClientZhenMieState z, BarConfig cfg, long now) {
         float delta = Math.abs(target - last);
         boolean small = cfg.smallChangeEnabled && delta < cfg.smallChangeThreshold;
-        if (last >= 0f && delta > 0.001f && !z.decaying() && !small) w.trigger(last, target, now);
+        if (delta > 0.001f && !z.decaying() && !small) w.trigger(last, target, now);
         w.update(now, visual, cfg);
         return target;
     }
@@ -403,14 +388,14 @@ public final class RpgHudOverlay {
     private static void zmBar(GuiGraphics g, @Nullable ClientZhenMieState z, Box b, long now, BarConfig cfg, float a, int sh) {
         Box absBox = b.abs();
 
+        GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * cfg.zhenMieBgOpacity, dim(0xFFFFFF, BASE_DARKEN)));
+
+        if (z == null) { ZH_W.reset(); MI_W.reset(); zhLast = miLast = 0f; return; }
+
         int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF;
         int mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;
-        int zc = z != null && z.zhenBuff() ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
-        int mc = z != null && z.mieBuff() ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : mieBase;
-
-        GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * 0.5f, dim(0xFFFFFF, BASE_DARKEN)));
-
-        if (z == null) { ZH_W.reset(); MI_W.reset(); zhLast = miLast = -1f; return; }
+        int zc = z.zhenBuff() ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
+        int mc = z.mieBuff() ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : mieBase;
 
         float zm = Mth.clamp(z.zhen(), 0f, 1f);
         float mm = Mth.clamp(z.mie(), 0f, 1f);
@@ -421,13 +406,20 @@ public final class RpgHudOverlay {
         int ox = (int) originX(cfg);
         int oy = (int) originY(cfg, sh);
 
+        int bg = dim(0xFFFFFF, BASE_DARKEN);
+        int zBase = HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg));
+        int mBase = HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg));
+
+        int zFinal = HudDraw.lerpRgb(bg, applyBlend(bg, zBase, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
+        int mFinal = HudDraw.lerpRgb(bg, applyBlend(bg, mBase, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
+
         if (zm > 0.001f) {
             int sx1 = (int)(ox + absBox.x() * cfg.rpgHudScale);
             int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
             int sx2 = (int)(ox + (absBox.x() + absBox.w() * zm) * cfg.rpgHudScale);
             int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
             g.enableScissor(sx1, sy1, sx2, sy2);
-            GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a, HudDraw.lerpRgb(zc, WHITE, z.zhenWhite(now, cfg))));
+            GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a, zFinal));
             g.disableScissor();
         }
 
@@ -437,63 +429,108 @@ public final class RpgHudOverlay {
             int sx2 = (int)(ox + absBox.x2() * cfg.rpgHudScale);
             int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
             g.enableScissor(sx1, sy1, sx2, sy2);
-            GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a, HudDraw.lerpRgb(mc, WHITE, z.mieWhite(now, cfg))));
-            g.disableScissor();
-
-            int dark = darkMie(mc);
-            float breath = 0.5f - 0.5f * Mth.cos(now / 1000f * BREATH_HZ * Mth.TWO_PI);
-            g.enableScissor(sx1, sy1, sx2, sy2);
-            GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * Mth.lerp(breath, BREATH_MIN_A, BREATH_MAX_A), dark));
+            GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a, mFinal));
             g.disableScissor();
         }
 
-        ZH_W.emit((lo, hi, wa) -> {
-            int sx1 = (int)(ox + (absBox.x() + absBox.w() * lo) * cfg.rpgHudScale);
-            int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
-            int sx2 = (int)(ox + (absBox.x() + absBox.w() * hi) * cfg.rpgHudScale);
-            int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
-            g.enableScissor(sx1, sy1, sx2, sy2);
-            GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
-            g.disableScissor();
-        });
-
-        MI_W.emit((lo, hi, wa) -> {
-            int sx1 = (int)(ox + (absBox.x() + absBox.w() * (1f - hi)) * cfg.rpgHudScale);
-            int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
-            int sx2 = (int)(ox + (absBox.x() + absBox.w() * (1f - lo)) * cfg.rpgHudScale);
-            int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
-            g.enableScissor(sx1, sy1, sx2, sy2);
-            GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
-            g.disableScissor();
-        });
-
         ClashResult clash = z.clash();
-        if (clash == null) return;
-        float t = (now - z.clashStartMs()) / (clash.visualSeconds() * 1000f), fade = 1f - Mth.clamp(t, 0f, 1f), ca = 1f;
-        int color = switch (clash) {
-            case CRUSH -> {
-                ca = 0.5f + 0.5f * Mth.cos(now / 1000f * CRUSH_FLICKER_HZ * Mth.TWO_PI);
-                yield Mth.hsvToRgb((now % CRUSH_HUE_MS) / (float) CRUSH_HUE_MS, 0.85f, 1f);
+        if (clash != null) {
+            float t = (now - z.clashStartMs()) / (clash.visualSeconds() * 1000f), fade = 1f - Mth.clamp(t, 0f, 1f), ca = 1f;
+            int color = switch (clash) {
+                case CRUSH -> {
+                    float periodMs = 1000f / cfg.zhenMieClashHueHz;
+                    ca = 0.5f + 0.5f * Mth.cos((now / 1000f) * cfg.zhenMieClashHueHz * Mth.TWO_PI);
+                    yield Mth.hsvToRgb((now % (long)periodMs) / periodMs, 0.85f, 1f);
+                }
+                case KNOCKDOWN -> (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
+                default -> WHITE;
+            };
+            int finalClash = HudDraw.lerpRgb(bg, applyBlend(bg, color, cfg.zhenMieBlendMode), cfg.zhenMieBlendStrength);
+
+            if (zm > 0.001f) {
+                int sx1 = (int)(ox + absBox.x() * cfg.rpgHudScale);
+                int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
+                int sx2 = (int)(ox + (absBox.x() + absBox.w() * zm) * cfg.rpgHudScale);
+                int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
+                g.enableScissor(sx1, sy1, sx2, sy2);
+                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * fade * ca * CLASH_ALPHA, finalClash));
+                g.disableScissor();
             }
-            case KNOCKDOWN -> (now / KNOCKDOWN_SWAP_MS) % 2 == 0 ? zhenBase : mieBase;
-            default -> WHITE;
-        };
+            if (mm > 0.001f) {
+                int sx1 = (int)(ox + (absBox.x() + absBox.w() * (1f - mm)) * cfg.rpgHudScale);
+                int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
+                int sx2 = (int)(ox + absBox.x2() * cfg.rpgHudScale);
+                int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
+                g.enableScissor(sx1, sy1, sx2, sy2);
+                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * fade * ca * CLASH_ALPHA, finalClash));
+                g.disableScissor();
+            }
 
-        float rightEdge = (clash == ClashResult.KNOCKDOWN) ? (absBox.x() + absBox.w() * (1f - mm)) : absBox.x2();
-        int sx1 = (int)(ox + absBox.x() * cfg.rpgHudScale);
-        int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
-        int sx2 = (int)(ox + rightEdge * cfg.rpgHudScale);
-        int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
+            float mx = absBox.x() + absBox.w() * z.clashPoint();
+            float half = absBox.h() * CLASH_MARKER_WIDTH / 2f;
+            HudGeom.rect(g, mx - half, absBox.y(), mx + half, absBox.y2(), argb(a * fade, WHITE));
+            float ts = absBox.h() * 0.8f, ty = absBox.y() - ts * 0.6f;
+            GuiQuad.blit(g, ZM_TRIANGLE, mx - ts / 2f, ty, mx + ts / 2f, ty + ts, 0f, 0f, 1f, 1f, argb(a * fade, WHITE));
+        } else {
+            ZH_W.emit((lo, hi, wa) -> {
+                int sx1 = (int)(ox + (absBox.x() + absBox.w() * lo) * cfg.rpgHudScale);
+                int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
+                int sx2 = (int)(ox + (absBox.x() + absBox.w() * hi) * cfg.rpgHudScale);
+                int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
+                g.enableScissor(sx1, sy1, sx2, sy2);
+                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
+                g.disableScissor();
+            });
 
-        g.enableScissor(sx1, sy1, sx2, sy2);
-        GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * fade * ca * CLASH_ALPHA, color));
-        g.disableScissor();
+            MI_W.emit((lo, hi, wa) -> {
+                int sx1 = (int)(ox + (absBox.x() + absBox.w() * (1f - hi)) * cfg.rpgHudScale);
+                int sy1 = (int)(oy + absBox.y() * cfg.rpgHudScale);
+                int sx2 = (int)(ox + (absBox.x() + absBox.w() * (1f - lo)) * cfg.rpgHudScale);
+                int sy2 = (int)(oy + absBox.y2() * cfg.rpgHudScale);
+                g.enableScissor(sx1, sy1, sx2, sy2);
+                GuiQuad.blit(g, ZM_BAR, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), 0f, 0f, 1f, 1f, argb(a * wa, WHITE));
+                g.disableScissor();
+            });
 
-        float mx = absBox.x() + absBox.w() * z.clashPoint();
-        float half = absBox.h() * CLASH_MARKER_WIDTH / 2f;
-        HudGeom.rect(g, mx - half, absBox.y(), mx + half, absBox.y2(), argb(a * fade, WHITE));
-        float ts = absBox.h() * 0.8f, ty = absBox.y() - ts * 0.6f;
-        GuiQuad.blit(g, ZM_TRIANGLE, mx - ts / 2f, ty, mx + ts / 2f, ty + ts, 0f, 0f, 1f, 1f, argb(a * fade, WHITE));
+            if (mm > 0.01f) {
+                int breathColor = cfg.zhenMieBreathColor.getRGB() & 0xFFFFFF;
+                sweep(g, absBox, 1f - mm, 1f, now, 0.5f, a, breathColor, cfg);
+            }
+        }
+    }
+
+    private static void sweep(GuiGraphics g, Box bar, float lo, float hi, long now, float phase, float a, int color, BarConfig cfg) {
+        if (hi - lo <= 0.02f) return;
+        float t = (now / 1000f * cfg.zhenMieBreathHz + phase) % 1f;
+        float c = Mth.lerp(t, lo - SWEEP_WIDTH, hi + SWEEP_WIDTH);
+        int steps = 6;
+        for (int i = 0; i < steps; i++) {
+            float s0 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * i / steps, s1 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * (i + 1) / steps;
+            float w = 1f - Math.abs((s0 + s1) / 2f - c) / SWEEP_WIDTH;
+            float drawL = Math.max(lo, s0), drawR = Math.min(hi, s1);
+            if (drawR > drawL) {
+                HudGeom.rect(g, bar.x() + bar.w() * drawL, bar.y(), bar.x() + bar.w() * drawR, bar.y2(), argb(a * SWEEP_ALPHA * w, color));
+            }
+        }
+    }
+
+    private static int applyBlend(int base, int blend, BarConfig.ZhenMieBlendMode mode) {
+        if (mode == BarConfig.ZhenMieBlendMode.NORMAL) return blend;
+        int br = (base >> 16) & 0xFF, bg = (base >> 8) & 0xFF, bb = base & 0xFF;
+        int lr = (blend >> 16) & 0xFF, lg = (blend >> 8) & 0xFF, lb = blend & 0xFF;
+        int r, g, b;
+        switch (mode) {
+            case MULTIPLY -> { r = br * lr / 255; g = bg * lg / 255; b = bb * lb / 255; }
+            case SCREEN -> { r = 255 - (255 - br) * (255 - lr) / 255; g = 255 - (255 - bg) * (255 - lg) / 255; b = 255 - (255 - bb) * (255 - lb) / 255; }
+            case ADD -> { r = Math.min(255, br + lr); g = Math.min(255, bg + lg); b = Math.min(255, bb + lb); }
+            case OVERLAY -> {
+                r = br < 128 ? (2 * br * lr / 255) : (255 - 2 * (255 - br) * (255 - lr) / 255);
+                g = bg < 128 ? (2 * bg * lg / 255) : (255 - 2 * (255 - bg) * (255 - lg) / 255);
+                b = bb < 128 ? (2 * bb * lb / 255) : (255 - 2 * (255 - bb) * (255 - lb) / 255);
+            }
+            default -> { r = lr; g = lg; b = lb; }
+        }
+        return (r << 16) | (g << 8) | b;
     }
 
     static void text(GuiGraphics g, Component c, float x, float cy, float scale, int rgb, float a, boolean center) {
@@ -538,7 +575,7 @@ public final class RpgHudOverlay {
         }
     }
 
-    record Snap(float hp, float maxHp, float abs, float sta, float maxSta, float shield, float shieldInit,
+    record Snap(float hp, float maxHp, float abs, float sta, float maxSta, float shield, float shieldInit, float shieldTarget,
                 int armor, int toughness, int food, float sat, float exhaustion, boolean hungerEffect,
                 @Nullable FoodProperties held, int air, int maxAir, boolean underwater, @Nullable LivingEntity mount,
                 int xpLevel, float xpProgress, int xpNeed, int xpPoints, int level,
@@ -550,9 +587,14 @@ public final class RpgHudOverlay {
             float hp = p.getHealth(), maxHp = p.getMaxHealth();
             int heartU = p.hasEffect(MobEffects.WITHER) ? 124 : p.hasEffect(MobEffects.POISON) ? 88 : p.isFullyFrozen() ? 178 : 52;
             int heartV = p.level().getLevelData().isHardcore() ? 45 : 0;
+
+            float shieldMain = st == null ? 0f : st.amount();
+            float shieldMax = st == null ? 0f : st.initial();
+            float shieldTarget = st == null ? 0f : st.bar.target();
+
             return new Snap(hp, maxHp, p.getAbsorptionAmount(),
                     patch == null ? 0f : patch.getStamina(), patch == null ? 0f : patch.getMaxStamina(),
-                    st == null ? 0f : st.amount(), st == null ? 0f : st.initial(),
+                    shieldMain, shieldMax, shieldTarget,
                     p.getArmorValue(), (int) Math.round(p.getAttributeValue(Attributes.ARMOR_TOUGHNESS)),
                     p.getFoodData().getFoodLevel(), p.getFoodData().getSaturationLevel(), PlayerHudSync.clientExhaustion(),
                     p.hasEffect(MobEffects.HUNGER), heldFood(p),

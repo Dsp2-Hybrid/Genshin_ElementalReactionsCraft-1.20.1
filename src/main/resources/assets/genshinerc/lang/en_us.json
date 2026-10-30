@@ -525,5 +525,27 @@
   "genshinerc.bar.config.rpg_hp_text_scale": "Health Text Scale",
   "genshinerc.bar.config.rpg_hp_text_scale.desc": "Controls the size scale of the health numbers on the health bar.",
   "genshinerc.bar.config.rpg_food_text_scale": "Hunger Text Scale",
-  "genshinerc.bar.config.rpg_food_text_scale.desc": "Controls the size scale of the hunger and saturation numbers on the hunger bar."
+  "genshinerc.bar.config.rpg_food_text_scale.desc": "Controls the size scale of the hunger and saturation numbers on the hunger bar.",
+
+  "genshinerc.bar.config.shield_layer2_white_mix": "Elemental Shield Layer 2 White Mix",
+  "genshinerc.bar.config.shield_layer2_white_mix.desc": "Ratio of mixing white into the second layer of elemental shields.",
+  "genshinerc.bar.config.shield_layer3_white_mix": "Elemental Shield Layer 3 White Mix",
+  "genshinerc.bar.config.shield_layer3_white_mix.desc": "Ratio of mixing white into the third layer of elemental shields.",
+  "genshinerc.bar.config.zhen_mie_clash_hue_hz": "Zhen-Mie Clash Hue Frequency",
+  "genshinerc.bar.config.zhen_mie_clash_hue_hz.desc": "The frequency of the rainbow color flickering during Zhen-Mie clash.",
+  "genshinerc.bar.config.zhen_mie_blend_mode": "Zhen-Mie Blend Mode",
+  "genshinerc.bar.config.zhen_mie_blend_mode.desc": "The blend mode between the color layer and the background layer.",
+  "genshinerc.bar.config.zhen_mie_blend_strength": "Zhen-Mie Blend Strength",
+  "genshinerc.bar.config.zhen_mie_blend_strength.desc": "The strength of the blend mode (does not change the opacity).",
+  "genshinerc.bar.config.zhen_mie_bg_opacity": "Zhen-Mie Background Opacity",
+  "genshinerc.bar.config.zhen_mie_bg_opacity.desc": "The opacity of the Zhen-Mie bar background.",
+  "genshinerc.bar.config.zhen_mie_breath_hz": "Zhen-Mie Breath Frequency",
+  "genshinerc.bar.config.zhen_mie_breath_hz.desc": "The frequency of the breathing sweep on the Mie bar.",
+  "genshinerc.bar.config.zhen_mie_blend_mode.normal": "Normal",
+  "genshinerc.bar.config.zhen_mie_blend_mode.multiply": "Multiply",
+  "genshinerc.bar.config.zhen_mie_blend_mode.screen": "Screen",
+  "genshinerc.bar.config.zhen_mie_blend_mode.add": "Add",
+  "genshinerc.bar.config.zhen_mie_blend_mode.overlay": "Overlay",
+  "genshinerc.bar.config.zhen_mie_breath_color": "Zhen-Mie Breath Color",
+  "genshinerc.bar.config.zhen_mie_breath_color.desc": "The color of the Zhen-Mie breathing sweep."
 }

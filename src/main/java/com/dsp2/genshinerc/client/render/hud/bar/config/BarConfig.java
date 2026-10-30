@@ -52,6 +52,7 @@ public class BarConfig {
     public enum MobMode { NONE, ALWAYS, ALWAYS_WHEN_NOT_FULLHP, ON_HURT }
     public enum EasingType { EASE_IN_CUBIC, EASE_OUT_CUBIC, EASE_IN_OUT_CUBIC, LINEAR, SINE }
     public enum BuffDirection { RIGHT_TO_LEFT, LEFT_TO_RIGHT }
+    public enum ZhenMieBlendMode { NORMAL, MULTIPLY, SCREEN, ADD, OVERLAY }
 
     @SerialEntry public boolean enabled = true;
     @SerialEntry public PlayerMode playerMode = PlayerMode.ON_CHANGE;
@@ -179,6 +180,14 @@ public class BarConfig {
     @SerialEntry public Color mieColor = new Color(0xFFAFAF);
     @SerialEntry public Color zhenBuffColor = new Color(0x0045FF);
     @SerialEntry public Color mieBuffColor = new Color(0xFF00CE);
+    @SerialEntry public float shieldLayer2WhiteMix = 0.55f;
+    @SerialEntry public float shieldLayer3WhiteMix = 0.80f;
+    @SerialEntry public float zhenMieClashHueHz = 6.25f;
+    @SerialEntry public ZhenMieBlendMode zhenMieBlendMode = ZhenMieBlendMode.NORMAL;
+    @SerialEntry public float zhenMieBlendStrength = 1.0f;
+    @SerialEntry public float zhenMieBgOpacity = 0.5f;
+    @SerialEntry public float zhenMieBreathHz = 0.4f;
+    @SerialEntry public Color zhenMieBreathColor = new Color(0xBA0012);
 
     @SerialEntry public boolean rpgHudEnabled = true;
     @SerialEntry public boolean rpgHideEfHud = true;
@@ -429,6 +438,14 @@ public class BarConfig {
                 .option(colorOpt("mie_color", new Color(0xFFAFAF), () -> c.mieColor, v -> c.mieColor = v))
                 .option(colorOpt("zhen_buff_color", new Color(0x0045FF), () -> c.zhenBuffColor, v -> c.zhenBuffColor = v))
                 .option(colorOpt("mie_buff_color", new Color(0xFF00CE), () -> c.mieBuffColor, v -> c.mieBuffColor = v))
+                .option(floatOpt("shield_layer2_white_mix", 0.55f, () -> c.shieldLayer2WhiteMix, v -> c.shieldLayer2WhiteMix = v, 0.0f, 1.0f))
+                .option(floatOpt("shield_layer3_white_mix", 0.80f, () -> c.shieldLayer3WhiteMix, v -> c.shieldLayer3WhiteMix = v, 0.0f, 1.0f))
+                .option(floatOpt("zhen_mie_clash_hue_hz", 6.25f, () -> c.zhenMieClashHueHz, v -> c.zhenMieClashHueHz = v, 0.1f, 30.0f))
+                .option(enumOpt("zhen_mie_blend_mode", ZhenMieBlendMode.class, ZhenMieBlendMode.NORMAL, () -> c.zhenMieBlendMode, v -> c.zhenMieBlendMode = v))
+                .option(floatOpt("zhen_mie_blend_strength", 1.0f, () -> c.zhenMieBlendStrength, v -> c.zhenMieBlendStrength = v, 0.0f, 1.0f))
+                .option(floatOpt("zhen_mie_bg_opacity", 0.5f, () -> c.zhenMieBgOpacity, v -> c.zhenMieBgOpacity = v, 0.0f, 1.0f))
+                .option(floatOpt("zhen_mie_breath_hz", 0.4f, () -> c.zhenMieBreathHz, v -> c.zhenMieBreathHz = v, 0.1f, 5.0f))
+                .option(colorOpt("zhen_mie_breath_color", new Color(0xBA0012), () -> c.zhenMieBreathColor, v -> c.zhenMieBreathColor = v))
 
                 .option(boolOpt("rpg_hud_enabled", true, () -> c.rpgHudEnabled, v -> c.rpgHudEnabled = v))
                 .option(boolOpt("rpg_hide_ef_hud", true, () -> c.rpgHideEfHud, v -> c.rpgHideEfHud = v))
