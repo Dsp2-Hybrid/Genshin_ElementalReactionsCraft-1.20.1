@@ -18,9 +18,7 @@ public class YACLListFormatErrorScreenEventCallbackMixin {
         if (BarConfig.PENDING_LIST_SCREEN != self || BarConfig.PENDING_LIST_OPTION == null) {
             return false;
         }
-
         self.setFocused(null);
-
         return BarConfig.hasInvalidEntityYOffset(BarConfig.PENDING_LIST_OPTION.pendingValue());
     }
 
@@ -37,7 +35,7 @@ public class YACLListFormatErrorScreenEventCallbackMixin {
         });
     }
 
-    @Inject(method = "onClose", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "onClose", at = @At("HEAD"), cancellable = true)
     private void genshinerc$onClose(CallbackInfo ci) {
         if (genshinerc$shouldIntercept()) {
             ci.cancel();

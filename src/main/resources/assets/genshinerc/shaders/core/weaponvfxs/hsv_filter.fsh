@@ -1,5 +1,5 @@
 ﻿#version 150
-uniform sampler2D DiffuseSampler;
+uniform sampler2D Sampler0;
 uniform float Time;
 in vec2 texCoord;
 in vec4 vertexColor;
@@ -17,11 +17,12 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 void main() {
-    vec4 tex = texture(DiffuseSampler, texCoord);
-    vec3 finalColor = tex.rgb * vertexColor.rgb;
-    if (tex.a < 0.05 || dot(finalColor, vec3(0.299, 0.587, 0.114)) < 0.08) discard;
-    vec3 hsv = rgb2hsv(finalColor);
+    vec4 tex = texture(Sampler0, texCoord);
+    if (tex.a < 0.05) discard;
+    vec3 hsv = rgb2hsv(tex.rgb);
     hsv.x = fract(hsv.x + Time * 0.5);
-    finalColor = hsv2rgb(hsv);
-    fragColor = vec4(finalColor, tex.a * vertexColor.a);
+    tex.rgb = hsv2rgb(hsv);
+    fragColor = vec4(tex.rgb * vertexColor.rgb * 8.0, tex.a * vertexColor.a);
 }
+
+

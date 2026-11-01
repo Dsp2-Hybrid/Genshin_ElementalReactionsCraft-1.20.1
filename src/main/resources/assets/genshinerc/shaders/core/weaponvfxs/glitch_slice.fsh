@@ -1,5 +1,5 @@
 ﻿#version 150
-uniform sampler2D DiffuseSampler;
+uniform sampler2D Sampler0;
 uniform float Time;
 in vec2 texCoord;
 in vec4 vertexColor;
@@ -10,8 +10,9 @@ void main() {
     float glitch = step(0.7, rand(vec2(slice, floor(Time * 10.0))));
     vec2 uv = texCoord;
     if (glitch > 0.5) uv.x += (rand(vec2(slice, Time)) - 0.5) * 0.2;
-    vec4 col = texture(DiffuseSampler, uv);
-    vec3 finalColor = col.rgb * vertexColor.rgb;
-    if (col.a < 0.05 || dot(finalColor, vec3(0.299, 0.587, 0.114)) < 0.08) discard;
-    fragColor = vec4(finalColor, col.a * vertexColor.a);
+    vec4 col = texture(Sampler0, uv);
+    if (col.a < 0.05) discard;
+    fragColor = vec4(col.rgb * vertexColor.rgb * 8.0, col.a * vertexColor.a);
 }
+
+

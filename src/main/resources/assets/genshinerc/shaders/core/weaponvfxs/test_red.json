@@ -2,7 +2,7 @@
   "vertex": "genshinerc:weaponvfxs/weapon_vfx",
   "fragment": "genshinerc:weaponvfxs/test_red",
   "attributes": [ "Position", "UV0", "Color" ],
-  "samplers": [ { "name": "DiffuseSampler" } ],
+  "samplers": [ { "name": "Sampler0" } ],
   "uniforms": [
     { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 ] },
     { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 ] },

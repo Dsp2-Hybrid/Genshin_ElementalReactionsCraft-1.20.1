@@ -53,15 +53,23 @@ public class GuiRenderHelper {
             init();
         }
 
-        EntityRenderer renderer;
-        if (entity instanceof AbstractClientPlayer) {
-            renderer = vanillaPlayerRenderers.get("default");
-        } else {
-            renderer = vanillaRenderers.get(entity.getType());
+        EntityRenderer renderer = null;
+
+        try {
+            if (entity instanceof AbstractClientPlayer) {
+                if (vanillaPlayerRenderers != null) {
+                    renderer = vanillaPlayerRenderers.get("default");
+                }
+            } else {
+                if (vanillaRenderers != null) {
+                    renderer = vanillaRenderers.get(entity.getType());
+                }
+            }
+        } catch (Exception ignored) {
         }
 
         if (renderer == null) {
-            return null;
+            return (EntityRenderer<Entity>) (EntityRenderer) Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(entity);
         }
         return (EntityRenderer<Entity>) renderer;
     }
