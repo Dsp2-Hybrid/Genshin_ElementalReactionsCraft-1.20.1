@@ -1,0 +1,19 @@
+﻿#version 150
+uniform sampler2D DiffuseSampler;
+uniform sampler2D TrailSampler;
+uniform float Time;
+in vec2 texCoord;
+out vec4 fragColor;
+void main() {
+    vec2 p = texCoord - 0.5;
+    float r = length(p);
+    float a = atan(p.y, p.x) + Time * 1.5;
+    float segments = 8.0;
+    a = mod(a, 6.283185 / segments);
+    if (a > 3.14159 / segments) a = (3.14159 / segments) - a;
+    vec2 uv = vec2(cos(a), sin(a)) * r + 0.5;
+    vec3 scene = texture(DiffuseSampler, uv).rgb;
+    vec3 trail = texture(TrailSampler, uv).rgb;
+    vec3 blended = 1.0 - (1.0 - scene) * (1.0 - trail);
+    fragColor = vec4(blended, 1.0);
+}
