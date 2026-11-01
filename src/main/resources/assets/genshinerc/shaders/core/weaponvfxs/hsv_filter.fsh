@@ -20,9 +20,7 @@ void main() {
     vec4 tex = texture(Sampler0, texCoord);
     if (tex.a < 0.05) discard;
     vec3 hsv = rgb2hsv(tex.rgb);
-    hsv.x = fract(hsv.x + Time * 0.5);
+    hsv.x = fract(hsv.x + Time * 1.5);
     tex.rgb = hsv2rgb(hsv);
-    fragColor = vec4(tex.rgb * vertexColor.rgb * 8.0, tex.a * vertexColor.a);
+    fragColor = tex * vertexColor;
 }
-
-

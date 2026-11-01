@@ -4,7 +4,6 @@ import com.guhao.vix.client.shaderpasses.PostPassBase;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.server.packs.resources.ResourceManager;
-
 import java.io.IOException;
 
 public class WeaponCompositePass extends PostPassBase {
@@ -20,6 +19,7 @@ public class WeaponCompositePass extends PostPassBase {
         this.effect.setSampler("TrailSampler", trail::getColorTextureId);
         this.effect.safeGetUniform("ProjMat").set(orthographic(out));
         this.effect.safeGetUniform("OutSize").set((float) out.width, (float) out.height);
+        this.effect.safeGetUniform("Time").set((System.currentTimeMillis() % 100000L) / 1000f);
         this.effect.apply();
         try {
             this.pushVertex(scene, out);

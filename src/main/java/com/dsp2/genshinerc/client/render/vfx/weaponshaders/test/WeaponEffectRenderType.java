@@ -15,13 +15,11 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class WeaponEffectRenderType implements ParticleRenderType {
-    private static final WeaponEffectPipeline PPL = new WeaponEffectPipeline(ResourceLocation.fromNamespaceAndPath("genshinerc", "weapon_effect"));
-
+    private static final WeaponEffectPipeline PPL = new WeaponEffectPipeline(new ResourceLocation("genshinerc", "weapon_effect"));
     private record Key(WeaponShaderMode mode, ResourceLocation texture) {}
     private static final Map<Key, WeaponEffectRenderType> CACHE = new HashMap<>();
 
@@ -67,10 +65,8 @@ public class WeaponEffectRenderType implements ParticleRenderType {
     public void end(Tesselator tesselator) {
         tesselator.getBuilder().setQuadSorting(VertexSorting.DISTANCE_TO_ORIGIN);
         tesselator.end();
-
         PPL.call();
         PPL.suspend();
-
         RenderSystem.depthMask(false);
         RenderSystem.disableDepthTest();
         RenderSystem.disableBlend();

@@ -10,9 +10,7 @@ void main() {
     if (col.a < 0.05) discard;
     float scanline = sin(texCoord.y * OutSize.y * 3.14159);
     scanline = smoothstep(0.0, 1.0, scanline * 0.5 + 0.5);
-    float flicker = 1.0 - (sin(Time * 50.0) * 0.05);
-    col.rgb *= mix(0.5, 1.0, scanline) * flicker;
-    fragColor = vec4(col.rgb * vertexColor.rgb * 8.0, col.a * vertexColor.a);
+    float flicker = 1.0 - (sin(Time * 50.0) * 0.2);
+    col.rgb *= mix(0.2, 1.0, scanline) * flicker;
+    fragColor = col * vertexColor;
 }
-
-

@@ -6,5 +6,6 @@ out vec4 fragColor;
 void main() {
     vec4 scene = texture(DiffuseSampler, texCoord);
     vec4 trail = texture(TrailSampler, texCoord);
-    fragColor = vec4(scene.rgb + trail.rgb, 1.0);
+    vec3 blended = 1.0 - (1.0 - scene.rgb) * (1.0 - trail.rgb * trail.a);
+    fragColor = vec4(blended, 1.0);
 }

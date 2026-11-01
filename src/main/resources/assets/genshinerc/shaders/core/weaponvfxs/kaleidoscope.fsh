@@ -8,14 +8,11 @@ void main() {
     vec2 p = texCoord - 0.5;
     float radius = length(p);
     float angle = atan(p.y, p.x) + Time * 2.0;
-    float segments = 6.0;
+    float segments = 4.0;
     angle = mod(angle, 6.283185 / segments);
     if (angle > 3.14159 / segments) angle = (3.14159 / segments) - angle;
     vec2 newUV = vec2(cos(angle), sin(angle)) * radius + 0.5;
     vec4 tex = texture(Sampler0, newUV);
     if (tex.a < 0.05) discard;
-    float edge = smoothstep(0.5, 0.2, radius);
-    fragColor = vec4(tex.rgb * vertexColor.rgb * 8.0, tex.a * vertexColor.a * edge);
+    fragColor = tex * vertexColor;
 }
-
-
