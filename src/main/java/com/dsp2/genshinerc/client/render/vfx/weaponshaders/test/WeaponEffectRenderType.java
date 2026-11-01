@@ -18,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings({"deprecation", "removal"})
 public class WeaponEffectRenderType implements ParticleRenderType {
     private static final WeaponEffectPipeline PPL = new WeaponEffectPipeline(new ResourceLocation("genshinerc", "weapon_effect"));
     private record Key(WeaponShaderMode mode, ResourceLocation texture) {}
@@ -39,18 +40,19 @@ public class WeaponEffectRenderType implements ParticleRenderType {
     public void begin(BufferBuilder builder, TextureManager manager) {
         RenderSystem.enableBlend();
         RenderSystem.disableCull();
-        RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
 
         ShaderInstance found = WeaponShaderManager.getShader(mode);
         final ShaderInstance shader = found != null ? found : GameRenderer.getPositionTexColorShader();
         RenderSystem.setShader(() -> shader);
+
         if (shader != null) {
-            shader.safeGetUniform("Time").set((System.currentTimeMillis() % 100000L) / 1000f);
-            shader.safeGetUniform("OutSize").set(
-                    (float) Minecraft.getInstance().getWindow().getWidth(),
-                    (float) Minecraft.getInstance().getWindow().getHeight());
+            var time = shader.safeGetUniform("Time");
+            if (time != null) time.set((System.currentTimeMillis() % 100000L) / 1000f);
+            var size = shader.safeGetUniform("OutSize");
+            if (size != null) size.set((float) Minecraft.getInstance().getWindow().getWidth(), (float) Minecraft.getInstance().getWindow().getHeight());
         }
 
         if (this.texture != null) {

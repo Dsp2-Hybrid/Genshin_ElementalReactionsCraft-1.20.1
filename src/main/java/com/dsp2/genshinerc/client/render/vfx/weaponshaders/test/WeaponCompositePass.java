@@ -19,7 +19,8 @@ public class WeaponCompositePass extends PostPassBase {
         this.effect.setSampler("TrailSampler", trail::getColorTextureId);
         this.effect.safeGetUniform("ProjMat").set(orthographic(out));
         this.effect.safeGetUniform("OutSize").set((float) out.width, (float) out.height);
-        this.effect.safeGetUniform("Time").set((System.currentTimeMillis() % 100000L) / 1000f);
+        var time = this.effect.safeGetUniform("Time");
+        if (time != null) time.set((System.currentTimeMillis() % 100000L) / 1000f);
         this.effect.apply();
         try {
             this.pushVertex(scene, out);
