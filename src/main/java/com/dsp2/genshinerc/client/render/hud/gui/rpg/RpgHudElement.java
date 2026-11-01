@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public enum RpgHudElement {
     PORTRAIT(-8.0f, -87.0f, 81.0f, 77.0f, 16, 16, Kind.FREE, false, false, false),
-    LEVEL_TEXT(1.0f, -11.0f, 58.0f, 15.0f, 16, 6, Kind.FREE, false, false, false),
+    LEVEL_TEXT(-3.0f, -11.0f, 58.0f, 15.0f, 16, 6, Kind.FREE, false, false, false),
     EXP(-6.0f, -81.0f, 35.0f, 69.0f, 6, 10, Kind.ASPECT, true, false, false),
     HEALTH(59.0f, -36.0f, 138.0f, 10.0f, 20, 3, Kind.FREE, true, false, false),
     HP_ICON(55.0f, -36.0f, 8.0f, 8.0f, 3, 3, Kind.ASPECT, false, false, false),

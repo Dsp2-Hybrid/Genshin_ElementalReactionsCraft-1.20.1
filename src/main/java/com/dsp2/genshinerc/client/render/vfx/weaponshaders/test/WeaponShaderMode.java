@@ -2,16 +2,17 @@ package com.dsp2.genshinerc.client.render.vfx.weaponshaders.test;
 
 public enum WeaponShaderMode {
     NONE("none"),
-    KALEIDOSCOPE("kaleidoscope"),
-    PIXELSORT("pixelsort"),
-    EDGEGLOW("edgeglow"),
-    WAVE("wave"),
-    EMBOSS("emboss"),
-    CRT("crt"),
-    GLITCH_SLICE("glitch_slice"),
-    FISHEYE("fisheye"),
-    RADIAL_BLUR("radial_blur"),
-    HSV_FILTER("hsv_filter");
+    KALEIDOSCOPE("weaponvfxs/kaleidoscope"),
+    PIXELSORT("weaponvfxs/pixelsort"),
+    EDGEGLOW("weaponvfxs/edgeglow"),
+    WAVE("weaponvfxs/wave"),
+    EMBOSS("weaponvfxs/emboss"),
+    CRT("weaponvfxs/crt"),
+    GLITCH_SLICE("weaponvfxs/glitch_slice"),
+    FISHEYE("weaponvfxs/fisheye"),
+    RADIAL_BLUR("weaponvfxs/radial_blur"),
+    HSV_FILTER("weaponvfxs/hsv_filter"),
+    TEST_RED("weaponvfxs/test_red");
 
     public final String shaderName;
 
@@ -19,5 +20,5 @@ public enum WeaponShaderMode {
         this.shaderName = shaderName;
     }
 
-    public static WeaponShaderMode currentMode = WeaponShaderMode.NONE;
+    public static volatile WeaponShaderMode currentMode = WeaponShaderMode.NONE;
 }

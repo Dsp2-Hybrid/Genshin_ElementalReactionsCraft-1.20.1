@@ -1,46 +1,51 @@
 package com.dsp2.genshinerc.mixin.mods.shaders.efn;
 
-import com.dsp2.genshinerc.client.render.vfx.weaponshaders.test.CustomWeaponRenderType;
-import com.dsp2.genshinerc.client.render.vfx.weaponshaders.test.WeaponShaderManager;
-import com.dsp2.genshinerc.client.render.vfx.weaponshaders.test.WeaponShaderMode;
 import com.hm.efn.client.particle.AirTrailParticle;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.Camera;
+import com.dsp2.genshinerc.client.render.vfx.weaponshaders.test.CustomWeaponRenderType;
+import com.dsp2.genshinerc.client.render.vfx.weaponshaders.test.WeaponShaderMode;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import yesman.epicfight.api.animation.Joint;
+import yesman.epicfight.api.animation.types.StaticAnimation;
+import yesman.epicfight.api.asset.AssetAccessor;
 import yesman.epicfight.api.client.animation.property.TrailInfo;
+import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
 @Mixin(value = AirTrailParticle.class, remap = false)
 public abstract class AirTrailParticleMixin {
 
-    // 拦截 getRenderType
-    @Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
-    public void overrideRenderType(CallbackInfoReturnable<ParticleRenderType> cir) {
-        WeaponShaderMode mode = WeaponShaderMode.currentMode;
-        if (mode == WeaponShaderMode.NONE) return;
+    @Unique
+    private ResourceLocation genshinerc$trailTexture;
 
-        ShaderInstance customShader = WeaponShaderManager.getShader(mode);
-        if (customShader != null) {
-            // 用 Accessor 接口获取父类的贴图
-            TrailInfo info = ((AnimationTrailParticleAccessor)(Object)this).getTrailInfo();
-            if (info != null) {
-                ResourceLocation originalTexture = info.texturePath();
-                cir.setReturnValue(new CustomWeaponRenderType(originalTexture, customShader));
-            }
+    @Inject(method = "<init>", at = @At("RETURN"), require = 1)
+    private void genshinerc$onInit(ClientLevel level, LivingEntityPatch<?> owner, Joint joint, AssetAccessor<? extends StaticAnimation> animation, TrailInfo trailInfo, CallbackInfo ci) {
+        if (trailInfo != null) {
+            this.genshinerc$trailTexture = trailInfo.texturePath();
         }
     }
 
-    // 拦截 render，取消原本的管道
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    public void cancelOriginalPipeline(VertexConsumer pBuffer, Camera pRenderInfo, float pPartialTicks, CallbackInfo ci) {
-        if (WeaponShaderMode.currentMode != WeaponShaderMode.NONE) {
-            ci.cancel();
+    @Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true, require = 1)
+    private void genshinerc$renderType(CallbackInfoReturnable<ParticleRenderType> cir) {
+        WeaponShaderMode mode = WeaponShaderMode.currentMode;
+        if (mode != WeaponShaderMode.NONE) {
+            cir.setReturnValue(CustomWeaponRenderType.get(mode, this.genshinerc$trailTexture));
         }
+    }
+
+    @ModifyExpressionValue(
+            method = "render",
+            at = @At(value = "INVOKE", target = "Lcom/guhao/vix/client/pipeline/PostEffectPipelines;isActive()Z", remap = false),
+            require = 1
+    )
+    private boolean genshinerc$skipEfnPipeline(boolean original) {
+        return WeaponShaderMode.currentMode == WeaponShaderMode.NONE && original;
     }
 }

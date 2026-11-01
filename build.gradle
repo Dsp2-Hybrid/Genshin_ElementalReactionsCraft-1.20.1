@@ -98,6 +98,12 @@ dependencies {
     implementation fg.deobf("curse.maven:epicfight-nightfall-1307848:8693642")
     implementation fg.deobf("maven.modrinth:FxmeaUaC:MbRMbYsr")
 
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
+    implementation('io.github.llamalad7:mixinextras-forge:0.3.5') {
+        jarJar.ranged(it, '[0.3.5,)')
+    }
+
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 

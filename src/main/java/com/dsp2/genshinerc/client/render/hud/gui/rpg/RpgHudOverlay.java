@@ -71,6 +71,7 @@ public final class RpgHudOverlay {
 
     private static final float SWEEP_WIDTH = 0.18f, SWEEP_ALPHA = 0.45f;
     private static final float BASE_DARKEN = 0.30f;
+    private static final float SMALL_WHITE_START = 0.7f;
 
     private static final BarTrack B_HEALTH = new BarTrack(), B_STAMINA = new BarTrack();
     private static final NumberFx N_HP = new NumberFx(400L, 100L, 400L);
@@ -279,7 +280,7 @@ public final class RpgHudOverlay {
 
         t.forEachWhite((ws0, ws1, wa) -> st.seg(g, st.i.white(), b, ws0, ws1, argb(a * wa, WHITE)));
 
-        float sa = t.smallAlpha(now, cfg);
+        float sa = t.smallAlpha(now, cfg) * SMALL_WHITE_START;
         if (sa > 0.01f) st.seg(g, st.i.white(), b, 0f, Math.max(main, extra), argb(a * sa, WHITE));
     }
 

@@ -7,7 +7,6 @@ import net.minecraftforge.client.event.RegisterShadersEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,17 +19,16 @@ public class WeaponShaderManager {
         for (WeaponShaderMode mode : WeaponShaderMode.values()) {
             if (mode == WeaponShaderMode.NONE) continue;
             try {
-                // 使用 getResourceProvider() 获取资源提供器
+                String shaderPath = "genshinerc:" + mode.shaderName;
                 event.registerShader(
                         new ShaderInstance(
                                 event.getResourceProvider(),
-                                mode.shaderName,
-                                DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP // 粒子对应的标准顶点格式
+                                shaderPath,
+                                DefaultVertexFormat.POSITION_TEX_COLOR
                         ),
                         shaderInstance -> CACHE.put(mode, shaderInstance)
                 );
-            } catch (IOException e) {
-                System.err.println("[GenshinERC] 无法注册 Shader: " + mode.shaderName);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

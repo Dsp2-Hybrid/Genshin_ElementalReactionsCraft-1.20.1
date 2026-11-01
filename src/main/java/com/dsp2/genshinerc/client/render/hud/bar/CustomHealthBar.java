@@ -44,6 +44,8 @@ public class CustomHealthBar extends EntityUI {
     private static final float V_TOP = 14.0f / TEX_HEIGHT;
     private static final float V_BOTTOM = 24.0f / TEX_HEIGHT;
 
+    private static final float SMALL_CHANGE_MAX_ALPHA = 0.7f;
+
     private static final Map<ResourceLocation, RenderType> BAR_RENDER_TYPES = new HashMap<>();
 
     private final Map<LivingEntity, Tracker> trackers = new HashMap<>();
@@ -311,7 +313,7 @@ public class CustomHealthBar extends EntityUI {
             boolean shouldDraw = false;
 
             if (isStillUltraHighFreq) {
-                smallAlpha = 1.0f;
+                smallAlpha = SMALL_CHANGE_MAX_ALPHA;
                 shouldDraw = true;
             } else {
                 long elapsed = now - tracker.lastSmallChangeTime;
@@ -323,9 +325,9 @@ public class CustomHealthBar extends EntityUI {
                     if (elapsed < totalMs) {
                         shouldDraw = true;
                         if (elapsed > shaderDurationMs) {
-                            smallAlpha = 1.0f - ((float)(elapsed - shaderDurationMs) / fadeOutMs);
+                            smallAlpha = SMALL_CHANGE_MAX_ALPHA * (1.0f - ((float)(elapsed - shaderDurationMs) / fadeOutMs));
                         } else {
-                            smallAlpha = 1.0f;
+                            smallAlpha = SMALL_CHANGE_MAX_ALPHA;
                         }
                     }
                 } else {
@@ -335,18 +337,18 @@ public class CustomHealthBar extends EntityUI {
                     if (elapsed < totalMs) {
                         shouldDraw = true;
                         if (totalMs < fadeOutMs) {
-                            smallAlpha = 1.0f - ((float) elapsed / totalMs);
+                            smallAlpha = SMALL_CHANGE_MAX_ALPHA * (1.0f - ((float) elapsed / totalMs));
                         } else if (elapsed > totalMs - fadeOutMs) {
-                            smallAlpha = (totalMs - elapsed) / fadeOutMs;
+                            smallAlpha = SMALL_CHANGE_MAX_ALPHA * ((totalMs - elapsed) / fadeOutMs);
                         } else {
-                            smallAlpha = 1.0f;
+                            smallAlpha = SMALL_CHANGE_MAX_ALPHA;
                         }
                     }
                 }
             }
 
             if (shouldDraw) {
-                smallAlpha = Mth.clamp(smallAlpha, 0.0f, 1.0f);
+                smallAlpha = Mth.clamp(smallAlpha, 0.0f, SMALL_CHANGE_MAX_ALPHA);
                 float liveEnd = Math.max(renderHealthEnd, renderAbsEnd);
                 if (liveEnd > 0.001f) {
                     drawTexturedQuad(matrix, buffers, BAR_TEXTURE, minX, innerMinY, minX + length * liveEnd, innerMaxY, 0, V_TOP, liveEnd, V_BOTTOM, 1.0f, 1.0f, 1.0f, smallAlpha * alpha);

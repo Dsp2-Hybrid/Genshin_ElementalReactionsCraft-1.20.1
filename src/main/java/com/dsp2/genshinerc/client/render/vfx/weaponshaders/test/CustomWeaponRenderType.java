@@ -12,44 +12,52 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 
-public class CustomWeaponRenderType implements ParticleRenderType {
-    private final ResourceLocation texture;
-    private final ShaderInstance shader;
+import java.util.HashMap;
+import java.util.Map;
 
-    public CustomWeaponRenderType(ResourceLocation texture, ShaderInstance shader) {
+public class CustomWeaponRenderType implements ParticleRenderType {
+    private record Key(WeaponShaderMode mode, ResourceLocation texture) {}
+    private static final Map<Key, CustomWeaponRenderType> CACHE = new HashMap<>();
+
+    public static CustomWeaponRenderType get(WeaponShaderMode mode, ResourceLocation texture) {
+        return CACHE.computeIfAbsent(new Key(mode, texture), k -> new CustomWeaponRenderType(mode, texture));
+    }
+
+    private final WeaponShaderMode mode;
+    private final ResourceLocation texture;
+
+    private CustomWeaponRenderType(WeaponShaderMode mode, ResourceLocation texture) {
+        this.mode = mode;
         this.texture = texture;
-        this.shader = shader;
     }
 
     @Override
-    public void begin(BufferBuilder builder, TextureManager manager) { // 改了这里：m_6505_ -> begin
+    public void begin(BufferBuilder builder, TextureManager manager) {
         RenderSystem.enableBlend();
         RenderSystem.disableCull();
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
 
-        if (this.shader != null) {
-            RenderSystem.setShader(() -> this.shader);
-            if (this.shader.safeGetUniform("Time") != null) {
-                this.shader.safeGetUniform("Time").set((float) (System.currentTimeMillis() % 100000) / 1000f);
+        ShaderInstance shader = WeaponShaderManager.getShader(mode);
+        if (shader != null) {
+            RenderSystem.setShader(() -> shader);
+            if (shader.safeGetUniform("Time") != null) {
+                shader.safeGetUniform("Time").set((System.currentTimeMillis() % 100000L) / 1000f);
             }
         } else {
-            // 改了这里：用官方名字
-            RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapShader);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        }
+        if (texture != null) {
+            RenderSystem.setShaderTexture(0, texture);
         }
 
-        if (this.texture != null) {
-            RenderSystem.setShaderTexture(0, this.texture);
-        }
-
-        // 改了这里：m_166779_ -> begin
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
     }
 
     @Override
-    public void end(Tesselator tesselator) { // 改了这里：m_6294_ -> end
-        tesselator.end(); // 改了这里：m_85914_ -> end()
+    public void end(Tesselator tesselator) {
+        tesselator.end();
         RenderSystem.disableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableCull();

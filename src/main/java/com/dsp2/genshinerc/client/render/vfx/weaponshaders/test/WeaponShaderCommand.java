@@ -17,23 +17,22 @@ public class WeaponShaderCommand {
     };
 
     private static final WeaponShaderMode[] MODES = {
-            WeaponShaderMode.KALEIDOSCOPE, // /s00
-            WeaponShaderMode.PIXELSORT,    // /s01
-            WeaponShaderMode.EDGEGLOW,     // /s02
-            WeaponShaderMode.WAVE,         // /s03
-            WeaponShaderMode.EMBOSS,       // /s04
-            WeaponShaderMode.CRT,          // /s05
-            WeaponShaderMode.GLITCH_SLICE, // /s06
-            WeaponShaderMode.FISHEYE,      // /s07
-            WeaponShaderMode.RADIAL_BLUR,  // /s08
-            WeaponShaderMode.HSV_FILTER    // /s09
+            WeaponShaderMode.KALEIDOSCOPE,
+            WeaponShaderMode.PIXELSORT,
+            WeaponShaderMode.EDGEGLOW,
+            WeaponShaderMode.WAVE,
+            WeaponShaderMode.EMBOSS,
+            WeaponShaderMode.CRT,
+            WeaponShaderMode.GLITCH_SLICE,
+            WeaponShaderMode.FISHEYE,
+            WeaponShaderMode.RADIAL_BLUR,
+            WeaponShaderMode.HSV_FILTER
     };
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
-        // 循环注册 /s00 到 /s09
         for (int i = 0; i < COMMANDS.length; i++) {
             final WeaponShaderMode mode = MODES[i];
             final String cmdName = COMMANDS[i];
@@ -42,7 +41,7 @@ public class WeaponShaderCommand {
                     .executes(context -> {
                         WeaponShaderMode.currentMode = mode;
                         context.getSource().sendSuccess(
-                                () -> Component.literal("§a[双刀刀光] 切换至: §e" + mode.name() + " §7(指令: /" + cmdName + ")"),
+                                () -> Component.literal("Switched to: " + mode.name()),
                                 false
                         );
                         return 1;
@@ -50,12 +49,22 @@ public class WeaponShaderCommand {
             );
         }
 
-        // 单独注册一个 /s-off 用来恢复原版
-        dispatcher.register(Commands.literal("s-off")
+        dispatcher.register(Commands.literal("stest")
+                .executes(context -> {
+                    WeaponShaderMode.currentMode = WeaponShaderMode.TEST_RED;
+                    context.getSource().sendSuccess(
+                            () -> Component.literal("Switched to: TEST_RED"),
+                            false
+                    );
+                    return 1;
+                })
+        );
+
+        dispatcher.register(Commands.literal("soff")
                 .executes(context -> {
                     WeaponShaderMode.currentMode = WeaponShaderMode.NONE;
                     context.getSource().sendSuccess(
-                            () -> Component.literal("§a[双刀刀光] 已恢复原版 EFN 空气扰动"),
+                            () -> Component.literal("Switched to: NONE"),
                             false
                     );
                     return 1;
