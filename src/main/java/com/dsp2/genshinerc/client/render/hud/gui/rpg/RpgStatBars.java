@@ -82,19 +82,25 @@ final class RpgStatBars {
     }
 
     static void draw(GuiGraphics g, Snap s, long now, BarConfig cfg, float a, boolean preview) {
-        if (preview || s.armor() > 0 || ARMOR.busy())
+        boolean showArmor = preview || s.armor() > 0 || ARMOR.busy();
+        boolean showTough = preview || s.toughness() > 0 || TOUGH.busy();
+
+        if (showArmor)
             layered(g, RpgHudElement.ARMOR.get(cfg), ARMOR, RpgPalette.ARMOR, Math.round(T_ARMOR.shown()), now, a);
-        if (preview || s.toughness() > 0 || TOUGH.busy())
+        if (showTough)
             layered(g, RpgHudElement.TOUGHNESS.get(cfg), TOUGH, RpgPalette.TOUGHNESS, Math.round(T_TOUGH.shown()), now, a);
 
         hunger(g, s, RpgHudElement.HUNGER.get(cfg), now, cfg, a);
         exhaustion(g, RpgHudElement.EXHAUSTION.get(cfg).abs(), a);
 
-        Box armorIcon = RpgHudElement.ARMOR_ICON.get(cfg).abs();
-        HudGeom.icon(g, HudGeom.ICONS, 43, 9, armorIcon, argb(a, WHITE));
-
-        Box toughIcon = RpgHudElement.TOUGHNESS_ICON.get(cfg).abs();
-        HudGeom.icon(g, HudGeom.ICONS, 43, 9, toughIcon, argb(a, 0xAAAAAA));
+        if (showArmor) {
+            Box armorIcon = RpgHudElement.ARMOR_ICON.get(cfg).abs();
+            HudGeom.icon(g, HudGeom.ICONS, 43, 9, armorIcon, argb(a, WHITE));
+        }
+        if (showTough) {
+            Box toughIcon = RpgHudElement.TOUGHNESS_ICON.get(cfg).abs();
+            HudGeom.icon(g, HudGeom.ICONS, 43, 9, toughIcon, argb(a, 0xAAAAAA));
+        }
 
         Box hungerIcon = RpgHudElement.HUNGER_ICON.get(cfg).abs();
         HudGeom.icon(g, HudGeom.ICONS, 52, 27, hungerIcon, argb(a, WHITE));

@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.hud.bar.config;
+package com.dsp2.genshinerc.client.render.hud.bar.config.yaclfixi;
 
 import dev.isxander.yacl3.gui.OptionListWidget;
 import dev.isxander.yacl3.gui.YACLScreen;

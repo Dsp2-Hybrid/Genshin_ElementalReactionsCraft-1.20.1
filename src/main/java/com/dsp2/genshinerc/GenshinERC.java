@@ -40,7 +40,7 @@ public class GenshinERC {
                 maxValueField.setDouble(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, 13107200.0D);
                 maxValueField.setDouble(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, 13107200.0D);
             } catch (Exception e) {
-                System.err.println("失败");
+                System.err.println("Failed");
                 e.printStackTrace();
             }
         });

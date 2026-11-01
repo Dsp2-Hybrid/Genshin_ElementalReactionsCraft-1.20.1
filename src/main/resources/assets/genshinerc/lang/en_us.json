@@ -547,5 +547,8 @@
   "genshinerc.bar.config.zhen_mie_blend_mode.add": "Add",
   "genshinerc.bar.config.zhen_mie_blend_mode.overlay": "Overlay",
   "genshinerc.bar.config.zhen_mie_breath_color": "Zhen-Mie Breath Color",
-  "genshinerc.bar.config.zhen_mie_breath_color.desc": "The color of the Zhen-Mie breathing sweep."
+  "genshinerc.bar.config.zhen_mie_breath_color.desc": "The color of the Zhen-Mie breathing sweep.",
+  "genshinerc.bar.config.rpg_hp_text_offset_y": "HP Text Y Offset",
+  "genshinerc.bar.config.rpg_hp_text_offset_y.desc": "Vertical offset of the HP text inside the health bar.\nPositive moves down, negative moves up. Unit: pre-scale pixels."
+
 }

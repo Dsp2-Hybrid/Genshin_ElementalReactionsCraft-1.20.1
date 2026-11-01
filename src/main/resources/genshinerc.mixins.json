@@ -15,7 +15,9 @@
     "mods.gui.epicfight.fixguimodelbyef.MixinScreen",
     "mods.gui.epicfight.fixguimodelbyef.MixinPatchedLivingEntityRenderer",
     "mods.gui.epicfight.bar.MixinHealthBar",
-    "mods.gui.libs.yacl.YACLListFormatErrorScreenEventCallbackMixin"
+    "mods.gui.libs.yacl.YACLListFormatErrorScreenEventCallbackMixin",
+    "mods.shaders.efn.AnimationTrailParticleAccessor",
+    "mods.shaders.efn.AirTrailParticleMixin"
 
 
 

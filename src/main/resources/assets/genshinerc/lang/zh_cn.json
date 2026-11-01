@@ -554,5 +554,7 @@
   "genshinerc.bar.config.rpg_hp_text_scale": "生命值文本缩放",
   "genshinerc.bar.config.rpg_hp_text_scale.desc": "控制生命值数字在生命条上的显示大小比例。",
   "genshinerc.bar.config.rpg_food_text_scale": "饥饿值文本缩放",
-  "genshinerc.bar.config.rpg_food_text_scale.desc": "控制饥饿值与饱和度数字在饥饿条上的显示大小比例。"
+  "genshinerc.bar.config.rpg_food_text_scale.desc": "控制饥饿值与饱和度数字在饥饿条上的显示大小比例。",
+  "genshinerc.bar.config.rpg_hp_text_offset_y": "RPG生命值文本 Y 轴偏移",
+  "genshinerc.bar.config.rpg_hp_text_offset_y.desc": "生命值文本在血条内的垂直偏移。\n正数向下移动，负数向上移动。单位：GUI 缩放前像素。"
 }

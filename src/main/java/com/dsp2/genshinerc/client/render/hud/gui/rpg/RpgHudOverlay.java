@@ -236,7 +236,7 @@ public final class RpgHudOverlay {
         float top = hp.y(), bottom = hp.y2();
         if (hasSta && sta.y() > top && sta.y() < bottom && sta.x() < hp.x2() && sta.x2() > hp.x()) bottom = sta.y();
         float scale = Mth.clamp((bottom - top) / 8f * 0.8f, 0.35f, 1.5f) * cfg.rpgHpTextScale;
-        hpText(g, s, hp.cx(), (top + bottom) / 2f, scale, now, a);
+        hpText(g, s, hp.cx(), (top + bottom) / 2f + cfg.rpgHpTextOffsetY, scale, now, a);
     }
 
     private static String formatNum(float v) {
@@ -495,22 +495,28 @@ public final class RpgHudOverlay {
 
             if (mm > 0.01f) {
                 int breathColor = cfg.zhenMieBreathColor.getRGB() & 0xFFFFFF;
-                sweep(g, absBox, 1f - mm, 1f, now, 0.5f, a, breathColor, cfg);
+                sweep(g, absBox, 1f - mm, 1f, now, 0.5f, a, breathColor, cfg, flashTex);
             }
         }
     }
 
-    private static void sweep(GuiGraphics g, Box bar, float lo, float hi, long now, float phase, float a, int color, BarConfig cfg) {
+    private static void sweep(GuiGraphics g, Box bar, float lo, float hi, long now, float phase, float a, int color,
+                              BarConfig cfg, ResourceLocation maskTex) {
         if (hi - lo <= 0.02f) return;
         float t = (now / 1000f * cfg.zhenMieBreathHz + phase) % 1f;
         float c = Mth.lerp(t, lo - SWEEP_WIDTH, hi + SWEEP_WIDTH);
         int steps = 6;
         for (int i = 0; i < steps; i++) {
-            float s0 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * i / steps, s1 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * (i + 1) / steps;
+            float s0 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * i / steps;
+            float s1 = c - SWEEP_WIDTH + 2f * SWEEP_WIDTH * (i + 1) / steps;
             float w = 1f - Math.abs((s0 + s1) / 2f - c) / SWEEP_WIDTH;
             float drawL = Math.max(lo, s0), drawR = Math.min(hi, s1);
             if (drawR > drawL) {
-                HudGeom.rect(g, bar.x() + bar.w() * drawL, bar.y(), bar.x() + bar.w() * drawR, bar.y2(), argb(a * SWEEP_ALPHA * w, color));
+                float x1 = bar.x() + bar.w() * drawL;
+                float x2 = bar.x() + bar.w() * drawR;
+                GuiQuad.blit(g, maskTex, x1, bar.y(), x2, bar.y2(),
+                        drawL, 0f, drawR, 1f,
+                        argb(a * SWEEP_ALPHA * w, color));
             }
         }
     }
