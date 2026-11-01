@@ -6,6 +6,8 @@ in vec4 vertexColor;
 out vec4 fragColor;
 void main() {
     vec4 base = texture(DiffuseSampler, texCoord);
+    vec3 finalColor = base.rgb * vertexColor.rgb;
+    if (base.a < 0.05 || dot(finalColor, vec3(0.299, 0.587, 0.114)) < 0.08) discard;
     float lum = dot(base.rgb, vec3(0.299, 0.587, 0.114));
     vec4 res = base;
     if (lum > 0.3) {
@@ -14,5 +16,5 @@ void main() {
             res = mix(res, texture(DiffuseSampler, uv), 1.0 - (i/0.15));
         }
     }
-    fragColor = res * vertexColor;
+    fragColor = vec4(res.rgb * vertexColor.rgb, res.a * vertexColor.a);
 }

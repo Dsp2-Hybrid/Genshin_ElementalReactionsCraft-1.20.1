@@ -18,8 +18,10 @@ vec3 hsv2rgb(vec3 c) {
 }
 void main() {
     vec4 tex = texture(DiffuseSampler, texCoord);
-    vec3 hsv = rgb2hsv(tex.rgb);
+    vec3 finalColor = tex.rgb * vertexColor.rgb;
+    if (tex.a < 0.05 || dot(finalColor, vec3(0.299, 0.587, 0.114)) < 0.08) discard;
+    vec3 hsv = rgb2hsv(finalColor);
     hsv.x = fract(hsv.x + Time * 0.5);
-    tex.rgb = hsv2rgb(hsv);
-    fragColor = tex * vertexColor;
+    finalColor = hsv2rgb(hsv);
+    fragColor = vec4(finalColor, tex.a * vertexColor.a);
 }

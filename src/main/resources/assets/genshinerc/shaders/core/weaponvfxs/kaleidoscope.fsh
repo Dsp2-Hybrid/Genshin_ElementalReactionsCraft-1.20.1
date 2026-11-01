@@ -13,6 +13,8 @@ void main() {
     if (angle > 3.14159 / segments) angle = (3.14159 / segments) - angle;
     vec2 newUV = vec2(cos(angle), sin(angle)) * radius + 0.5;
     vec4 tex = texture(DiffuseSampler, newUV);
+    vec3 finalColor = tex.rgb * vertexColor.rgb;
+    if (tex.a < 0.05 || dot(finalColor, vec3(0.299, 0.587, 0.114)) < 0.08) discard;
     float edge = smoothstep(0.5, 0.2, radius);
-    fragColor = tex * vertexColor * vec4(1.0, 1.0, 1.0, edge);
+    fragColor = vec4(finalColor, tex.a * vertexColor.a * edge);
 }

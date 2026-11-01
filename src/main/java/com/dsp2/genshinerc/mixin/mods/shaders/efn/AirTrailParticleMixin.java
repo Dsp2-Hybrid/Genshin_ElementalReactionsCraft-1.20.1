@@ -3,7 +3,6 @@ package com.dsp2.genshinerc.mixin.mods.shaders.efn;
 import com.hm.efn.client.particle.AirTrailParticle;
 import com.dsp2.genshinerc.client.render.vfx.weaponshaders.test.CustomWeaponRenderType;
 import com.dsp2.genshinerc.client.render.vfx.weaponshaders.test.WeaponShaderMode;
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -38,14 +37,5 @@ public abstract class AirTrailParticleMixin {
         if (mode != WeaponShaderMode.NONE) {
             cir.setReturnValue(CustomWeaponRenderType.get(mode, this.genshinerc$trailTexture));
         }
-    }
-
-    @ModifyExpressionValue(
-            method = "render",
-            at = @At(value = "INVOKE", target = "Lcom/guhao/vix/client/pipeline/PostEffectPipelines;isActive()Z", remap = false),
-            require = 1
-    )
-    private boolean genshinerc$skipEfnPipeline(boolean original) {
-        return WeaponShaderMode.currentMode == WeaponShaderMode.NONE && original;
     }
 }

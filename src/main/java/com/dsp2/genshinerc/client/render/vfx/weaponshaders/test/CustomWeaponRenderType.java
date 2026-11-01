@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -35,7 +36,7 @@ public class CustomWeaponRenderType implements ParticleRenderType {
     public void begin(BufferBuilder builder, TextureManager manager) {
         RenderSystem.enableBlend();
         RenderSystem.disableCull();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
 
@@ -45,11 +46,15 @@ public class CustomWeaponRenderType implements ParticleRenderType {
             if (shader.safeGetUniform("Time") != null) {
                 shader.safeGetUniform("Time").set((System.currentTimeMillis() % 100000L) / 1000f);
             }
+            if (shader.safeGetUniform("OutSize") != null) {
+                shader.safeGetUniform("OutSize").set((float)Minecraft.getInstance().getWindow().getWidth(), (float)Minecraft.getInstance().getWindow().getHeight());
+            }
         } else {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         }
-        if (texture != null) {
-            RenderSystem.setShaderTexture(0, texture);
+
+        if (this.texture != null) {
+            manager.getTexture(this.texture).bind();
         }
 
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
