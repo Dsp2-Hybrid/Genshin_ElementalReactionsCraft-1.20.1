@@ -9,7 +9,8 @@
     { "name": "OutSize",         "type": "float", "count": 2, "values": [1920.0, 1080.0] },
     { "name": "Time",            "type": "float", "count": 1, "values": [0.0] },
     { "name": "Mode",            "type": "int",   "count": 1, "values": [0] },
-    { "name": "GlowStrength",    "type": "float", "count": 1, "values": [0.9] },
-    { "name": "DistortStrength", "type": "float", "count": 1, "values": [1.0] }
+    { "name": "GlowStrength",    "type": "float", "count": 1, "values": [0.6] },
+    { "name": "DistortStrength", "type": "float", "count": 1, "values": [1.0] },
+    { "name": "DistortFreq",     "type": "float", "count": 1, "values": [1.0] }
   ]
 }

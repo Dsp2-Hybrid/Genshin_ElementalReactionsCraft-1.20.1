@@ -1,5 +1,5 @@
 {
-  "blend": { "func": "add", "srcrgb": "srcalpha", "dstrgb": "one" },
+  "blend": { "func": "add", "srcrgb": "one", "dstrgb": "one", "srcalpha": "one", "dstalpha": "one" },
   "vertex": "genshinerc:weaponvfxs/weapon_vfx",
   "fragment": "genshinerc:weaponvfxs/edgeglow",
   "attributes": ["Position", "UV0", "Color"],
@@ -8,6 +8,10 @@
     { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
     { "name": "ProjMat",      "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
     { "name": "OutSize",      "type": "float", "count": 2, "values": [1920.0, 1080.0] },
-    { "name": "Time",         "type": "float", "count": 1, "values": [0.0] }
+    { "name": "Time",         "type": "float", "count": 1, "values": [0.0] },
+    { "name": "Trail",        "type": "float", "count": 1, "values": [1.0] },
+    { "name": "EdgeWidth", "type": "float", "count": 1, "values": [2.0] },
+    { "name": "FlowSpeed", "type": "float", "count": 1, "values": [1.0] },
+    { "name": "GlowGain",  "type": "float", "count": 1, "values": [1.8] }
   ]
 }

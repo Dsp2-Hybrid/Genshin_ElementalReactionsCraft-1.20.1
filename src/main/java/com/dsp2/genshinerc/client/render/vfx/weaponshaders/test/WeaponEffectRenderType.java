@@ -17,9 +17,13 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class WeaponEffectRenderType implements ParticleRenderType {
-    private static final WeaponEffectPipeline PPL = new WeaponEffectPipeline(ResourceLocation.fromNamespaceAndPath("genshinerc", "weapon_effect"));
+    private static final Set<String> SCREEN_PARAMS = Set.of("glow", "distort", "distortFreq");
+
+    private static final WeaponEffectPipeline PPL = new WeaponEffectPipeline(
+            ResourceLocation.fromNamespaceAndPath("genshinerc", "weapon_effect"));
     private record Key(WeaponShaderMode mode, ResourceLocation texture) {}
     private static final Map<Key, WeaponEffectRenderType> CACHE = new HashMap<>();
 
@@ -39,7 +43,7 @@ public class WeaponEffectRenderType implements ParticleRenderType {
     public void begin(BufferBuilder builder, TextureManager manager) {
         RenderSystem.enableBlend();
         RenderSystem.disableCull();
-        RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
+        RenderSystem.blendFuncSeparate(SourceFactor.ONE, DestFactor.ONE, SourceFactor.ONE, DestFactor.ONE);
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
 
@@ -54,11 +58,15 @@ public class WeaponEffectRenderType implements ParticleRenderType {
             if (time != null) time.set((System.currentTimeMillis() % 100000L) / 1000f);
             var size = shader.safeGetUniform("OutSize");
             if (size != null) size.set((float) Minecraft.getInstance().getWindow().getWidth(), (float) Minecraft.getInstance().getWindow().getHeight());
+
+            for (ParamSpec spec : mode.params) {
+                if (SCREEN_PARAMS.contains(spec.name())) continue;
+                var u = shader.safeGetUniform(spec.uniformName());
+                if (u != null) u.set(WeaponShaderParams.get(mode, spec.name()));
+            }
         }
 
-        if (this.texture != null) {
-            RenderUtils.GLSetTexture(this.texture);
-        }
+        if (this.texture != null) RenderUtils.GLSetTexture(this.texture);
 
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
     }

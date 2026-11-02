@@ -12,19 +12,30 @@ public class WeaponCompositePass extends PostPassBase {
     }
 
     private static int screenMode(WeaponShaderMode m) {
+        if (!WeaponShaderParams.has(m, "distort")) return 0;
         return switch (m) {
-            case WAVE, MIRROR -> 1;
-            case TWIST, VORTEX, KALEIDOSCOPE -> 2;
-            case PULSE, RIPPLE -> 3;
-            case FISHEYE, SQUASH, ZOOM_BLUR, RADIAL_BLUR -> 4;
-            case GLITCH_SLICE, PIXELSORT, PIXELATE, CRT -> 5;
-            case RGBSPLIT, CHROMATIC -> 6;
-            case NONE, TEST_RED -> 0;
-            default -> 7;
+            case WAVE -> 1;
+            case MIRROR -> 2;
+            case TWIST, VORTEX -> 3;
+            case KALEIDOSCOPE -> 4;
+            case PULSE, RIPPLE -> 5;
+            case FISHEYE -> 6;
+            case SQUASH -> 7;
+            case ZOOM_BLUR, RADIAL_BLUR, PIXELSORT -> 8;
+            case GLITCH_SLICE, CRT -> 9;
+            case PIXELATE -> 10;
+            case RGBSPLIT, CHROMATIC -> 11;
+            default -> 12;
         };
     }
 
     public void process(RenderTarget trail, RenderTarget scene, RenderTarget out) {
+        WeaponShaderMode m = WeaponShaderMode.currentMode;
+        boolean hasDistort = WeaponShaderParams.has(m, "distort");
+        float distort = hasDistort ? WeaponShaderParams.get(m, "distort") : 0f;
+        float distortFreq = hasDistort ? WeaponShaderParams.get(m, "distortFreq") : 1f;
+        float glow = WeaponShaderParams.get(m, "glow");
+
         out.bindWrite(true);
         RenderSystem.viewport(0, 0, out.width, out.height);
         this.effect.setSampler("DiffuseSampler", scene::getColorTextureId);
@@ -32,7 +43,10 @@ public class WeaponCompositePass extends PostPassBase {
         this.effect.safeGetUniform("ProjMat").set(orthographic(out));
         this.effect.safeGetUniform("OutSize").set((float) out.width, (float) out.height);
         this.effect.safeGetUniform("Time").set((System.currentTimeMillis() % 100000L) / 1000f);
-        this.effect.safeGetUniform("Mode").set(screenMode(WeaponShaderMode.currentMode));
+        this.effect.safeGetUniform("Mode").set(screenMode(m));
+        this.effect.safeGetUniform("DistortStrength").set(distort);
+        this.effect.safeGetUniform("DistortFreq").set(distortFreq);
+        this.effect.safeGetUniform("GlowStrength").set(glow);
         this.effect.apply();
         try {
             this.pushVertex(scene, out);

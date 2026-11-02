@@ -135,7 +135,7 @@ public final class ZhenMieBarRenderer {
         }
 
         if (!flashing) {
-            zhOverlay.emit((lo, hi, wa) -> HudDraw.quad(m, buffers, flashTex, l + span * lo, bottomY, l + span * hi, topY,
+            zhOverlay.emit((lo, hi, wa) -> HudDraw.quad(m, buffers, flashTex, l + span * lo, bottomMie, l + span * hi, topMie,
                     uLeft + uSpan * lo, 0f, uLeft + uSpan * hi, 1f, z, 0xFFFFFF, alpha * wa));
             miOverlay.emit((lo, hi, wa) -> HudDraw.quad(m, buffers, flashTex, rMie - span * hi, bottomMie, rMie - span * lo, topMie,
                     uRight - uSpan * hi, 0f, uRight - uSpan * lo, 1f, z, 0xFFFFFF, alpha * wa));

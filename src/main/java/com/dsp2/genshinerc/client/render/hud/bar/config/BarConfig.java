@@ -232,7 +232,7 @@ public class BarConfig {
     @SerialEntry public float rpgOrbMinAlpha = 0.3f;
     @SerialEntry public float rpgHpTextScale = 0.90f;
     @SerialEntry public float rpgFoodTextScale = 1.50f;
-    @SerialEntry public float rpgHpTextOffsetY = 0.70f;
+    @SerialEntry public float rpgHpTextOffsetY = 0.50f;
     @SerialEntry public Map<String, float[]> rpgLayout = new LinkedHashMap<>();
 
     public Map<String, float[]> layout() {
@@ -481,7 +481,7 @@ public class BarConfig {
                 .option(floatOptCustomStep("rpg_orb_min_alpha", 0.3f, () -> c.rpgOrbMinAlpha, v -> c.rpgOrbMinAlpha = v, 0f, 1f, 0.01f, "%.2f"))
                 .option(floatOptCustomStep("rpg_hp_text_scale", 0.90f, () -> c.rpgHpTextScale, v -> c.rpgHpTextScale = v, 0.3f, 2.0f, 0.01f, "%.2f"))
                 .option(floatOptCustomStep("rpg_food_text_scale", 1.50f, () -> c.rpgFoodTextScale, v -> c.rpgFoodTextScale = v, 0.5f, 3.0f, 0.01f, "%.2f"))
-                .option(floatOptCustomStep("rpg_hp_text_offset_y", 0.7f, () -> c.rpgHpTextOffsetY, v -> c.rpgHpTextOffsetY = v, -3f, 3f, 0.01f, "%.2f"))
+                .option(floatOptCustomStep("rpg_hp_text_offset_y", 0.50f, () -> c.rpgHpTextOffsetY, v -> c.rpgHpTextOffsetY = v, -3f, 3f, 0.01f, "%.2f"))
                 .option(ButtonOption.createBuilder()
                         .name(t(P("rpg_hud_editor")))
                         .description(OptionDescription.of(td(P("rpg_hud_editor"))))
