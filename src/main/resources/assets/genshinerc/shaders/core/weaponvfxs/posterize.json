@@ -1,12 +1,13 @@
-﻿{
+{
+  "blend": { "func": "add", "srcrgb": "srcalpha", "dstrgb": "one" },
   "vertex": "genshinerc:weaponvfxs/weapon_vfx",
   "fragment": "genshinerc:weaponvfxs/posterize",
-  "attributes": [ "Position", "UV0", "Color" ],
-  "samplers": [ { "name": "Sampler0" } ],
+  "attributes": ["Position", "UV0", "Color"],
+  "samplers": [{ "name": "Sampler0" }],
   "uniforms": [
-    { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 ] },
-    { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 ] },
-    { "name": "OutSize", "type": "float", "count": 2, "values": [ 1920, 1080 ] },
-    { "name": "Time", "type": "float", "count": 1, "values": [ 0.0 ] }
+    { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+    { "name": "ProjMat",      "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+    { "name": "OutSize",      "type": "float", "count": 2, "values": [1920.0, 1080.0] },
+    { "name": "Time",         "type": "float", "count": 1, "values": [0.0] }
   ]
 }

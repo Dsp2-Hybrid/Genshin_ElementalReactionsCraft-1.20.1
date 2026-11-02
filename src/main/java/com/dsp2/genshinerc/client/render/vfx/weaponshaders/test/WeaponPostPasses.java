@@ -1,6 +1,5 @@
 package com.dsp2.genshinerc.client.render.vfx.weaponshaders.test;
 
-import com.guhao.vix.client.shaderpasses.PostPassBase;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -12,7 +11,7 @@ import java.io.IOException;
 
 @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class WeaponPostPasses {
-    public static PostPassBase blit;
+    public static WeaponBlitPass blit;
     public static WeaponCompositePass composite;
 
     @SubscribeEvent
@@ -20,7 +19,7 @@ public class WeaponPostPasses {
         close();
         ResourceManager rm = Minecraft.getInstance().getResourceManager();
         try {
-            blit = new PostPassBase("genshinerc:weapon_blit", rm);
+            blit = new WeaponBlitPass("genshinerc:weapon_blit", rm);
             composite = new WeaponCompositePass("genshinerc:weapon_composite", rm);
         } catch (IOException e) {
             LogUtils.getLogger().error("genshinerc: failed to load post passes", e);

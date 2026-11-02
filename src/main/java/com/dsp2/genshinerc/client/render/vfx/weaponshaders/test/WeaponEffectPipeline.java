@@ -6,10 +6,8 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 
-
-@SuppressWarnings({"deprecation", "removal"})
 public class WeaponEffectPipeline extends PostEffectPipelines.Pipeline {
-    private static final ResourceLocation TMP = new ResourceLocation("genshinerc", "weapon_tmp");
+    private static final ResourceLocation TMP = ResourceLocation.fromNamespaceAndPath("genshinerc", "weapon_tmp");
 
     public WeaponEffectPipeline(ResourceLocation name) {
         super(name);
@@ -18,13 +16,20 @@ public class WeaponEffectPipeline extends PostEffectPipelines.Pipeline {
 
     @Override
     public void PostEffectHandler() {
-        if (WeaponPostPasses.blit == null || this.bufferTarget == null) return;
+        if (WeaponPostPasses.blit == null || WeaponPostPasses.composite == null || this.bufferTarget == null) return;
 
         RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
         RenderTarget tmp = TargetManager.getTarget(TMP);
+
+        if (tmp == null || tmp == main) return;
+
+        if (tmp.width != main.width || tmp.height != main.height) {
+            tmp.resize(main.width, main.height, false);
+        }
+
         try {
             WeaponPostPasses.composite.process(this.bufferTarget, main, tmp);
-            WeaponPostPasses.blit.process(tmp, main);
+            WeaponPostPasses.blit.draw(tmp, main);
         } finally {
             TargetManager.ReleaseTarget(TMP);
         }

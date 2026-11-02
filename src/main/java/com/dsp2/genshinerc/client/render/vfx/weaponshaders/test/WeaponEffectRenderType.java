@@ -18,9 +18,8 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings({"deprecation", "removal"})
 public class WeaponEffectRenderType implements ParticleRenderType {
-    private static final WeaponEffectPipeline PPL = new WeaponEffectPipeline(new ResourceLocation("genshinerc", "weapon_effect"));
+    private static final WeaponEffectPipeline PPL = new WeaponEffectPipeline(ResourceLocation.fromNamespaceAndPath("genshinerc", "weapon_effect"));
     private record Key(WeaponShaderMode mode, ResourceLocation texture) {}
     private static final Map<Key, WeaponEffectRenderType> CACHE = new HashMap<>();
 
@@ -41,8 +40,10 @@ public class WeaponEffectRenderType implements ParticleRenderType {
         RenderSystem.enableBlend();
         RenderSystem.disableCull();
         RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+
+        PPL.start();
 
         ShaderInstance found = WeaponShaderManager.getShader(mode);
         final ShaderInstance shader = found != null ? found : GameRenderer.getPositionTexColorShader();
@@ -59,7 +60,6 @@ public class WeaponEffectRenderType implements ParticleRenderType {
             RenderUtils.GLSetTexture(this.texture);
         }
 
-        PPL.start();
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
     }
 
@@ -67,10 +67,12 @@ public class WeaponEffectRenderType implements ParticleRenderType {
     public void end(Tesselator tesselator) {
         tesselator.getBuilder().setQuadSorting(VertexSorting.DISTANCE_TO_ORIGIN);
         tesselator.end();
+
         PPL.call();
         PPL.suspend();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
+
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
         RenderSystem.disableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableCull();

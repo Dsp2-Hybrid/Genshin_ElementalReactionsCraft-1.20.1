@@ -11,16 +11,28 @@ public class WeaponCompositePass extends PostPassBase {
         super(resourceLocation, rm);
     }
 
+    private static int screenMode(WeaponShaderMode m) {
+        return switch (m) {
+            case WAVE, MIRROR -> 1;
+            case TWIST, VORTEX, KALEIDOSCOPE -> 2;
+            case PULSE, RIPPLE -> 3;
+            case FISHEYE, SQUASH, ZOOM_BLUR, RADIAL_BLUR -> 4;
+            case GLITCH_SLICE, PIXELSORT, PIXELATE, CRT -> 5;
+            case RGBSPLIT, CHROMATIC -> 6;
+            case NONE, TEST_RED -> 0;
+            default -> 7;
+        };
+    }
+
     public void process(RenderTarget trail, RenderTarget scene, RenderTarget out) {
-        this.prevProcess(scene, out);
-        scene.unbindWrite();
+        out.bindWrite(true);
         RenderSystem.viewport(0, 0, out.width, out.height);
         this.effect.setSampler("DiffuseSampler", scene::getColorTextureId);
         this.effect.setSampler("TrailSampler", trail::getColorTextureId);
         this.effect.safeGetUniform("ProjMat").set(orthographic(out));
         this.effect.safeGetUniform("OutSize").set((float) out.width, (float) out.height);
-        var time = this.effect.safeGetUniform("Time");
-        if (time != null) time.set((System.currentTimeMillis() % 100000L) / 1000f);
+        this.effect.safeGetUniform("Time").set((System.currentTimeMillis() % 100000L) / 1000f);
+        this.effect.safeGetUniform("Mode").set(screenMode(WeaponShaderMode.currentMode));
         this.effect.apply();
         try {
             this.pushVertex(scene, out);

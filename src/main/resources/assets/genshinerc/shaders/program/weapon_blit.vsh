@@ -1,4 +1,4 @@
-﻿#version 150
+#version 150
 in vec4 Position;
 uniform mat4 ProjMat;
 uniform vec2 OutSize;

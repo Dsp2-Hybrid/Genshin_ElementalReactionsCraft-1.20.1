@@ -1,12 +1,19 @@
-﻿#version 150
+#version 150
+
 uniform sampler2D DiffuseSampler;
 uniform sampler2D TrailSampler;
+uniform float Time;
+
 in vec2 texCoord;
 out vec4 fragColor;
+
 void main() {
-    vec2 offset = vec2(0.05, 0.0);
-    float r = texture(DiffuseSampler, texCoord + offset).r + texture(TrailSampler, texCoord + offset).r;
-    float g = texture(DiffuseSampler, texCoord).g + texture(TrailSampler, texCoord).g;
-    float b = texture(DiffuseSampler, texCoord - offset).b + texture(TrailSampler, texCoord - offset).b;
-    fragColor = vec4(r, g, b, 1.0);
+    vec4 trail = texture(TrailSampler, texCoord);
+    float mask = clamp(trail.a * 1.5, 0.0, 1.0);
+
+    float split = (0.04 + sin(Time * 4.0) * 0.012) * mask;
+    float r = texture(DiffuseSampler, texCoord + vec2(split, 0.0)).r + trail.r;
+    float g = texture(DiffuseSampler, texCoord).g + trail.g;
+    float b = texture(DiffuseSampler, texCoord - vec2(split, 0.0)).b + trail.b;
+    fragColor = vec4(clamp(vec3(r, g, b), 0.0, 1.0), 1.0);
 }

@@ -1,14 +1,56 @@
-﻿#version 150
+#version 150
+
 uniform sampler2D Sampler0;
+uniform float Time;
+uniform vec2 OutSize;
+
 in vec2 texCoord;
 in vec4 vertexColor;
 out vec4 fragColor;
-float lum(vec2 uv) { return dot(texture(Sampler0, uv).rgb, vec3(0.299,0.587,0.114)); }
+
+#define TEXEL (1.0 / vec2(textureSize(Sampler0, 0)))
+
+float lum(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
+
+float hash(vec2 p) {
+    p = fract(p * vec2(5.3983, 5.4427));
+    p += dot(p, p + vec2(21.5351, 14.3137));
+    return fract(p.x * p.y * 95.4337);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+vec4 warp(vec2 uv) {
+    vec4 o = texture(Sampler0, texCoord);
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return o;
+    vec4 w = texture(Sampler0, uv);
+    return mix(o, w, smoothstep(0.0, 0.2, w.a));
+}
+
+void emitGlow(vec3 rgb, vec3 glow, float a) {
+    vec3 c = rgb * vertexColor.rgb + glow;
+    a = clamp(a, 0.0, 1.0) * vertexColor.a;
+    float k = clamp(max(c.r, max(c.g, c.b)) * 1.6, 0.0, 1.0);
+    if (a * k < 0.004) discard;
+    fragColor = vec4(c * 1.35, a * k);
+}
+
+void emit(vec3 rgb, float a) { emitGlow(rgb, vec3(0.0), a); }
+
+float L(vec2 o) { vec4 s = texture(Sampler0, texCoord + o); return lum(s.rgb) * s.a + s.a * 0.5; }
 void main() {
-    vec2 px = vec2(1.0/64.0, 0.0);
+    vec2 d = TEXEL * 1.5;
     vec4 c = texture(Sampler0, texCoord);
-    if (c.a < 0.05) discard;
-    float gx = lum(texCoord+px.xy) + 2.0*lum(texCoord+px.xx) + lum(texCoord+px.xy) - lum(texCoord-px.xy) - 2.0*lum(texCoord-px.xx) - lum(texCoord-px.xy);
-    float gy = lum(texCoord+px.yx) + 2.0*lum(texCoord+px.xx) + lum(texCoord+px.yx) - lum(texCoord-px.yx) - 2.0*lum(texCoord-px.xx) - lum(texCoord-px.yx);
-    fragColor = vec4(c.rgb * vertexColor.rgb * (0.5 + clamp(sqrt(gx*gx+gy*gy), 0.0, 1.5)), c.a * vertexColor.a);
+    float gx = -L(vec2(-d.x, -d.y)) - 2.0 * L(vec2(-d.x, 0.0)) - L(vec2(-d.x, d.y))
+             +  L(vec2( d.x, -d.y)) + 2.0 * L(vec2( d.x, 0.0)) + L(vec2( d.x, d.y));
+    float gy = -L(vec2(-d.x, -d.y)) - 2.0 * L(vec2(0.0, -d.y)) - L(vec2(d.x, -d.y))
+             +  L(vec2(-d.x,  d.y)) + 2.0 * L(vec2(0.0,  d.y)) + L(vec2(d.x,  d.y));
+    float e = clamp(length(vec2(gx, gy)) * 3.0, 0.0, 1.0);
+    vec3 ec = mix(vec3(0.05, 0.9, 1.0), vec3(1.0, 0.35, 0.0), 0.5 + 0.5 * sin(Time * 3.0 + texCoord.x * 15.0));
+    emitGlow(c.rgb * (1.0 - e * 0.5), ec * e * 1.5, max(c.a, e));
 }
