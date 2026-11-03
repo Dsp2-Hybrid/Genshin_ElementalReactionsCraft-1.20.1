@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -129,7 +128,7 @@ public class WeaponShaderCommand {
                 }))
         );
 
-        d.register(Commands.literal("stest").executes(ctx -> {
+        d.register(Commands.literal("s0").executes(ctx -> {
             WeaponShaderMode.currentMode = WeaponShaderMode.TEST_RED;
             printAll(WeaponShaderMode.TEST_RED, ctx.getSource());
             return 1;

@@ -99,7 +99,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:FxmeaUaC:MbRMbYsr")
 
     //Guhao
-    implementation fg.deobf(files("libs/VIX-1.0.9-all.jar"))
+    implementation fg.deobf("curse.maven:guhaos-vix-1531111:9043675")
 
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
 
