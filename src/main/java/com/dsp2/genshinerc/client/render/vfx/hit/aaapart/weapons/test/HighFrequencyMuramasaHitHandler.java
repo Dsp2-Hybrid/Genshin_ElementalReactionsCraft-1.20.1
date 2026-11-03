@@ -14,6 +14,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
+@SuppressWarnings({"deprecation", "removal"})
 @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT)
 public class HighFrequencyMuramasaHitHandler {
 
