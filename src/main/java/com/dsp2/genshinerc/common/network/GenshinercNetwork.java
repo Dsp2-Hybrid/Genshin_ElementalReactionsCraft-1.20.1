@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.common.network;
 
+import com.dsp2.genshinerc.common.network.packet.vfx.aaap.S2CHitEffectPacket;
 import com.dsp2.genshinerc.common.network.base.combat.SyncShieldPacket;
 import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
 import com.dsp2.genshinerc.common.network.base.element.SyncAuraPacket;
@@ -42,6 +43,12 @@ public final class GenshinercNetwork {
                 .encoder(SyncPlayerHudPacket::encode)
                 .decoder(SyncPlayerHudPacket::decode)
                 .consumerMainThread(SyncPlayerHudPacket::handle)
+                .add();
+                
+        CHANNEL.messageBuilder(S2CHitEffectPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(S2CHitEffectPacket::encode)
+                .decoder(S2CHitEffectPacket::decode)
+                .consumerMainThread(S2CHitEffectPacket::handle)
                 .add();
     }
 }
