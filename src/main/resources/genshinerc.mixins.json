@@ -8,7 +8,6 @@
     "mods.core.combat.epicfight.MixinGuardSkill",
     "mods.core.combat.epicfight.MixinImpactGuardSkill",
     "mods.core.combat.epicfight.MixinBattleModeGui"
-
   ],
   "client": [
     "mods.gui.epicfight.EntityRenderDispatcherMixin",
@@ -19,6 +18,9 @@
     "mods.gui.libs.yacl.YACLListFormatErrorScreenEventCallbackMixin",
     "mods.shaders.efn.AirTrailParticleMixin",
     "mods.shaders.efn.BloomTrailParticleMixin",
+    "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher"
+
+
 
 
   ],
