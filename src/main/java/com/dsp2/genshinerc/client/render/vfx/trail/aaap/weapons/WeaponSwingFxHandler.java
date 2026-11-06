@@ -118,7 +118,6 @@ public final class WeaponSwingFxHandler {
             tracker.lastSegment = first;
             tracker.lastTickCount = tickCount;
             tracker.lastPartial = partialTick;
-            
             startFollow(patch, joint, profile, tracker);
             return;
         }

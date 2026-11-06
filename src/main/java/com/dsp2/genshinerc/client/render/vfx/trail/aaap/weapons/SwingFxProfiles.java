@@ -3,11 +3,16 @@ package com.dsp2.genshinerc.client.render.vfx.trail.aaap.weapons;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
+
 import javax.annotation.Nullable;
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import yesman.epicfight.api.utils.math.Vec3f;
+import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
+import yesman.epicfight.world.capabilities.item.CapabilityItem;
+import yesman.epicfight.world.capabilities.item.WeaponCapability;
 
 @SuppressWarnings({"deprecation", "removal"})
 public final class SwingFxProfiles {
@@ -18,7 +23,13 @@ public final class SwingFxProfiles {
             null,
             new Vec3f(0.0F, 0.0F, -0.2F),
             new Vec3f(0.0F, 0.0F, -1.5F),
-            6.0F, 4, 0.35F, 0.5F, 0.85F, 0.02F, 3);
+            6.0F,
+            4,
+            0.35F,
+            0.5F,
+            0.85F,
+            0.02F,
+            3);
 
     private record Entry(Predicate<ItemStack> matcher, SwingFxProfile profile) {}
 
@@ -32,9 +43,19 @@ public final class SwingFxProfiles {
 
     @Nullable
     public static SwingFxProfile resolve(LivingEntityPatch<?> patch, ItemStack stack) {
-        if (stack.isEmpty()) return null;
+        if (stack.isEmpty()) {
+            return null;
+        }
+
+        CapabilityItem cap = EpicFightCapabilities.getItemStackCapability(stack);
+        if (!(cap instanceof WeaponCapability)) {
+            return null;
+        }
+
         for (Entry entry : ENTRIES) {
-            if (entry.matcher().test(stack)) return entry.profile();
+            if (entry.matcher().test(stack)) {
+                return entry.profile();
+            }
         }
         return DEFAULT;
     }
