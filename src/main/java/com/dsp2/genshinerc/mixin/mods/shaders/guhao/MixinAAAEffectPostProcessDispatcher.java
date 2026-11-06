@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.mixin.mods.shaders.guhao;
 
 import com.dsp2.genshinerc.client.render.vfx.aaapshader.ShaderPackAaaPostProcess;
+import com.guhao.vix.client.aaaeffect.AAAEffectPostProcessDispatcher;
 import com.mojang.logging.LogUtils;
 import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
 import mod.chloeprime.aaaparticles.api.client.effekseer.EffekseerManager;
@@ -13,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(targets = "com.guhao.vix.client.aaaeffect.AAAEffectPostProcessDispatcher", remap = false)
+@Mixin(value = AAAEffectPostProcessDispatcher.class, remap = false)
 public abstract class MixinAAAEffectPostProcessDispatcher {
 
     @Inject(method = "begin", at = @At("TAIL"))
@@ -31,8 +32,11 @@ public abstract class MixinAAAEffectPostProcessDispatcher {
         ShaderPackAaaPostProcess.end();
     }
 
-    @Inject(method = "draw(Lmod/chloeprime/aaaparticles/api/client/effekseer/EffekseerManager;Ljava/util/List;Lcom/guhao/vix/client/aaaeffect/AAAEffectPostProcessDispatcher$DrawOperation;)V",
-            at = @At("HEAD"), cancellable = true)
+    @Inject(
+            method = "draw(Lmod/chloeprime/aaaparticles/api/client/effekseer/EffekseerManager;Ljava/util/List;Lcom/guhao/vix/client/aaaeffect/AAAEffectPostProcessDispatcher$DrawOperation;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
     private static void genshinerc$draw(EffekseerManager manager, List active, @Coerce Object original, CallbackInfo ci) {
         try {
             if (ShaderPackAaaPostProcess.tryDraw(manager, (List<ParticleEmitter>) active)) {
