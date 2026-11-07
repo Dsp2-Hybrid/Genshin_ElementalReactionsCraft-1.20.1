@@ -1,6 +1,5 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
-
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.damage.DamageKind;
 import com.dsp2.genshinerc.common.core.damage.ElementalDamage;
