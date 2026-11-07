@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.registry;
+package com.dsp2.genshinerc.common.registry;
 
 import com.dsp2.genshinerc.GenshinERC;
 import net.minecraft.world.entity.ai.attributes.Attribute;

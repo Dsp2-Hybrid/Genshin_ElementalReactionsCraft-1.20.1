@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.client.render.world.component.damageindicator.config;
+package com.dsp2.genshinerc.client.render.world.component.damageindicator.config;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;

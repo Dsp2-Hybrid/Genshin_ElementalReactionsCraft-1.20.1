@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.element;
+package com.dsp2.genshinerc.common.core.element;
 
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.config.ServerConfig;

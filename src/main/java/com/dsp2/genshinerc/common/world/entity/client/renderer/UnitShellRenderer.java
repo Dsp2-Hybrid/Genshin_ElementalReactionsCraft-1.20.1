@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+@SuppressWarnings({"deprecation", "removal"})
 public class UnitShellRenderer extends MobRenderer<TrainingUnit, ShellModel> {
     
     public static EntityRendererProvider.Context CONTEXT;

@@ -2,24 +2,24 @@ package com.dsp2.genshinerc.util.framesequence.meta;
 
 public class FrameMetadata {
 
-    /** 总帧数 */
+    /** 鎬诲抚鏁?*/
     public int frames;
 
-    /** 每秒帧率 */
+    /** 姣忕甯х巼 */
     public int fps;
 
-    /** 是否循环 */
+    /** 鏄惁寰幆 */
     public boolean loop = true;
 
-    /** 每帧宽度 */
+    /** 姣忓抚瀹藉害 */
     public int width;
 
-    /** 每帧高度 */
+    /** 姣忓抚楂樺害 */
     public int height;
 
-    /** 文件名格式，例如 frame_0000.png 对应 "frame_%04d" */
+    /** 鏂囦欢鍚嶆牸寮忥紝渚嬪 frame_0000.png 瀵瑰簲 "frame_%04d" */
     public String pattern = "frame_%04d";
 
-    /** 纹理所在目录，相对于当前 mod 的 textures/ */
+    /** 绾圭悊鎵€鍦ㄧ洰褰曪紝鐩稿浜庡綋鍓?mod 鐨?textures/ */
     public String texturePath;
 }

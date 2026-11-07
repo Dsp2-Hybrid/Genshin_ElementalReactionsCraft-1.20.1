@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc;
+package com.dsp2.genshinerc;
 
 import com.dsp2.genshinerc.client.render.hud.bar.StatusBar;
 import com.dsp2.genshinerc.common.config.ServerConfig;

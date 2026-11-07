@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.client.render.world.component.damageindicator.event;
+package com.dsp2.genshinerc.client.render.world.component.damageindicator.event;
 
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig;
 import com.dsp2.genshinerc.common.core.damage.DamageKind;

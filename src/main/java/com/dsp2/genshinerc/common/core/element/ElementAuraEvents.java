@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.element;
+package com.dsp2.genshinerc.common.core.element;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;

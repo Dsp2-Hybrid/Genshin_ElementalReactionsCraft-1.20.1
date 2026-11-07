@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.network;
+package com.dsp2.genshinerc.common.network;
 
 import com.dsp2.genshinerc.common.network.packet.vfx.aaap.S2CHitEffectPacket;
 import com.dsp2.genshinerc.common.network.base.combat.SyncShieldPacket;

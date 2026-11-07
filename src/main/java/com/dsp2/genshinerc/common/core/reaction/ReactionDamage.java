@@ -1,7 +1,5 @@
-﻿package com.dsp2.genshinerc.common.core.reaction;
+package com.dsp2.genshinerc.common.core.reaction;
 
-// Assembled from Claude's full ReactionDamage plus the later patches:
-//   isNatural() guard, capReaction(), discount(), null cause for BURNING/ELECTRO_CHARGED.
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.damage.DamageKind;

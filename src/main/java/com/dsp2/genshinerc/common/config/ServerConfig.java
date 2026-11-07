@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.config;
+package com.dsp2.genshinerc.common.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 

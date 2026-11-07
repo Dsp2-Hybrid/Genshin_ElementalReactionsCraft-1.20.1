@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.mixin.core.damage;
+package com.dsp2.genshinerc.mixin.core.damage;
 
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;

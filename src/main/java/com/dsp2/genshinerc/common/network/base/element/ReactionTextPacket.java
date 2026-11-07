@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.network.base.element;
+package com.dsp2.genshinerc.common.network.base.element;
 
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.event.ReactionTextTracker;
 import com.dsp2.genshinerc.common.core.element.ElementType;

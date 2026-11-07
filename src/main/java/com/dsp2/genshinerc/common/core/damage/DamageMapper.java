@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.damage;
+package com.dsp2.genshinerc.common.core.damage;
 
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;

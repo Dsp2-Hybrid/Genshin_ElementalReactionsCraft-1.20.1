@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.element;
+package com.dsp2.genshinerc.common.core.element;
 
 /**
  * DEPRECATED. All tunables now live in ServerConfig. Kept only so old references compile.

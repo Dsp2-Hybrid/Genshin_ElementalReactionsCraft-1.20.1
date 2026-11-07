@@ -5,6 +5,8 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+@SuppressWarnings({"deprecation", "removal"})
 public class Sounds {
     public static final DeferredRegister<SoundEvent> REGISTRY = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, UnitBootstrap.NS);
     public static final RegistryObject<SoundEvent> TRAINING_STRIKE = REGISTRY.register("training_strike",

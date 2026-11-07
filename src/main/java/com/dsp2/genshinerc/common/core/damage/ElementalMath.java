@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.damage;
+package com.dsp2.genshinerc.common.core.damage;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import net.minecraft.world.entity.LivingEntity;

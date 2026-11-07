@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.reaction;
+package com.dsp2.genshinerc.common.core.reaction;
 
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import org.jetbrains.annotations.Nullable;

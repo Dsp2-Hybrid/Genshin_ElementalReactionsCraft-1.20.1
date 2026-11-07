@@ -43,21 +43,19 @@ public class FrameSequenceBuilder {
 
     public FrameSequence build() {
         if (meta == null) {
-            throw new IllegalStateException("FrameSequence '" + id + "': metadata 未设置");
+            throw new IllegalStateException("FrameSequence '" + id + "': metadata is missing or invalid");
         }
         if (meta.frames <= 0) {
-            throw new IllegalStateException("FrameSequence '" + id + "': frames 非法");
+            throw new IllegalStateException("FrameSequence '" + id + "': frames must be greater than 0");
         }
         if (meta.fps <= 0) {
-            throw new IllegalStateException("FrameSequence '" + id + "': fps 非法");
+            throw new IllegalStateException("FrameSequence '" + id + "': fps must be greater than 0");
         }
         if (meta.texturePath == null || meta.texturePath.isEmpty()) {
-            throw new IllegalStateException("FrameSequence '" + id + "': texturePath 未设置");
+            throw new IllegalStateException("FrameSequence '" + id + "': texturePath is missing or invalid");
         }
         return new FrameSequence(this);
     }
-
-    // ---------- 供 FrameSequence 读取 ----------
 
     ResourceLocation getId()          { return id; }
     FrameMetadata    getMetadata()    { return meta; }

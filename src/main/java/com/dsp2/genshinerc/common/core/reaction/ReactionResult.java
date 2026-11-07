@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.reaction;
+package com.dsp2.genshinerc.common.core.reaction;
 
 // Assembled from fragments Claude supplied across replies.
 

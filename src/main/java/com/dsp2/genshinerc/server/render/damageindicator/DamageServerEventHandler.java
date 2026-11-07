@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.server.render.damageindicator;
+package com.dsp2.genshinerc.server.render.damageindicator;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.damage.DamageMapper;

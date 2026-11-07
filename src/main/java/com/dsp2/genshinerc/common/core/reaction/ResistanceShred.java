@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.reaction;
+package com.dsp2.genshinerc.common.core.reaction;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;

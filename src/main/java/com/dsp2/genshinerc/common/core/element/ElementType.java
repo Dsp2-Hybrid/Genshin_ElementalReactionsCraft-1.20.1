@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.element;
+package com.dsp2.genshinerc.common.core.element;
 
 import org.jetbrains.annotations.Nullable;
 

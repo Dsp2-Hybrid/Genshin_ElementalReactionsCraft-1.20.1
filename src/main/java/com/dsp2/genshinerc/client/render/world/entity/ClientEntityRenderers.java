@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.client.render.world.entity;
+package com.dsp2.genshinerc.client.render.world.entity;
 
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.registry.ModEntities;

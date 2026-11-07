@@ -13,6 +13,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
+
+@SuppressWarnings({"deprecation", "removal"})
 @Mod.EventBusSubscriber(modid = UnitBootstrap.NS, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class UnitBootstrap {
     public static final String NS = "genshinerc";

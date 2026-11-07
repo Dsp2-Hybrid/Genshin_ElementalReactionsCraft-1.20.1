@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.core.element;
+package com.dsp2.genshinerc.common.core.element;
 
 public record AttachCooldown(int timerTicks, int interval) {
     public static final AttachCooldown STANDARD = new AttachCooldown(50, 3);

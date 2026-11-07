@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.client.render.world.component.damageindicator.api;
+package com.dsp2.genshinerc.client.render.world.component.damageindicator.api;
 
 import java.util.Collections;
 import java.util.HashMap;
