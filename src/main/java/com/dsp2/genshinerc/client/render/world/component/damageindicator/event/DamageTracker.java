@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.world.component.damageindicator.event;
+﻿package com.dsp2.genshinerc.client.render.world.component.damageindicator.event;
 
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.TextParticle;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.api.CustomColor;
@@ -144,9 +144,11 @@ public class DamageTracker {
 
     public static void tickAll() {
         PARTICLES.removeIf(TextParticle::tick);
+        ReactionTextTracker.tick();
     }
 
     public static void renderAll(PoseStack ps, MultiBufferSource buf, Camera cam, float pt) {
         for (TextParticle p : PARTICLES) p.render(ps, buf, cam, pt);
+        ReactionTextTracker.render(ps, buf, cam, pt);
     }
 }

@@ -10,6 +10,7 @@ import yesman.epicfight.api.utils.math.OpenMatrix4f;
 import yesman.epicfight.world.capabilities.entitypatch.Faction;
 import yesman.epicfight.world.capabilities.entitypatch.MobPatch;
 import yesman.epicfight.world.damagesource.StunType;
+
 public abstract class CombatAvatar<T extends Mob> extends MobPatch<T> {
     protected AssetAccessor<? extends StaticAnimation> burstMotion;
     protected AssetAccessor<? extends StaticAnimation> staggerMotion;

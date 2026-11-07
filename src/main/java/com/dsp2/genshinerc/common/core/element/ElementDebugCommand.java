@@ -1,5 +1,7 @@
-package com.dsp2.genshinerc.common.core.element;
+﻿package com.dsp2.genshinerc.common.core.element;
 
+import com.dsp2.genshinerc.common.core.reaction.ElementReactions;
+import com.dsp2.genshinerc.common.core.reaction.ReactionResult;
 import com.dsp2.genshinerc.common.level.command.LevelDebugCommand;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
@@ -46,6 +48,12 @@ public final class ElementDebugCommand {
 
         d.register(Commands.literal("dc").requires(s -> s.hasPermission(2))
                 .executes(ElementDebugCommand::clear));
+
+        d.register(Commands.literal("da").requires(s -> s.hasPermission(2))
+                .then(Commands.argument("id", IntegerArgumentType.integer(1, 7))
+                        .executes(ctx -> react(ctx, 1.0f))
+                        .then(Commands.argument("units", FloatArgumentType.floatArg(0.1f, 8f))
+                                .executes(ctx -> react(ctx, FloatArgumentType.getFloat(ctx, "units"))))));
     }
 
     private static int apply(CommandContext<CommandSourceStack> ctx, float units) {
@@ -91,6 +99,16 @@ public final class ElementDebugCommand {
         if (target == null) return fail(ctx);
         ElementAuraManager.clear(target);
         ctx.getSource().sendSuccess(() -> Component.literal("Cleared all auras on target"), false);
+        return 1;
+    }
+
+    private static int react(CommandContext<CommandSourceStack> ctx, float units) {
+        ElementType type = ElementType.fromDebugId(IntegerArgumentType.getInteger(ctx, "id"));
+        LivingEntity target = target(ctx);
+        if (type == null || target == null) return fail(ctx);
+        ReactionResult result = ElementReactions.trigger(target, ctx.getSource().getEntity(), type, units);
+        ctx.getSource().sendSuccess(() -> Component.literal("Reactions: " + result.reactions()
+                + " amplify " + result.amplify() + " flat " + result.catalyzeFlat()), false);
         return 1;
     }
 

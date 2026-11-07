@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.core.element;
+﻿package com.dsp2.genshinerc.common.core.element;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +11,8 @@ public enum ElementType {
     ANEMO("ane.png", null, "anemo"),
     GEO("geo.png", null, "geo"),
     BURNING("pyro.png", "pyro_ani", "pyro"),
-    FROZEN("cry_0.png", "cry_ani", "cryo");
+    FROZEN("cry_0.png", "cry_ani", "cryo"),
+    QUICKEN("den.png", null, "dendro");
 
     private static final ElementType[] DEBUG_ORDER = {PYRO, HYDRO, ELECTRO, CRYO, DENDRO, ANEMO, GEO};
 

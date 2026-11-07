@@ -1,10 +1,13 @@
-package com.dsp2.genshinerc;
+﻿package com.dsp2.genshinerc;
 
 import com.dsp2.genshinerc.client.render.hud.bar.StatusBar;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.config.ConfigInitCore;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
+import com.dsp2.genshinerc.common.registry.ModAttributes;
+import com.dsp2.genshinerc.common.registry.ModEffects;
+import com.dsp2.genshinerc.common.registry.ModEntities;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -27,6 +30,11 @@ public class GenshinERC {
 
         //Network
         GenshinercNetwork.register();
+
+        //Registries
+        ModEffects.REGISTRY.register(modEventBus);
+        ModAttributes.REGISTRY.register(modEventBus);
+        ModEntities.REGISTRY.register(modEventBus);
 
         modEventBus.addListener(this::onCommonSetup);
     }

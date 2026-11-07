@@ -18,7 +18,8 @@
     "mods.gui.libs.yacl.YACLListFormatErrorScreenEventCallbackMixin",
     "mods.shaders.efn.AirTrailParticleMixin",
     "mods.shaders.efn.BloomTrailParticleMixin",
-    "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher"
+    "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher",
+    "core.damage.MixinLivingEntityArmor"
 
 
 

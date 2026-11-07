@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.core.element;
+﻿package com.dsp2.genshinerc.common.core.element;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -14,7 +14,10 @@ public final class ElementAuraEvents {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) ElementAuraManager.tick();
+        if (event.phase == TickEvent.Phase.END) {
+            com.dsp2.genshinerc.common.core.reaction.ElementReactions.tick();
+            ElementAuraManager.tick();
+        }
     }
 
     @SubscribeEvent
@@ -27,5 +30,7 @@ public final class ElementAuraEvents {
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         ElementAuraManager.reset();
+        ElementAttachment.reset();
+        com.dsp2.genshinerc.common.core.reaction.ElementReactions.reset();
     }
 }

@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.world.component.damageindicator.config;
+﻿package com.dsp2.genshinerc.client.render.world.component.damageindicator.config;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
@@ -50,6 +50,23 @@ public class DamageIndicatorConfig {
     @SerialEntry public String colorCryo     = "#B4FFFE";
     @SerialEntry public String colorGeo      = "#EFC01B";
     @SerialEntry public String colorOverload = "#FD375A";
+    @SerialEntry public String colorTrue           = "#E6E6E6";
+    @SerialEntry public String colorSuperconduct   = "#C0B2FE";
+    @SerialEntry public String colorElectroCharged = "#6699FF";
+    @SerialEntry public String colorShatter        = "#D9FFFE";
+    @SerialEntry public String colorBloom          = "#2AB980";
+    @SerialEntry public String colorHyperbloom     = "#A879B3";
+    @SerialEntry public String colorBurgeon        = "#CC7900";
+    @SerialEntry public String colorBurning        = "#E57000";
+    @SerialEntry public String colorQuicken        = "#6D9934";
+    @SerialEntry public String colorAggravate      = "#BA70D9";
+    @SerialEntry public String colorSpread         = "#79934D";
+    @SerialEntry public boolean reactionTextEnabled = true;
+    @SerialEntry public double reactionTextScale    = 0.8;
+    @SerialEntry public int reactionTextLifeTime    = 24;
+    @SerialEntry public double reactionTextOffsetY  = 0.6;
+    @SerialEntry public double reactionTextRise     = 0.3;
+    @SerialEntry public double reactionTextSpacing  = 0.3;
     @SerialEntry public boolean lifeShrinkEnabled = true;
     @SerialEntry public int lifeShrinkStartTick = 4;
     @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_OUT;
@@ -96,6 +113,17 @@ public class DamageIndicatorConfig {
             case "cryo" -> colorCryo;
             case "geo" -> colorGeo;
             case "overload" -> colorOverload;
+            case "true" -> colorTrue;
+            case "superconduct" -> colorSuperconduct;
+            case "electro_charged" -> colorElectroCharged;
+            case "shatter" -> colorShatter;
+            case "bloom" -> colorBloom;
+            case "hyperbloom" -> colorHyperbloom;
+            case "burgeon" -> colorBurgeon;
+            case "burning" -> colorBurning;
+            case "quicken" -> colorQuicken;
+            case "aggravate" -> colorAggravate;
+            case "spread" -> colorSpread;
             default -> colorPhysical;
         };
     }
@@ -207,6 +235,23 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(false, "color_cryo", new Color(0xB4FFFE), () -> toAwt(c.colorCryo), v -> c.colorCryo = fromAwt(v)))
                 .option(colorOpt(false, "color_geo", new Color(0xEFC01B), () -> toAwt(c.colorGeo), v -> c.colorGeo = fromAwt(v)))
                 .option(colorOpt(false, "color_overload", new Color(0xFD375A), () -> toAwt(c.colorOverload), v -> c.colorOverload = fromAwt(v)))
+                .option(colorOpt(false, "color_true", new Color(0xE6E6E6), () -> toAwt(c.colorTrue), v -> c.colorTrue = fromAwt(v)))
+                .option(colorOpt(false, "color_superconduct", new Color(0xC0B2FE), () -> toAwt(c.colorSuperconduct), v -> c.colorSuperconduct = fromAwt(v)))
+                .option(colorOpt(false, "color_electro_charged", new Color(0x6699FF), () -> toAwt(c.colorElectroCharged), v -> c.colorElectroCharged = fromAwt(v)))
+                .option(colorOpt(false, "color_shatter", new Color(0xD9FFFE), () -> toAwt(c.colorShatter), v -> c.colorShatter = fromAwt(v)))
+                .option(colorOpt(false, "color_bloom", new Color(0x2AB980), () -> toAwt(c.colorBloom), v -> c.colorBloom = fromAwt(v)))
+                .option(colorOpt(false, "color_hyperbloom", new Color(0xA879B3), () -> toAwt(c.colorHyperbloom), v -> c.colorHyperbloom = fromAwt(v)))
+                .option(colorOpt(false, "color_burgeon", new Color(0xCC7900), () -> toAwt(c.colorBurgeon), v -> c.colorBurgeon = fromAwt(v)))
+                .option(colorOpt(false, "color_burning", new Color(0xE57000), () -> toAwt(c.colorBurning), v -> c.colorBurning = fromAwt(v)))
+                .option(colorOpt(false, "color_quicken", new Color(0x6D9934), () -> toAwt(c.colorQuicken), v -> c.colorQuicken = fromAwt(v)))
+                .option(colorOpt(false, "color_aggravate", new Color(0xBA70D9), () -> toAwt(c.colorAggravate), v -> c.colorAggravate = fromAwt(v)))
+                .option(colorOpt(false, "color_spread", new Color(0x79934D), () -> toAwt(c.colorSpread), v -> c.colorSpread = fromAwt(v)))
+                .option(boolOpt(false, "reaction_text_enabled", true, () -> c.reactionTextEnabled, v -> c.reactionTextEnabled = v))
+                .option(dblOpt(false, "reaction_text_scale", 0.8, () -> c.reactionTextScale, v -> c.reactionTextScale = v, 0.20, 3.00))
+                .option(intOpt(false, "reaction_text_life_time", 24, () -> c.reactionTextLifeTime, v -> c.reactionTextLifeTime = v, 8, 80))
+                .option(dblOpt(false, "reaction_text_offset_y", 0.6, () -> c.reactionTextOffsetY, v -> c.reactionTextOffsetY = v, -1.00, 3.00))
+                .option(dblOpt(false, "reaction_text_rise", 0.3, () -> c.reactionTextRise, v -> c.reactionTextRise = v, 0.00, 2.00))
+                .option(dblOpt(false, "reaction_text_spacing", 0.3, () -> c.reactionTextSpacing, v -> c.reactionTextSpacing = v, 0.10, 1.50))
                 .option(boolOpt(false, "life_shrink_enabled", true, () -> c.lifeShrinkEnabled, v -> c.lifeShrinkEnabled = v))
                 .option(intOpt(false, "life_shrink_start_tick", 4, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
                 .option(easingOpt(false, "life_shrink_easing", EasingWrapper.EASE_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))
