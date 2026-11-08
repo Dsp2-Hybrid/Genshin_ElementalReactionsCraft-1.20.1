@@ -27,10 +27,6 @@ public class VFXConfig {
     public static void load() { HANDLER.load(); }
     public static void save() { HANDLER.save(); }
 
-    @SerialEntry public boolean elementHudEnabled = true;
-    @SerialEntry public int elementHudYOffset = 0;
-    @SerialEntry public int elementGaugeBarYOffset = 0;
-    @SerialEntry public int hudGlobalYOffset = 0;
 
     @SerialEntry public boolean statusTextEnabled = true;
     @SerialEntry public double statusTextOffsetY = 0.45;
@@ -65,10 +61,6 @@ public class VFXConfig {
         return OptionGroup.createBuilder()
                 .name(t("genshinerc.bar.group.visuals"))
                 .description(OptionDescription.of(td("genshinerc.bar.group.visuals")))
-                .option(boolOpt("element_hud_enabled", true, () -> c.elementHudEnabled, v -> c.elementHudEnabled = v))
-                .option(intOpt("element_hud_y_offset", 0, () -> c.elementHudYOffset, v -> c.elementHudYOffset = v, -200, 200))
-                .option(intOpt("element_gauge_bar_y_offset", 0, () -> c.elementGaugeBarYOffset, v -> c.elementGaugeBarYOffset = v, -100, 100))
-                .option(intOpt("hud_global_y_offset", 0, () -> c.hudGlobalYOffset, v -> c.hudGlobalYOffset = v, -200, 200))
                 .option(boolOpt("status_text_enabled", true, () -> c.statusTextEnabled, v -> c.statusTextEnabled = v))
                 .option(dblOpt("status_text_offset_y", 0.45, () -> c.statusTextOffsetY, v -> c.statusTextOffsetY = v, -1.0, 3.0))
                 .option(dblOpt("status_text_scale", 0.9, () -> c.statusTextScale, v -> c.statusTextScale = v, 0.2, 3.0))

@@ -2,7 +2,7 @@
   "targets": { "swap": {} },
   "passes": [
     {
-      "name": "genshinerc:weapon_thermal",
+      "name": "genshinerc:aaa_particle/thermal/weapon_thermal",
       "intarget": "minecraft:main",
       "outtarget": "swap"
     },

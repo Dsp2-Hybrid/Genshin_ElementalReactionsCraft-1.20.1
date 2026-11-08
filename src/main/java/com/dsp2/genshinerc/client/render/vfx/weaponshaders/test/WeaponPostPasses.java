@@ -19,8 +19,8 @@ public class WeaponPostPasses {
         close();
         ResourceManager rm = Minecraft.getInstance().getResourceManager();
         try {
-            blit = new WeaponBlitPass("genshinerc:weapon_blit", rm);
-            composite = new WeaponCompositePass("genshinerc:weapon_composite", rm);
+            blit = new WeaponBlitPass("genshinerc:weapon/post/weapon_blit", rm);
+            composite = new WeaponCompositePass("genshinerc:weapon/post/weapon_composite", rm);
         } catch (IOException e) {
             LogUtils.getLogger().error("genshinerc: failed to load post passes", e);
             close();

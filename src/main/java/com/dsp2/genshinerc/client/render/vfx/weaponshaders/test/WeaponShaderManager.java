@@ -18,7 +18,7 @@ public class WeaponShaderManager {
         for (WeaponShaderMode mode : WeaponShaderMode.values()) {
             if (mode == WeaponShaderMode.NONE) continue;
             try {
-                String shaderPath = "genshinerc:weaponvfxs/" + mode.shaderName;
+                String shaderPath = "genshinerc:weapon/material/" + mode.shaderName;
                 event.registerShader(
                         new ShaderInstance(
                                 event.getResourceProvider(),

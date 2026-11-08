@@ -22,9 +22,8 @@ public final class ElementHudRenderer {
 
     public static void render(LivingEntity entity, Matrix4f matrix, MultiBufferSource buffers,
                               BarConfig cfg, float hudX, float hudY, float globalAlpha) {
-        VFXConfig vfx = VFXConfig.get();
-        if (!vfx.elementHudEnabled) return;
 
+        VFXConfig vfx = VFXConfig.get();
         EntityAuras auras = ClientAuraCache.get(entity.getId());
         if (auras == null) return;
 
@@ -39,12 +38,12 @@ public final class ElementHudRenderer {
 
         boolean isPlayer = entity instanceof Player;
         int baseElementY = isPlayer ? (int)cfg.playerElementOffsetY : cfg.elementOffsetY;
-        int gaugeYOffset = isPlayer ? (int)cfg.playerElementGaugeYOffset : vfx.elementGaugeBarYOffset;
+        int gaugeYOffset = 0;
 
         float box = (cfg.elementBoxSize / 100f) * cfg.elementScale;
         float step = box + (cfg.elementSpacing / 100f) * cfg.elementScale;
         float rowCenterX = hudX + cfg.elementOffsetX / 100f;
-        float centerY = hudY + baseElementY / 100f + vfx.elementHudYOffset / 100f + box / 2f;
+        float centerY = hudY + baseElementY / 100f  + box / 2f;
         float centerSlot = (auras.layoutCount() - 1f) / 2f;
 
         for (ClientAura aura : visible) {
