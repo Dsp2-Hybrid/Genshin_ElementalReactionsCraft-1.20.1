@@ -3,10 +3,12 @@ package com.dsp2.genshinerc.common.core.combat.zhenmie;
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
 import com.dsp2.genshinerc.common.core.combat.epicfight.EfCombatBridge;
+import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,8 +33,20 @@ public final class ZhenMieManager {
 
     private ZhenMieManager() {}
 
+    private static int getLevelSafe(LivingEntity entity) {
+        if (entity instanceof Player p) return EntityLevelManager.getPlayerLevel(p);
+        return EntityLevelManager.getLevel(entity);
+    }
+
     public static void applyDefense(LivingEntity defender, AttackIntensity intensity, DefenseOutcome outcome) {
-        ZhenMieRules.Delta d = ZhenMieRules.forDefense(intensity, outcome);
+        applyDefense(defender, null, intensity, outcome);
+    }
+
+    public static void applyDefense(LivingEntity defender, @Nullable LivingEntity attacker, AttackIntensity intensity, DefenseOutcome outcome) {
+        int atkLv = attacker != null ? getLevelSafe(attacker) : 0;
+        int defLv = getLevelSafe(defender);
+        
+        ZhenMieRules.Delta d = ZhenMieRules.forDefense(intensity, outcome, atkLv, defLv);
         add(defender, d.zhen(), d.mie());
     }
 
@@ -43,16 +57,22 @@ public final class ZhenMieManager {
         s.decaying = false;
 
         float oldZ = s.zhen, oldM = s.mie;
-        float z = Mth.clamp(oldZ + dZhen, 0f, 1f);
-        float m = Mth.clamp(oldM + dMie, 0f, 1f);
+        int defLv = getLevelSafe(entity);
 
-        if (z + m >= 1f - EPS && (dZhen > 0f || dMie > 0f)) {
-            float point = Mth.clamp(dZhen >= dMie ? 1f - oldM : oldZ, 0f, 1f);
-            ClashResult result = ZhenMieRules.classify(point);
+        float maxCap = ZhenMieRules.maxCapacity(entity.getMaxHealth(), defLv);
+
+        float z = Mth.clamp(oldZ + dZhen, 0f, maxCap);
+        float m = Mth.clamp(oldM + dMie, 0f, maxCap);
+
+        if (z + m >= maxCap - EPS && (dZhen > 0f || dMie > 0f)) {
+            float point = Mth.clamp(dZhen >= dMie ? maxCap - oldM : oldZ, 0f, maxCap);
+            float normalizedPoint = point / maxCap;
+            
+            ClashResult result = ZhenMieRules.classify(normalizedPoint);
             s.zhen = 0f;
             s.mie = m * ZhenMieRules.MIE_KEPT_AFTER_CLASH;
             s.pendingClash = result;
-            s.clashPoint = point;
+            s.clashPoint = normalizedPoint;
             onClash(entity, result);
         } else {
             s.zhen = z;

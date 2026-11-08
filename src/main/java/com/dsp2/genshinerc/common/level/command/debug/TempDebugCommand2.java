@@ -26,17 +26,17 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Locale;
 
 @Mod.EventBusSubscriber(modid = "genshinerc")
-public final class ElementDebugCommand {
+public final class TempDebugCommand2 {
     private static final float DEFAULT_UNITS = 2.0f;
     private static final float DEFAULT_CONSUME = 1.0f;
-    private ElementDebugCommand() {}
+    private TempDebugCommand2() {}
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> d = event.getDispatcher();
         d.register(Commands.literal("d").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(ctx -> apply(ctx, DEFAULT_UNITS)).then(Commands.argument("units", FloatArgumentType.floatArg(0.1f, 8f)).executes(ctx -> apply(ctx, FloatArgumentType.getFloat(ctx, "units"))))));
         d.register(Commands.literal("dr").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(ctx -> consume(ctx, DEFAULT_CONSUME)).then(Commands.argument("amount", FloatArgumentType.floatArg(0.01f, ElementGauge.MAX_GAUGE)).executes(ctx -> consume(ctx, FloatArgumentType.getFloat(ctx, "amount"))))));
-        d.register(Commands.literal("df").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(ElementDebugCommand::flash)));
-        d.register(Commands.literal("dc").requires(s -> s.hasPermission(2)).executes(ElementDebugCommand::clear));
+        d.register(Commands.literal("df").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(TempDebugCommand2::flash)));
+        d.register(Commands.literal("dc").requires(s -> s.hasPermission(2)).executes(TempDebugCommand2::clear));
         d.register(Commands.literal("da").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(ctx -> react(ctx, 1.0f)).then(Commands.argument("units", FloatArgumentType.floatArg(0.1f, 8f)).executes(ctx -> react(ctx, FloatArgumentType.getFloat(ctx, "units"))))));
         d.register(Commands.literal("dh").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).then(Commands.argument("damage", FloatArgumentType.floatArg(0.1f, 100000f)).executes(ctx -> {
             ElementType type = ElementType.fromDebugId(IntegerArgumentType.getInteger(ctx, "id"));

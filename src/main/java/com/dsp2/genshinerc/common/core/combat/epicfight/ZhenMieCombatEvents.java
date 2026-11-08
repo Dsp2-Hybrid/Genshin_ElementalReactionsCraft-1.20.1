@@ -17,12 +17,22 @@ public final class ZhenMieCombatEvents {
     public static void onDamage(LivingDamageEvent event) {
         LivingEntity victim = event.getEntity();
         if (victim.level().isClientSide() || event.getSource().getEntity() == null) return;
-        ZhenMieManager.applyDefense(victim, EfCombatBridge.classify(event.getSource()), DefenseOutcome.HIT);
-        if (event.getSource().getEntity() instanceof LivingEntity attacker) ZhenMieManager.markCombat(attacker);
+        LivingEntity attacker = null;
+        if (event.getSource().getEntity() instanceof LivingEntity livingAttacker) {
+            attacker = livingAttacker;
+        }
+        ZhenMieManager.applyDefense(victim, attacker, EfCombatBridge.classify(event.getSource()), DefenseOutcome.HIT);
+        if (attacker != null) {
+            ZhenMieManager.markCombat(attacker);
+        }
     }
 
     public static void onGuard(LivingEntity defender, TakeDamageEvent.Attack event) {
         DefenseOutcome outcome = event.isParried() ? DefenseOutcome.PARRY : DefenseOutcome.BLOCK;
-        ZhenMieManager.applyDefense(defender, EfCombatBridge.classify(event.getDamageSource()), outcome);
+        LivingEntity attacker = null;
+        if (event.getDamageSource().getEntity() instanceof LivingEntity livingAttacker) {
+            attacker = livingAttacker;
+        }
+        ZhenMieManager.applyDefense(defender, attacker, EfCombatBridge.classify(event.getDamageSource()), outcome);
     }
 }

@@ -37,6 +37,8 @@ public final class CryoWorld {
                 level.setBlockAndUpdate(p.immutable(), Blocks.ICE.defaultBlockState());
             } else if (pyro && (s.is(Blocks.ICE) || s.is(Blocks.FROSTED_ICE))) {
                 level.setBlockAndUpdate(p.immutable(), Blocks.WATER.defaultBlockState());
+            } else if (pyro && ElementAuraManager.hasAura(e, ElementType.FROZEN) && s.is(Blocks.SNOW)) {
+                level.setBlockAndUpdate(p.immutable(), Blocks.WATER.defaultBlockState());
             }
         }
     }

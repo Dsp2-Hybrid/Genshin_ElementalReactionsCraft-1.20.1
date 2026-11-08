@@ -109,9 +109,9 @@ public final class MurasamaShaderSetup {
         public void processScene(AAAEffectPostProcessContext ctx, RenderTarget before, RenderTarget after, RenderTarget isolated, RenderTarget scene) {
             if (shader == null) {
                 try {
-                    shader = new EffectInstance(Minecraft.getInstance().getResourceManager(), "genshinerc:weapon_thermal");
+                    shader = new EffectInstance(Minecraft.getInstance().getResourceManager(), "genshinerc:aaa_particle/thermal/weapon_thermal");
                 } catch (IOException e) {
-                    throw new IllegalStateException("Unable to load genshinerc:weapon_thermal", e);
+                    throw new IllegalStateException("Unable to load genshinerc:aaa_particle/thermal/weapon_thermal", e);
                 }
             }
 
