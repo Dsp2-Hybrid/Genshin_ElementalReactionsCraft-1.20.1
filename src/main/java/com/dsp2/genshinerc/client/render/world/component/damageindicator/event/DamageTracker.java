@@ -27,8 +27,12 @@ public class DamageTracker {
     public static void setColorProvider(DamageColorProvider p) { colorProvider = p; }
     public static void setSizeProvider(DamageSizeProvider p) { sizeProvider = p; }
 
+    private static int forceLifeTime = 0;
+
     public static void addCustomText(LivingEntity entity, String text, String hexColor, String hexColor2, float scale) {
+        forceLifeTime = 24;
         addParticle(new DamageInfo(entity, "physical", 0, false, false, false, 0, hexColor, scale, false, false, text, hexColor2));
+        forceLifeTime = 0;
     }
 
     public static void addParticle(DamageInfo info) {
@@ -115,10 +119,11 @@ public class DamageTracker {
             velCopy.x += (Math.random() - 0.5) * 0.2;
             velCopy.z += (Math.random() - 0.5) * 0.2;
         }
+        int life = forceLifeTime > 0 ? forceLifeTime : cfg.lifeTime;
         PARTICLES.add(new TextParticle(
                 pos.x, pos.y, pos.z, velCopy.x, velCopy.y, velCopy.z,
                 Component.literal(text), color, color2, cfg.velocityMultiplier, cfg.gravityStrength,
-                cfg.lifeTime, scale, cfg.drawShadow, kill, cfg));
+                life, scale, cfg.drawShadow, kill, cfg));
     }
 
     private static String formatDamage(DamageInfo i, int digits) {

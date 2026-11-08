@@ -27,8 +27,6 @@ public class VFXConfig {
     public static void load() { HANDLER.load(); }
     public static void save() { HANDLER.save(); }
 
-    @SerialEntry public int playerElementOffsetY = 30;
-    @SerialEntry public int playerElementGaugeYOffset = 0;
     @SerialEntry public boolean elementHudEnabled = true;
     @SerialEntry public int elementHudYOffset = 0;
     @SerialEntry public int elementGaugeBarYOffset = 0;
@@ -67,8 +65,6 @@ public class VFXConfig {
         return OptionGroup.createBuilder()
                 .name(t("genshinerc.bar.group.visuals"))
                 .description(OptionDescription.of(td("genshinerc.bar.group.visuals")))
-                .option(intOpt("player_element_offset_y", 30, () -> c.playerElementOffsetY, v -> c.playerElementOffsetY = v, -200, 200))
-                .option(intOpt("player_element_gauge_y_offset", 0, () -> c.playerElementGaugeYOffset, v -> c.playerElementGaugeYOffset = v, -100, 100))
                 .option(boolOpt("element_hud_enabled", true, () -> c.elementHudEnabled, v -> c.elementHudEnabled = v))
                 .option(intOpt("element_hud_y_offset", 0, () -> c.elementHudYOffset, v -> c.elementHudYOffset = v, -200, 200))
                 .option(intOpt("element_gauge_bar_y_offset", 0, () -> c.elementGaugeBarYOffset, v -> c.elementGaugeBarYOffset = v, -100, 100))

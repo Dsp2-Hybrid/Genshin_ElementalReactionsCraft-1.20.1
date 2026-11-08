@@ -715,4 +715,5 @@
   "genshinerc.bar.config.player_element_gauge_y_offset": "玩家元素量条 Y轴偏移",
   "genshinerc.bar.config.player_element_gauge_y_offset.desc": "仅对玩家生效的元素量条 Y轴偏移。"
 
+
 }

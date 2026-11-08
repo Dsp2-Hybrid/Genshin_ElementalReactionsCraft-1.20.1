@@ -38,8 +38,8 @@ public final class ElementHudRenderer {
         if (visible.isEmpty()) return;
 
         boolean isPlayer = entity instanceof Player;
-        int baseElementY = isPlayer ? vfx.playerElementOffsetY : cfg.elementOffsetY;
-        int gaugeYOffset = isPlayer ? vfx.playerElementGaugeYOffset : vfx.elementGaugeBarYOffset;
+        int baseElementY = isPlayer ? (int)cfg.playerElementOffsetY : cfg.elementOffsetY;
+        int gaugeYOffset = isPlayer ? (int)cfg.playerElementGaugeYOffset : vfx.elementGaugeBarYOffset;
 
         float box = (cfg.elementBoxSize / 100f) * cfg.elementScale;
         float step = box + (cfg.elementSpacing / 100f) * cfg.elementScale;

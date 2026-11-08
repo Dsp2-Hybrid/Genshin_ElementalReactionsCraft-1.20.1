@@ -63,7 +63,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public String colorAggravate      = "#BA70D9";
     @SerialEntry public String colorSpread         = "#79934D";
     @SerialEntry public boolean reactionTextEnabled = true;
-    @SerialEntry public double reactionTextScale    = 0.92;
+    @SerialEntry public double reactionTextScale    = 0.96;
     @SerialEntry public boolean lifeShrinkEnabled = true;
     @SerialEntry public int lifeShrinkStartTick = 4;
     @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_OUT;
@@ -245,7 +245,7 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(false, "color_aggravate", new Color(0xBA70D9), () -> toAwt(c.colorAggravate), v -> c.colorAggravate = fromAwt(v)))
                 .option(colorOpt(false, "color_spread", new Color(0x79934D), () -> toAwt(c.colorSpread), v -> c.colorSpread = fromAwt(v)))
                 .option(boolOpt(false, "reaction_text_enabled", true, () -> c.reactionTextEnabled, v -> c.reactionTextEnabled = v))
-                .option(dblOpt(false, "reaction_text_scale", 0.92, () -> c.reactionTextScale, v -> c.reactionTextScale = v, 0.3, 2.5))
+                .option(dblOpt(false, "reaction_text_scale", 0.96, () -> c.reactionTextScale, v -> c.reactionTextScale = v, 0.3, 2.5))
                 .option(boolOpt(false, "life_shrink_enabled", true, () -> c.lifeShrinkEnabled, v -> c.lifeShrinkEnabled = v))
                 .option(intOpt(false, "life_shrink_start_tick", 4, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
                 .option(easingOpt(false, "life_shrink_easing", EasingWrapper.EASE_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))

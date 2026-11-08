@@ -534,6 +534,7 @@ public class CustomHealthBar extends EntityUI {
         public enum Phase { IDLE, FADING_IN, HOLDING, FADING_OUT }
         private Phase phase = Phase.IDLE;
         private long phaseStartTime = 0;
+        public long lastAuraMs = 0;
         public float currentAlpha = 0f;
 
         public float getShakeOffset(long now, BarConfig config) {
@@ -718,6 +719,11 @@ public class CustomHealthBar extends EntityUI {
                         boolean hasAura = false;
             com.dsp2.genshinerc.client.render.hud.bar.element.EntityAuras auras = com.dsp2.genshinerc.client.render.hud.bar.element.ClientAuraCache.get(entity.getId());
             if (auras != null && !auras.isEmpty()) hasAura = true;
+            
+            if (hasAura) {
+                lastAuraMs = now;
+            }
+            boolean isAuraActive = (now - lastAuraMs < 500);
 
             BarConfig.PlayerMode pMode = config.playerMode;
             BarConfig.MobMode mMode = config.mobMode;
@@ -748,20 +754,16 @@ public class CustomHealthBar extends EntityUI {
                 phaseStartTime = now;
             }
 
-                        if (hasAura && phase == Phase.IDLE) {
-                phase = Phase.FADING_IN;
-                phaseStartTime = now;
-            }
-            if (hasAura && phase == Phase.FADING_OUT) {
-                phase = Phase.FADING_IN;
-                phaseStartTime = now;
-            }
-            if (isAlways && phase == Phase.IDLE) {
-                phase = Phase.FADING_IN;
-                phaseStartTime = now;
+            boolean forceDisplay = isAlways || (isAuraActive && (isPlayer ? pMode != BarConfig.PlayerMode.NONE : mMode != BarConfig.MobMode.NONE));
+
+            if (forceDisplay) {
+                if (phase == Phase.IDLE || phase == Phase.FADING_OUT) {
+                    phase = Phase.FADING_IN;
+                    phaseStartTime = now;
+                }
             }
 
-            if (phase == Phase.HOLDING && !isAlways) {
+            if (phase == Phase.HOLDING && !forceDisplay) {
                 if (hpWhite.active || absWhite.active || mainBarAnimating || hpWhite.oldActive || absWhite.oldActive || isSmallChangeActive) {
                     phaseStartTime = now;
                 } else {

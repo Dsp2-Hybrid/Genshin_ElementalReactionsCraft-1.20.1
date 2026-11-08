@@ -145,6 +145,8 @@ public class BarConfig {
     @SerialEntry public float elementBoxSize = 30.0f;
     @SerialEntry public float elementSpacing = 0.0f;
     @SerialEntry public int elementOffsetY = 30;
+    @SerialEntry public float playerElementOffsetY = 30f;
+    @SerialEntry public float playerElementGaugeYOffset = 0f;
     @SerialEntry public int elementOffsetX = 4;
     @SerialEntry public float elementScale = 1.50f;
 
@@ -402,6 +404,8 @@ public class BarConfig {
                 .option(floatOptCustomStep("element_box_size", 30.0f, () -> c.elementBoxSize, v -> c.elementBoxSize = v, 10.0f, 70.0f, 0.1f, "%.1f"))
                 .option(floatOptCustomStep("element_spacing", 0.0f, () -> c.elementSpacing, v -> c.elementSpacing = v, -5.0f, 15.0f, 0.1f, "%.1f"))
                 .option(intOpt("element_offset_y", 30, () -> c.elementOffsetY, v -> c.elementOffsetY = v, -100, 120, 1))
+                .option(floatOpt("player_element_offset_y", 30f, () -> c.playerElementOffsetY, v -> c.playerElementOffsetY = v, -100f, 100f))
+                .option(floatOpt("player_element_gauge_y_offset", 0f, () -> c.playerElementGaugeYOffset, v -> c.playerElementGaugeYOffset = v, -50f, 50f))
                 .option(intOpt("element_offset_x", 4, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100, 1))
                 .option(floatOpt("element_scale", 1.50f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 2.0f))
                 .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
