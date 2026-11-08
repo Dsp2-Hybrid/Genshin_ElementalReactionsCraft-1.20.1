@@ -1,11 +1,13 @@
 package com.dsp2.genshinerc.server.render.damageindicator;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
+import com.dsp2.genshinerc.common.core.damage.DamageKind;
 import com.dsp2.genshinerc.common.core.damage.DamageMapper;
 import com.dsp2.genshinerc.common.core.reaction.ReactionDamage;
 import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
 import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorConfigSyncPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
@@ -53,7 +55,6 @@ public class DamageServerEventHandler {
         if (e.level().isClientSide()) return;
 
         if (!ServerConfig.ENABLED.get()) return;
-
         if (ReactionDamage.isDealing()) return;
 
         if (!PRE_STATE.containsKey(e.getId())) {
@@ -61,7 +62,12 @@ public class DamageServerEventHandler {
             state.entity = e;
             state.preHealth = e.getHealth();
             state.preAbsorb = e.getAbsorptionAmount();
-            state.key = DamageMapper.classify(event.getSource()).indicatorKey();
+            
+            if (event.getSource().is(DamageTypeTags.IS_EXPLOSION)) {
+                state.key = "pyro";
+            } else {
+                state.key = DamageMapper.classify(event.getSource()).indicatorKey();
+            }
             PRE_STATE.put(e.getId(), state);
         }
     }

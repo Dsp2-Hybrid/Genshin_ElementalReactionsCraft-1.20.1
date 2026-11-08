@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.level.command;
+package com.dsp2.genshinerc.common.level.command.debug;
 
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;

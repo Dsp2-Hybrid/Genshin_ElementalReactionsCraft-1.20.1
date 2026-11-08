@@ -34,11 +34,9 @@ public final class NaturalExposure {
         LivingEntity e = event.getEntity();
         if (e.level().isClientSide() || !e.isAlive() || e instanceof ArmorStand) return;
         if (!ServerConfig.NATURAL_ENABLED.get()) return;
-
         int phase = e.tickCount + e.getId();
         if (e instanceof Slime && phase % ServerConfig.PERIODIC_INTERVAL_TICKS.get() == 0) periodic(e);
         if (phase % STEP != 0) return;
-
         exposure(e);
         if (phase % NEAR_STEP == 0) nearSwamp(e);
     }
@@ -47,13 +45,13 @@ public final class NaturalExposure {
         ElementType type = e instanceof MagmaCube ? ElementType.PYRO : ElementType.DENDRO;
         if (ElementAuraManager.hasAura(e, type)) return;
         float rest = ElementReactions.natural(e, type, GaugeTier.WEAK.units());
-        if (rest > 0f) ElementAuraManager.applyUnits(e, type, rest);
+        if (rest > 0f) ElementAuraManager.apply(e, type, rest, Math.max(1, Math.round((2.5f * rest + 7f) * 20f)));
     }
 
     private static void exposure(LivingEntity e) {
         Level level = e.level();
-        float weak = ServerConfig.NATURAL_WEAK_GAUGE.get().floatValue();
-        float strong = ServerConfig.NATURAL_STRONG_GAUGE.get().floatValue();
+        float weak = 1.0f;
+        float strong = 2.0f;
         BlockPos feet = e.blockPosition();
         BlockPos eye = BlockPos.containing(e.getEyePosition());
         boolean aquatic = e instanceof WaterAnimal || e instanceof Drowned || e instanceof Guardian;
@@ -69,14 +67,13 @@ public final class NaturalExposure {
             apply(e, ElementType.CRYO, weak, ServerConfig.SNOW_SECONDS.get(), STEP);
         }
 
-        if (level.getBlockState(feet).is(Blocks.POWDER_SNOW)) {
-            apply(e, ElementType.CRYO, strong, ServerConfig.POWDER_SNOW_SECONDS.get(), STEP);
-        }
+        if (level.getBlockState(feet).is(Blocks.POWDER_SNOW)) apply(e, ElementType.CRYO, strong, ServerConfig.POWDER_SNOW_SECONDS.get(), STEP);
 
         if (e.isInLava()) {
             apply(e, ElementType.PYRO, strong, ServerConfig.LAVA_SECONDS.get(), STEP);
         } else if (e.isOnFire() || level.getBlockState(feet).is(BlockTags.FIRE)) {
-            apply(e, ElementType.PYRO, weak, ServerConfig.FIRE_SECONDS.get(), STEP);
+            if (level.getBlockState(feet).is(Blocks.SOUL_FIRE)) apply(e, ElementType.PYRO, strong, ServerConfig.SOUL_FIRE_SECONDS.get(), STEP);
+            else apply(e, ElementType.PYRO, weak, ServerConfig.FIRE_SECONDS.get(), STEP);
         }
     }
 
@@ -89,7 +86,7 @@ public final class NaturalExposure {
         double min = ServerConfig.SWAMP_NEAR_MIN_SECONDS.get();
         double max = ServerConfig.SWAMP_NEAR_MAX_SECONDS.get();
         double seconds = min + (max - min) * Mth.clamp(d / radius, 0.0, 1.0);
-        apply(e, ElementType.DENDRO, ServerConfig.NATURAL_WEAK_GAUGE.get().floatValue(), seconds, NEAR_STEP);
+        apply(e, ElementType.DENDRO, 1.0f, seconds, NEAR_STEP);
     }
 
     private static double nearestSwamp(Level level, BlockPos origin, double radius) {
@@ -105,21 +102,9 @@ public final class NaturalExposure {
         return -1.0;
     }
 
-    private static boolean isSwamp(Level level, BlockPos pos) {
-        var biome = level.getBiome(pos);
-        return biome.is(Biomes.SWAMP) || biome.is(Biomes.MANGROVE_SWAMP);
-    }
-
-    private static boolean snowingAt(Level level, BlockPos pos) {
-        return level.isRaining() && level.canSeeSky(pos)
-                && level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY()
-                && level.getBiome(pos).value().getPrecipitationAt(pos) == Biome.Precipitation.SNOW;
-    }
-
-    private static boolean immune(LivingEntity e, ElementType type) {
-        return (type == ElementType.PYRO && e instanceof MagmaCube)
-                || (type == ElementType.DENDRO && e instanceof Slime && !(e instanceof MagmaCube));
-    }
+    private static boolean isSwamp(Level level, BlockPos pos) { var biome = level.getBiome(pos); return biome.is(Biomes.SWAMP) || biome.is(Biomes.MANGROVE_SWAMP); }
+    private static boolean snowingAt(Level level, BlockPos pos) { return level.isRaining() && level.canSeeSky(pos) && level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY() && level.getBiome(pos).value().getPrecipitationAt(pos) == Biome.Precipitation.SNOW; }
+    private static boolean immune(LivingEntity e, ElementType type) { return (type == ElementType.PYRO && e instanceof MagmaCube) || (type == ElementType.DENDRO && e instanceof Slime && !(e instanceof MagmaCube)); }
 
     private static void apply(LivingEntity e, ElementType type, float cap, double seconds, int step) {
         if (immune(e, type)) return;

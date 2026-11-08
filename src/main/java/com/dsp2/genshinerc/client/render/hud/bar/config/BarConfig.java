@@ -148,7 +148,6 @@ public class BarConfig {
     @SerialEntry public int elementOffsetX = 4;
     @SerialEntry public float elementScale = 1.50f;
 
-    @SerialEntry public float elementMinOpacity = 0.60f;
     @SerialEntry public float elementGaugeWidth = 80.0f;
     @SerialEntry public float elementGaugeHeight = 8.0f;
     @SerialEntry public float elementGaugeGap = -10.0f;
@@ -407,7 +406,6 @@ public class BarConfig {
                 .option(floatOpt("element_scale", 1.50f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 2.0f))
                 .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
                 .option(floatOpt("element_offset_z", 0.0f, () -> c.elementOffsetZ, v -> c.elementOffsetZ = v, -1f, 1f))
-                .option(percentOpt("element_min_opacity", 0.60f, () -> c.elementMinOpacity, v -> c.elementMinOpacity = v, 0f, 1f))
                 .option(floatOptCustomStep("element_gauge_width", 80f, () -> c.elementGaugeWidth, v -> c.elementGaugeWidth = v, 20f, 150f, 1f, "%.0f"))
                 .option(floatOptCustomStep("element_gauge_height", 8f, () -> c.elementGaugeHeight, v -> c.elementGaugeHeight = v, 2f, 30f, 0.5f, "%.1f"))
                 .option(floatOptCustomStep("element_gauge_gap", -10.0f, () -> c.elementGaugeGap, v -> c.elementGaugeGap = v, -50f, 30f, 0.5f, "%.1f"))
@@ -574,4 +572,10 @@ public class BarConfig {
         try { return new Color(Integer.parseInt(hex.replace("#","").trim(), 16)); } catch (Exception e) { return Color.WHITE; }
     }
     public static String fromAwt(Color c) { return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue()); }
+
+    private static Option<Double> dblOpt(String key, double def, java.util.function.Supplier<Double> g, java.util.function.Consumer<Double> s, double min, double max) {
+        return Option.<Double>createBuilder().name(t(P(key))).description(OptionDescription.of(td(P(key)))).binding(def, g, s)
+                .controller(opt -> dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder.create(opt).range(min, max).step(0.01))
+                .build();
+    }
 }

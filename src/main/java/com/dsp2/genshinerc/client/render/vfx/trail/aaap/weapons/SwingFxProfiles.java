@@ -25,8 +25,8 @@ public final class SwingFxProfiles {
             new Vec3f(0.0F, 0.0F, -1.5F),
             6.0F,
             4,
-            0.35F,
-            0.5F,
+            0.05F,
+            0.05F,
             0.85F,
             0.02F,
             3);

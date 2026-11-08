@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.common.level.command;
+package com.dsp2.genshinerc.common.level.command.debug;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.client.render.hud.gui.rpg.RpgHudElement;
@@ -25,17 +25,17 @@ public class HudDumpCommand {
                             Minecraft mc = Minecraft.getInstance();
                             if (mc.player == null) return 0;
 
-                            mc.player.sendSystemMessage(Component.literal("搂e=== RPG HUD 褰撳墠鍧愭爣鏁版嵁 ==="));
-                            mc.player.sendSystemMessage(Component.literal("搂7璇峰鍒朵互涓嬫枃鏈彂缁欎綔鑰呬綔涓烘柊鐨勯粯璁ゅ€?"));
+                            mc.player.sendSystemMessage(Component.literal("§e=== RPG HUD Element Dump ==="));
+                            mc.player.sendSystemMessage(Component.literal("§7Current Box Configuration (x, y, w, h, flipX, flipY):"));
 
                             for (RpgHudElement e : RpgHudElement.values()) {
                                 RpgHudElement.Box b = e.get(cfg);
                                 String text = String.format(Locale.ROOT, "%s(%.1ff, %.1ff, %.1ff, %.1ff, %b, %b)",
                                         e.name(), b.x(), b.y(), b.aw(), b.ah(), b.flipX(), b.flipY());
-                                mc.player.sendSystemMessage(Component.literal("搂a" + text));
+                                mc.player.sendSystemMessage(Component.literal("§a" + text));
                             }
 
-                            mc.player.sendSystemMessage(Component.literal("搂e==========================="));
+                            mc.player.sendSystemMessage(Component.literal("§e==========================="));
                             return 1;
                         })
         );

@@ -173,7 +173,7 @@ public class CustomHealthBar extends EntityUI {
             if (entity.distanceToSqr(mc.getCameraEntity()) > config.maxDistance * config.maxDistance) {
                 return false;
             }
-            if (LineOfSightChecker.isOccluded(mc, entity)) {
+                        if (LineOfSightChecker.isOccluded(mc, entity) || (mc.player != null && !mc.player.hasLineOfSight(entity))) {
                 return false;
             }
         }
@@ -715,6 +715,10 @@ public class CustomHealthBar extends EntityUI {
                 return;
             }
 
+                        boolean hasAura = false;
+            com.dsp2.genshinerc.client.render.hud.bar.element.EntityAuras auras = com.dsp2.genshinerc.client.render.hud.bar.element.ClientAuraCache.get(entity.getId());
+            if (auras != null && !auras.isEmpty()) hasAura = true;
+
             BarConfig.PlayerMode pMode = config.playerMode;
             BarConfig.MobMode mMode = config.mobMode;
             boolean isAlways = false;
@@ -744,6 +748,14 @@ public class CustomHealthBar extends EntityUI {
                 phaseStartTime = now;
             }
 
+                        if (hasAura && phase == Phase.IDLE) {
+                phase = Phase.FADING_IN;
+                phaseStartTime = now;
+            }
+            if (hasAura && phase == Phase.FADING_OUT) {
+                phase = Phase.FADING_IN;
+                phaseStartTime = now;
+            }
             if (isAlways && phase == Phase.IDLE) {
                 phase = Phase.FADING_IN;
                 phaseStartTime = now;

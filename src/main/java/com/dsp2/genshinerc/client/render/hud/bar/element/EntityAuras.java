@@ -34,7 +34,7 @@ public final class EntityAuras {
         }
     }
 
-    boolean isEmpty() {
+    public boolean isEmpty() {
         return auras.isEmpty();
     }
 
@@ -58,5 +58,15 @@ public final class EntityAuras {
 
     float layoutCount() {
         return Math.max(0f, layoutCount);
+    }
+
+    public boolean has(ElementType type) {
+        ClientAura a = auras.get(type);
+        return a != null && a.isVisible(ClientAura.nowTicks());
+    }
+
+    public float gauge(ElementType type) {
+        ClientAura a = auras.get(type);
+        return a == null ? 0f : a.display(ClientAura.nowTicks(), System.currentTimeMillis());
     }
 }

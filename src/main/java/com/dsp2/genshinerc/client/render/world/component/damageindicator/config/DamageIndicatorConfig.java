@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.client.render.world.component.damageindicator.config;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
 import com.dsp2.genshinerc.common.network.base.damageindicator.ServerConfigUpdatePacket;
 import dev.isxander.yacl3.api.*;
@@ -62,11 +63,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public String colorAggravate      = "#BA70D9";
     @SerialEntry public String colorSpread         = "#79934D";
     @SerialEntry public boolean reactionTextEnabled = true;
-    @SerialEntry public double reactionTextScale    = 0.8;
-    @SerialEntry public int reactionTextLifeTime    = 24;
-    @SerialEntry public double reactionTextOffsetY  = 0.6;
-    @SerialEntry public double reactionTextRise     = 0.3;
-    @SerialEntry public double reactionTextSpacing  = 0.3;
+    @SerialEntry public double reactionTextScale    = 0.92;
     @SerialEntry public boolean lifeShrinkEnabled = true;
     @SerialEntry public int lifeShrinkStartTick = 4;
     @SerialEntry public EasingWrapper lifeShrinkEasing = EasingWrapper.EASE_OUT;
@@ -151,11 +148,9 @@ public class DamageIndicatorConfig {
 
     private static Screen createServerScreen(DamageIndicatorConfig c, Screen escParent) {
         Minecraft mc = Minecraft.getInstance();
-
         boolean isSingleplayer = mc.hasSingleplayerServer();
         boolean hasOp = mc.player != null && mc.player.hasPermissions(2);
         boolean canEdit = isSingleplayer || hasOp;
-
         boolean lock = !canEdit;
 
         OptionGroup group = OptionGroup.createBuilder()
@@ -184,6 +179,7 @@ public class DamageIndicatorConfig {
     private static Screen createClientScreen(DamageIndicatorConfig c, Screen escParent) {
         OptionGroup group = buildGroup();
         OptionGroup barGroup = BarConfig.createGroup();
+        OptionGroup vfxGroup = VFXConfig.createGroup();
 
         return YetAnotherConfigLib.createBuilder()
                 .title(t("genshinerc.damageindicator.title"))
@@ -191,10 +187,12 @@ public class DamageIndicatorConfig {
                         .name(t("genshinerc.damageindicator.category.display"))
                         .group(group)
                         .group(barGroup)
+                        .group(vfxGroup)
                         .build())
                 .save(() -> {
                     DamageIndicatorConfig.save();
                     BarConfig.save();
+                    VFXConfig.save();
                 })
                 .build()
                 .generateScreen(escParent);
@@ -247,11 +245,7 @@ public class DamageIndicatorConfig {
                 .option(colorOpt(false, "color_aggravate", new Color(0xBA70D9), () -> toAwt(c.colorAggravate), v -> c.colorAggravate = fromAwt(v)))
                 .option(colorOpt(false, "color_spread", new Color(0x79934D), () -> toAwt(c.colorSpread), v -> c.colorSpread = fromAwt(v)))
                 .option(boolOpt(false, "reaction_text_enabled", true, () -> c.reactionTextEnabled, v -> c.reactionTextEnabled = v))
-                .option(dblOpt(false, "reaction_text_scale", 0.8, () -> c.reactionTextScale, v -> c.reactionTextScale = v, 0.20, 3.00))
-                .option(intOpt(false, "reaction_text_life_time", 24, () -> c.reactionTextLifeTime, v -> c.reactionTextLifeTime = v, 8, 80))
-                .option(dblOpt(false, "reaction_text_offset_y", 0.6, () -> c.reactionTextOffsetY, v -> c.reactionTextOffsetY = v, -1.00, 3.00))
-                .option(dblOpt(false, "reaction_text_rise", 0.3, () -> c.reactionTextRise, v -> c.reactionTextRise = v, 0.00, 2.00))
-                .option(dblOpt(false, "reaction_text_spacing", 0.3, () -> c.reactionTextSpacing, v -> c.reactionTextSpacing = v, 0.10, 1.50))
+                .option(dblOpt(false, "reaction_text_scale", 0.92, () -> c.reactionTextScale, v -> c.reactionTextScale = v, 0.3, 2.5))
                 .option(boolOpt(false, "life_shrink_enabled", true, () -> c.lifeShrinkEnabled, v -> c.lifeShrinkEnabled = v))
                 .option(intOpt(false, "life_shrink_start_tick", 4, () -> c.lifeShrinkStartTick, v -> c.lifeShrinkStartTick = v, 1, 30))
                 .option(easingOpt(false, "life_shrink_easing", EasingWrapper.EASE_OUT, () -> c.lifeShrinkEasing, v -> c.lifeShrinkEasing = v))

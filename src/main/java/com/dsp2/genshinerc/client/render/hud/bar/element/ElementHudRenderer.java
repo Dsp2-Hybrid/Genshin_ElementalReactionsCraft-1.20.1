@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.client.render.hud.bar.element;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig;
 import com.dsp2.genshinerc.client.render.hud.HudDraw;
 import com.dsp2.genshinerc.client.render.hud.WhiteMaskTextures;
@@ -11,6 +12,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.joml.Matrix4f;
 
 import java.util.List;
@@ -20,6 +22,9 @@ public final class ElementHudRenderer {
 
     public static void render(LivingEntity entity, Matrix4f matrix, MultiBufferSource buffers,
                               BarConfig cfg, float hudX, float hudY, float globalAlpha) {
+        VFXConfig vfx = VFXConfig.get();
+        if (!vfx.elementHudEnabled) return;
+
         EntityAuras auras = ClientAuraCache.get(entity.getId());
         if (auras == null) return;
 
@@ -32,23 +37,27 @@ public final class ElementHudRenderer {
         }
         if (visible.isEmpty()) return;
 
+        boolean isPlayer = entity instanceof Player;
+        int baseElementY = isPlayer ? vfx.playerElementOffsetY : cfg.elementOffsetY;
+        int gaugeYOffset = isPlayer ? vfx.playerElementGaugeYOffset : vfx.elementGaugeBarYOffset;
+
         float box = (cfg.elementBoxSize / 100f) * cfg.elementScale;
         float step = box + (cfg.elementSpacing / 100f) * cfg.elementScale;
         float rowCenterX = hudX + cfg.elementOffsetX / 100f;
-        float centerY = hudY + cfg.elementOffsetY / 100f + box / 2f;
+        float centerY = hudY + baseElementY / 100f + vfx.elementHudYOffset / 100f + box / 2f;
         float centerSlot = (auras.layoutCount() - 1f) / 2f;
 
         for (ClientAura aura : visible) {
             float cx = rowCenterX + (aura.slot() - centerSlot) * step;
-            drawAura(matrix, buffers, cfg, aura, cx, centerY, box, globalAlpha, nowTicks, nowMs);
+            drawAura(matrix, buffers, cfg, vfx, aura, cx, centerY, box, globalAlpha, nowTicks, nowMs, gaugeYOffset);
         }
     }
 
-    private static void drawAura(Matrix4f m, MultiBufferSource buffers, BarConfig cfg, ClientAura aura,
-                                 float cx, float cy, float box, float globalAlpha, double nowTicks, long nowMs) {
+    private static void drawAura(Matrix4f m, MultiBufferSource buffers, BarConfig cfg, VFXConfig vfx, ClientAura aura,
+                                 float cx, float cy, float box, float globalAlpha, double nowTicks, long nowMs, int gaugeYOffset) {
         float gauge = aura.display(nowTicks, nowMs);
         float white = aura.whiteness(nowMs, cfg);
-        float alpha = globalAlpha * aura.opacity(nowTicks, nowMs, gauge, cfg);
+        float alpha = globalAlpha * aura.opacity(nowTicks, nowMs, gauge, cfg, vfx);
         if (alpha <= 0.004f) return;
 
         float z = cfg.elementOffsetZ;
@@ -57,7 +66,7 @@ public final class ElementHudRenderer {
 
         float barW = box * cfg.elementGaugeWidth / 100f;
         float barH = box * cfg.elementGaugeHeight / 100f;
-        float barBottom = cy + half + box * cfg.elementGaugeGap / 100f;
+        float barBottom = cy + half + box * cfg.elementGaugeGap / 100f + gaugeYOffset / 100f;
         float bx1 = cx - barW / 2f;
         HudDraw.rect(m, buffers, bx1, barBottom, bx1 + barW, barBottom + barH, z,
                 HudDraw.scaleRgb(color, cfg.elementGaugeBgBrightness), alpha * cfg.elementGaugeBgAlpha * 0.85f);

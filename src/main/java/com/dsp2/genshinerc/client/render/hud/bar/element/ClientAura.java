@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.client.render.hud.bar.element;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.common.core.element.ElementGauge;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.client.Minecraft;
@@ -123,8 +124,8 @@ public final class ClientAura {
         return w * w * (3f - 2f * w);
     }
 
-    float opacity(double nowTicks, long nowMs, float shownGauge, BarConfig cfg) {
-        float gaugeAlpha = Mth.lerp(Mth.clamp(shownGauge / ElementGauge.MAX_GAUGE, 0f, 1f), cfg.elementMinOpacity, 1f);
+    float opacity(double nowTicks, long nowMs, float shownGauge, BarConfig cfg, VFXConfig vfx) {
+        float gaugeAlpha = Mth.lerp(Mth.clamp(shownGauge / ElementGauge.MAX_GAUGE, 0f, 1f), vfx.elementMinOpacity, 1f);
         float appear = Mth.clamp((nowMs - createdMs) / (float) APPEAR_MS, 0f, 1f);
         return gaugeAlpha * appear * flicker(nowTicks, nowMs, cfg) * ghostFade(nowMs, cfg);
     }

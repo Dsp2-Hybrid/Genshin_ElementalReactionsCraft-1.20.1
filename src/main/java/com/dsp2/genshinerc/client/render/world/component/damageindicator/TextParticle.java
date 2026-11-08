@@ -1,6 +1,5 @@
 package com.dsp2.genshinerc.client.render.world.component.damageindicator;
 
-import com.dsp2.genshinerc.client.render.hud.DeferredHudRenderer;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.api.CustomColor;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.api.EasingType;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig;
@@ -11,7 +10,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.joml.Matrix3f;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 public class TextParticle {
@@ -20,6 +19,7 @@ public class TextParticle {
     private final int maxAge;
     private final Component text;
     private final CustomColor color;
+    @Nullable private final CustomColor color2;
     private final float baseScale;
     private final boolean drawShadow;
     private final float shadowLuma;
@@ -36,18 +36,20 @@ public class TextParticle {
     private final EasingType fadeEasing;
     private final EasingType birthScaleEasing;
     private final EasingType birthFadeEasing;
+    private final int gradientDir;
 
     public TextParticle(double x, double y, double z, double vx, double vy, double vz,
-                        Component text, CustomColor color, double velocityMult, double gravity,
+                        Component text, CustomColor color, @Nullable CustomColor color2, double velocityMult, double gravity,
                         int maxAgeBase, float scale, boolean drawShadow, boolean isKill,
                         DamageIndicatorConfig cfg) {
         this.x = x; this.y = y; this.z = z;
         this.px = x; this.py = y; this.pz = z;
         this.vx = vx; this.vy = vy; this.vz = vz;
-        this.text = text; this.color = color;
+        this.text = text; this.color = color; this.color2 = color2;
         this.velocityMult = velocityMult; this.gravity = gravity;
         this.maxAge = isKill ? maxAgeBase + cfg.killExtraTicks : maxAgeBase;
         this.drawShadow = drawShadow; this.isKill = isKill; this.cfg = cfg;
+        this.gradientDir = (int) (Math.random() * 3);
 
         double randFactor = 1.0 + (Math.random() * 2 - 1) * cfg.birthSizeRandomPercent;
         this.baseScale = (float) (scale * randFactor);
@@ -129,56 +131,68 @@ public class TextParticle {
     }
 
     public void render(PoseStack ps, MultiBufferSource buf, Camera cam, float partialTick) {
-        Matrix4f pose = new Matrix4f(ps.last().pose());
-        Matrix3f normal = new Matrix3f(ps.last().normal());
+        float renderAge = Math.min(maxAge, age + partialTick);
+        float s = 0.03f * currentScale(renderAge);
 
-        DeferredHudRenderer.submitPost(deferred -> {
-            PoseStack replay = new PoseStack();
-            replay.last().pose().set(pose);
-            replay.last().normal().set(normal);
-            renderNow(replay, deferred, cam, partialTick);
-        });
-    }
+        CustomColor c = currentColor();
+        int argb = c.argb();
+        int a = (int) (((argb >>> 24) & 0xFF) * currentAlpha(renderAge));
+        
+        if (s <= 0f || a < 4) return;
 
-    private void renderNow(PoseStack ps, MultiBufferSource buf, Camera cam, float partialTick) {
         double dx = Mth.lerp(partialTick, px, x) - cam.getPosition().x;
         double dy = Mth.lerp(partialTick, py, y) - cam.getPosition().y;
         double dz = Mth.lerp(partialTick, pz, z) - cam.getPosition().z;
-
-        float renderAge = Math.min(maxAge, age + partialTick);
 
         ps.pushPose();
         ps.translate(dx, dy, dz);
         ps.mulPose(cam.rotation());
         ps.translate(0f, 0f, zOffset);
-
-        float s = 0.03f * currentScale(renderAge);
         ps.scale(-s, -s, s);
 
         Font font = Minecraft.getInstance().font;
-        CustomColor c = currentColor();
-        int argb = c.argb();
+        Matrix4f pose = ps.last().pose();
+        float textWidth = font.width(text);
+        float textX = -textWidth / 2f;
+        float textY = -font.lineHeight / 2f;
 
-        float alpha = currentAlpha(renderAge);
-        int a = (int) (((argb >> 24) & 0xFF) * alpha);
-        int r = (argb >> 16) & 0xFF, g = (argb >> 8) & 0xFF, b = argb & 0xFF;
-        int finalArgb = (a << 24) | (r << 16) | (g << 8) | b;
+        int rgb1 = argb & 0xFFFFFF;
+        int sa = (int) (a * shadowAlpha);
+        boolean shadow = drawShadow && sa >= 4;
 
-        float textX = font.width(text) / -2.0f;
+        if (color2 != null) {
+            int rgb2 = color2.argb() & 0xFFFFFF;
 
-        if (drawShadow && shadowAlpha > 0.001f) {
-            int sa = (int) (a * shadowAlpha);
-            int sR = (int) (r * shadowLuma);
-            int sG = (int) (g * shadowLuma);
-            int sB = (int) (b * shadowLuma);
-            int shadowArgb = (sa << 24) | (sR << 16) | (sG << 8) | sB;
-            font.drawInBatch(text, textX + shadowOffsetX, shadowOffsetY, shadowArgb, false,
-                    ps.last().pose(), buf, Font.DisplayMode.NORMAL, 0, 15728880);
+            if (shadow) {
+                MultiBufferSource shadowBuf = new GradientTextBuffer(
+                        buf, pose, textX, textX + textWidth, textY, textY + font.lineHeight,
+                        shade(rgb1, shadowLuma), shade(rgb2, shadowLuma), sa, gradientDir);
+                font.drawInBatch(text, textX + shadowOffsetX, shadowOffsetY, 0xFFFFFFFF, false,
+                        pose, shadowBuf, Font.DisplayMode.NORMAL, 0, 15728880);
+            }
+
+            MultiBufferSource mainBuf = new GradientTextBuffer(
+                    buf, pose, textX, textX + textWidth, textY, textY + font.lineHeight,
+                    rgb1, rgb2, a, gradientDir);
+            font.drawInBatch(text, textX, 0f, 0xFFFFFFFF, false,
+                    pose, mainBuf, Font.DisplayMode.NORMAL, 0, 15728880);
+        } else {
+            if (shadow) {
+                int shadowArgb = (sa << 24) | shade(rgb1, shadowLuma);
+                font.drawInBatch(text, textX + shadowOffsetX, shadowOffsetY, shadowArgb, false,
+                        pose, buf, Font.DisplayMode.NORMAL, 0, 15728880);
+            }
+            font.drawInBatch(text, textX, 0f, (a << 24) | rgb1, false,
+                    pose, buf, Font.DisplayMode.NORMAL, 0, 15728880);
         }
 
-        font.drawInBatch(text, textX, 0f, finalArgb, false,
-                ps.last().pose(), buf, Font.DisplayMode.NORMAL, 0, 15728880);
-
         ps.popPose();
+    }
+
+    private static int shade(int rgb, float luma) {
+        int r = (int) (((rgb >> 16) & 0xFF) * luma);
+        int g = (int) (((rgb >> 8) & 0xFF) * luma);
+        int b = (int) ((rgb & 0xFF) * luma);
+        return (r << 16) | (g << 8) | b;
     }
 }

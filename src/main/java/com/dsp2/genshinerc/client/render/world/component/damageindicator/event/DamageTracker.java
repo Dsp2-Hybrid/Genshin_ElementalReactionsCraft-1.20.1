@@ -10,6 +10,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.LivingEntity;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
@@ -26,6 +27,10 @@ public class DamageTracker {
     public static void setColorProvider(DamageColorProvider p) { colorProvider = p; }
     public static void setSizeProvider(DamageSizeProvider p) { sizeProvider = p; }
 
+    public static void addCustomText(LivingEntity entity, String text, String hexColor, String hexColor2, float scale) {
+        addParticle(new DamageInfo(entity, "physical", 0, false, false, false, 0, hexColor, scale, false, false, text, hexColor2));
+    }
+
     public static void addParticle(DamageInfo info) {
         DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
         if (!cfg.serverEnabled || info.entity == null) return;
@@ -39,6 +44,8 @@ public class DamageTracker {
         CustomColor color = info.hasOverrideColor()
                 ? CustomColor.fromHexString(info.overrideColor)
                 : colorProvider.getColor(info);
+        
+        CustomColor color2 = info.overrideColor2 != null ? CustomColor.fromHexString(info.overrideColor2) : null;
 
         double sizeOffset = (scale - (float) cfg.normalSize) * cfg.sizeYFactorK;
         double heightOffset = info.entity.getBbHeight() * cfg.heightYFactor;
@@ -87,20 +94,21 @@ public class DamageTracker {
             Vector3d p1 = new Vector3d(basePos.x - offX, basePos.y, basePos.z);
             Vector3d p2 = new Vector3d(basePos.x + offX, basePos.y, basePos.z);
             String absorbText = "-" + trim(info.absorbed, cfg.numberFormat);
-            addOne(p1, velBase, absorbText, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false, false);
+            addOne(p1, velBase, absorbText, CustomColor.fromHexString(cfg.absorbColor), null, scale, cfg, false, false);
             if (info.amount > 0.001f) {
                 String realText = trim(info.amount, cfg.numberFormat);
-                addOne(p2, velBase, realText, color, scale, cfg, false, true);
+                addOne(p2, velBase, realText, color, null, scale, cfg, false, true);
             }
         } else if (info.absorbDelta) {
             String text = (info.amount >= 0 ? "+" : "") + trim(Math.abs(info.amount), cfg.numberFormat);
-            addOne(basePos, velBase, text, CustomColor.fromHexString(cfg.absorbColor), scale, cfg, false, false);
+            addOne(basePos, velBase, text, CustomColor.fromHexString(cfg.absorbColor), null, scale, cfg, false, false);
         } else {
-            addOne(basePos, velBase, formatDamage(info, cfg.numberFormat), color, scale, cfg, info.kill, false);
+            String txt = info.customText != null ? info.customText : formatDamage(info, cfg.numberFormat);
+            addOne(basePos, velBase, txt, color, color2, scale, cfg, info.kill, false);
         }
     }
 
-    private static void addOne(Vector3d pos, Vector3d vel, String text, CustomColor color,
+    private static void addOne(Vector3d pos, Vector3d vel, String text, CustomColor color, CustomColor color2,
                                float scale, DamageIndicatorConfig cfg, boolean kill, boolean secondary) {
         Vector3d velCopy = new Vector3d(vel);
         if (secondary) {
@@ -109,7 +117,7 @@ public class DamageTracker {
         }
         PARTICLES.add(new TextParticle(
                 pos.x, pos.y, pos.z, velCopy.x, velCopy.y, velCopy.z,
-                Component.literal(text), color, cfg.velocityMultiplier, cfg.gravityStrength,
+                Component.literal(text), color, color2, cfg.velocityMultiplier, cfg.gravityStrength,
                 cfg.lifeTime, scale, cfg.drawShadow, kill, cfg));
     }
 
@@ -123,32 +131,22 @@ public class DamageTracker {
     private static String trim(float v, int digits) {
         double value = v;
         double abs = Math.abs(value);
-        if (digits <= 0) {
-            return String.valueOf(Math.round(value));
-        }
+        if (digits <= 0) return String.valueOf(Math.round(value));
         if (digits == 1) {
-            if (abs >= 1000) {
-                return String.valueOf(Math.round(value));
-            }
+            if (abs >= 1000) return String.valueOf(Math.round(value));
             String s = String.format("%.1f", value);
             return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
         }
-        if (abs >= 10000) {
-            return String.valueOf(Math.round(value));
-        }
-        if (abs >= 1000) {
-            return String.format("%.1f", value);
-        }
+        if (abs >= 10000) return String.valueOf(Math.round(value));
+        if (abs >= 1000) return String.format("%.1f", value);
         return String.format("%.2f", value);
     }
 
     public static void tickAll() {
         PARTICLES.removeIf(TextParticle::tick);
-        ReactionTextTracker.tick();
     }
 
     public static void renderAll(PoseStack ps, MultiBufferSource buf, Camera cam, float pt) {
         for (TextParticle p : PARTICLES) p.render(ps, buf, cam, pt);
-        ReactionTextTracker.render(ps, buf, cam, pt);
     }
 }
