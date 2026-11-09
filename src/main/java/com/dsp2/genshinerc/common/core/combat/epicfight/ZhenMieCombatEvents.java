@@ -2,7 +2,9 @@ package com.dsp2.genshinerc.common.core.combat.epicfight;
 
 import com.dsp2.genshinerc.common.core.combat.zhenmie.DefenseOutcome;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;
+import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieRules;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,7 +23,7 @@ public final class ZhenMieCombatEvents {
         if (event.getSource().getEntity() instanceof LivingEntity livingAttacker) {
             attacker = livingAttacker;
         }
-        ZhenMieManager.applyDefense(victim, attacker, EfCombatBridge.classify(event.getSource()), DefenseOutcome.HIT);
+        ZhenMieManager.applyDefense(victim, attacker, EfCombatBridge.classify(event.getSource()), DefenseOutcome.HIT, event.getAmount());
         if (attacker != null) {
             ZhenMieManager.markCombat(attacker);
         }
@@ -33,6 +35,7 @@ public final class ZhenMieCombatEvents {
         if (event.getDamageSource().getEntity() instanceof LivingEntity livingAttacker) {
             attacker = livingAttacker;
         }
-        ZhenMieManager.applyDefense(defender, attacker, EfCombatBridge.classify(event.getDamageSource()), outcome);
+        float dmg = attacker != null ? (float) attacker.getAttributeValue(Attributes.ATTACK_DAMAGE) : ZhenMieRules.DMG_REF;
+        ZhenMieManager.applyDefense(defender, attacker, EfCombatBridge.classify(event.getDamageSource()), outcome, dmg);
     }
 }

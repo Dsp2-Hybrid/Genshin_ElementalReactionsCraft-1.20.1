@@ -20,6 +20,17 @@ import java.util.UUID;
 
 public final class ElementReactions {
     private static final float EPS = 1.0e-4f;
+    public static float calcAmplify(ElementType trigger, ElementType aura) {
+        if (trigger == ElementType.PYRO && aura == ElementType.HYDRO) return 1.5f;
+        if (trigger == ElementType.HYDRO && aura == ElementType.PYRO) return 2.0f;
+        if (trigger == ElementType.PYRO && aura == ElementType.CRYO) return 2.0f;
+        if (trigger == ElementType.CRYO && aura == ElementType.PYRO) return 1.5f;
+        return 1.0f;
+    }
+
+    public static boolean isAmpReaction(ElementType t, ElementType a) {
+        return calcAmplify(t, a) > 1.0f;
+    }
     private static final UUID SUPERCONDUCT_SHRED = UUID.fromString("5b9c2a52-7a3e-4a1d-9d0c-3f6a7e1b8c01");
     private static boolean naturalMode;
     public static final float TNT_GAUGE_CENTER = 3.0f;
@@ -40,6 +51,13 @@ public final class ElementReactions {
 
     public static ReactionResult trigger(LivingEntity target, @Nullable Entity attacker, ElementType trigger, float units) {
         return run(target, attacker, trigger, units, false, false);
+    }
+
+    public static void forceSendText(LivingEntity target, ReactionResult rr) {
+        if (rr == null || rr.reactions().isEmpty()) return;
+        for (Reaction r : rr.reactions()) {
+            ReactionText.send(target, r, r.first(), r.second(), true);
+        }
     }
 
     public static float natural(LivingEntity target, ElementType type, float units) {

@@ -54,6 +54,14 @@ public final class TempDebugCommand {
         d.register(Commands.literal("s").requires(s -> s.hasPermission(2)).then(
             Commands.argument("amount", DoubleArgumentType.doubleArg()).executes(TempDebugCommand::addShield)));
 
+        d.register(Commands.literal("wl").requires(s -> s.hasPermission(2))
+            .then(Commands.argument("level", IntegerArgumentType.integer(0, 8))
+            .executes(ctx -> {
+                int lvl = IntegerArgumentType.getInteger(ctx, "level");
+                WorldLevel.set(lvl);
+                ctx.getSource().sendSuccess(() -> Component.literal("§aWorld Level set to: " + lvl), false);
+                return 1;
+            })));
         d.register(Commands.literal("d").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(ctx -> apply(ctx, DEFAULT_UNITS)).then(Commands.argument("units", FloatArgumentType.floatArg(0.1f, 8f)).executes(ctx -> apply(ctx, FloatArgumentType.getFloat(ctx, "units"))))));
         d.register(Commands.literal("dr").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(ctx -> consume(ctx, DEFAULT_CONSUME)).then(Commands.argument("amount", FloatArgumentType.floatArg(0.01f, ElementGauge.MAX_GAUGE)).executes(ctx -> consume(ctx, FloatArgumentType.getFloat(ctx, "amount"))))));
         d.register(Commands.literal("df").requires(s -> s.hasPermission(2)).then(Commands.argument("id", IntegerArgumentType.integer(1, 7)).executes(TempDebugCommand::flash)));

@@ -178,10 +178,13 @@ public class CustomHealthBar extends EntityUI {
             }
         }
 
+        if (entity instanceof Player && config.playerMode == BarConfig.PlayerMode.NONE) return false;
+        if (!(entity instanceof Player) && config.mobMode == BarConfig.MobMode.NONE) return false;
+
         Tracker tracker = trackers.computeIfAbsent(entity, k -> new Tracker());
         tracker.update(entity, config);
 
-        return tracker.currentAlpha > 0.01f;
+        return true;
     }
 
     @Override
@@ -241,8 +244,16 @@ public class CustomHealthBar extends EntityUI {
         float r = awtColor.getRed() / 255f;
         float g = awtColor.getGreen() / 255f;
         float b = awtColor.getBlue() / 255f;
+boolean allowShowBar = true;
+        if (!isPlayer && config.mobMode == BarConfig.MobMode.ALWAYS_WHEN_NOT_FULLHP && entity.getHealth() >= entity.getMaxHealth()) {
+            allowShowBar = false;
+        }
+        if (isPlayer && config.playerMode == BarConfig.PlayerMode.NONE) {
+            allowShowBar = false;
+        }
 
-        float alpha = tracker.currentAlpha * opacityMult;
+        float alpha = allowShowBar ? tracker.currentAlpha * opacityMult : 0f;
+        float textAlpha = allowShowBar ? tracker.currentAlpha : 1.0f;
 
         float renderHealthEnd = tracker.visualHealthEnd;
         float renderAbsStart = renderHealthEnd;
@@ -364,7 +375,7 @@ public class CustomHealthBar extends EntityUI {
         ShieldBarRenderer.render(entity, matrix, buffers, config, anchor, alpha);
         ZhenMieBarRenderer.render(entity, matrix, buffers, config, anchor, alpha);
 
-        StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, alpha);
+        StatusBar.renderHUD(entity, matrix, poseStack, buffers, config, maxX, minY, textAlpha);
         RenderSystem.disableBlend();
     }
 
@@ -613,8 +624,10 @@ public class CustomHealthBar extends EntityUI {
                 currentHealth = health;
                 currentAbsorption = absorption;
                 lastHealthChangeTime = now;
-                phase = Phase.HOLDING;
-                phaseStartTime = now;
+                if (health < maxHealth) {
+                    phase = Phase.HOLDING;
+                    phaseStartTime = now;
+                }
             } else if (healthChanged || absorptionChanged) {
                 long oldLastChangeTime = lastHealthChangeTime;
                 lastHealthChangeTime = now;

@@ -21,6 +21,10 @@ final class ReactionText {
     private ReactionText() {}
 
     static void send(LivingEntity target, Reaction reaction, @Nullable ElementType a, @Nullable ElementType b) {
+        send(target, reaction, a, b, false);
+    }
+
+    static void send(LivingEntity target, Reaction reaction, @Nullable ElementType a, @Nullable ElementType b, boolean force) {
         if (!ServerConfig.ENABLED.get() || !target.isAlive()) return;
         if (!(target.level() instanceof ServerLevel level)) return;
 
@@ -29,7 +33,7 @@ final class ReactionText {
 
         Map<Reaction, Long> active = ACTIVE.computeIfAbsent(target, k -> new HashMap<>());
         
-        if (!active.containsKey(reaction)) {
+        if (force || !active.containsKey(reaction)) {
             active.put(reaction, level.getGameTime());
             GenshinercNetwork.CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> target),
                     new ReactionTextPacket(target.getId(), reaction, first, second));

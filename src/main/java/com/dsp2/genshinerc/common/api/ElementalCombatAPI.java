@@ -50,6 +50,11 @@ public final class ElementalCombatAPI {
 
         if (attach) {
             ReactionResult rr = attach(target, attacker, type, tier, attackKey);
+            
+            if (baseDamage > 0 && rr != null && !rr.reactions().isEmpty()) {
+                ElementReactions.forceSendText(target, rr);
+            }
+            
             if (rr.amplify() != 1f) dmg *= rr.amplify();
             dmg += rr.catalyzeFlat();
         }

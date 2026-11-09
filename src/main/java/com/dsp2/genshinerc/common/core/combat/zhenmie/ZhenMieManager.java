@@ -39,14 +39,17 @@ public final class ZhenMieManager {
     }
 
     public static void applyDefense(LivingEntity defender, AttackIntensity intensity, DefenseOutcome outcome) {
-        applyDefense(defender, null, intensity, outcome);
+        applyDefense(defender, null, intensity, outcome, ZhenMieRules.DMG_REF);
     }
 
     public static void applyDefense(LivingEntity defender, @Nullable LivingEntity attacker, AttackIntensity intensity, DefenseOutcome outcome) {
+        applyDefense(defender, attacker, intensity, outcome, ZhenMieRules.DMG_REF);
+    }
+
+    public static void applyDefense(LivingEntity defender, @Nullable LivingEntity attacker, AttackIntensity intensity, DefenseOutcome outcome, float damage) {
         int atkLv = attacker != null ? getLevelSafe(attacker) : 0;
         int defLv = getLevelSafe(defender);
-        
-        ZhenMieRules.Delta d = ZhenMieRules.forDefense(intensity, outcome, atkLv, defLv);
+        ZhenMieRules.Delta d = ZhenMieRules.forDefense(intensity, outcome, atkLv, defLv, damage);
         add(defender, d.zhen(), d.mie());
     }
 
@@ -121,16 +124,14 @@ public final class ZhenMieManager {
             State s = entry.getValue();
             long time = e.level().getGameTime();
             long idle = time - s.lastCombatTick;
-            boolean changed = false;
-            if (idle > ZhenMieRules.ZHEN_DECAY_DELAY_TICKS && s.zhen > 0f) {
-                s.zhen = Math.max(0f, s.zhen - ZhenMieRules.ZHEN_DECAY_PER_TICK);
-                changed = true;
-            }
-            if (idle > ZhenMieRules.MIE_DECAY_DELAY_TICKS && s.mie > 0f) {
-                s.mie = Math.max(0f, s.mie - ZhenMieRules.MIE_DECAY_PER_TICK);
-                changed = true;
-            }
-            if (changed) {
+            
+            boolean zDecay = idle > ZhenMieRules.ZHEN_DECAY_DELAY_TICKS && s.zhen > 0f;
+            boolean mDecay = idle > ZhenMieRules.MIE_DECAY_DELAY_TICKS && s.mie > 0f;
+            if (zDecay || mDecay) {
+                int lv = getLevelSafe(e);
+                float cap = ZhenMieRules.maxCapacity(e.getMaxHealth(), lv);
+                if (zDecay) s.zhen = Math.max(0f, s.zhen - ZhenMieRules.zhenDecayPerTick(cap, lv));
+                if (mDecay) s.mie = Math.max(0f, s.mie - ZhenMieRules.mieDecayPerTick(cap, lv));
                 s.decaying = true;
                 boolean empty = s.zhen <= 0f && s.mie <= 0f;
                 if (empty || time % ZhenMieRules.DECAY_SYNC_INTERVAL == 0) DIRTY.add(e);
