@@ -11,10 +11,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
 import java.util.*;
 
 public final class ZhenMieManager {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final float EPS = 1.0e-4f;
     private static final String NBT_KEY = "GenshinZhenMie";
     private static final Map<LivingEntity, State> STATES = new WeakHashMap<>();
@@ -39,17 +42,17 @@ public final class ZhenMieManager {
     }
 
     public static void applyDefense(LivingEntity defender, AttackIntensity intensity, DefenseOutcome outcome) {
-        applyDefense(defender, null, intensity, outcome, ZhenMieRules.DMG_REF);
-    }
-
-    public static void applyDefense(LivingEntity defender, @Nullable LivingEntity attacker, AttackIntensity intensity, DefenseOutcome outcome) {
-        applyDefense(defender, attacker, intensity, outcome, ZhenMieRules.DMG_REF);
+        applyDefense(defender, null, intensity, outcome, 0f);
     }
 
     public static void applyDefense(LivingEntity defender, @Nullable LivingEntity attacker, AttackIntensity intensity, DefenseOutcome outcome, float damage) {
         int atkLv = attacker != null ? getLevelSafe(attacker) : 0;
         int defLv = getLevelSafe(defender);
-        ZhenMieRules.Delta d = ZhenMieRules.forDefense(intensity, outcome, atkLv, defLv, damage);
+        float cap = ZhenMieRules.maxCapacity(defender.getMaxHealth(), defLv);
+        ZhenMieRules.Delta d = ZhenMieRules.forDefense(intensity, outcome, atkLv, defLv, damage, cap);
+        
+        
+                
         add(defender, d.zhen(), d.mie());
     }
 
@@ -61,9 +64,9 @@ public final class ZhenMieManager {
 
         float oldZ = s.zhen, oldM = s.mie;
         int defLv = getLevelSafe(entity);
-
         float maxCap = ZhenMieRules.maxCapacity(entity.getMaxHealth(), defLv);
-
+        
+        
         float z = Mth.clamp(oldZ + dZhen, 0f, maxCap);
         float m = Mth.clamp(oldM + dMie, 0f, maxCap);
 
@@ -124,14 +127,16 @@ public final class ZhenMieManager {
             State s = entry.getValue();
             long time = e.level().getGameTime();
             long idle = time - s.lastCombatTick;
-            
-            boolean zDecay = idle > ZhenMieRules.ZHEN_DECAY_DELAY_TICKS && s.zhen > 0f;
-            boolean mDecay = idle > ZhenMieRules.MIE_DECAY_DELAY_TICKS && s.mie > 0f;
-            if (zDecay || mDecay) {
-                int lv = getLevelSafe(e);
-                float cap = ZhenMieRules.maxCapacity(e.getMaxHealth(), lv);
-                if (zDecay) s.zhen = Math.max(0f, s.zhen - ZhenMieRules.zhenDecayPerTick(cap, lv));
-                if (mDecay) s.mie = Math.max(0f, s.mie - ZhenMieRules.mieDecayPerTick(cap, lv));
+            boolean changed = false;
+            if (idle > ZhenMieRules.ZHEN_DECAY_DELAY_TICKS && s.zhen > 0f) {
+                s.zhen = Math.max(0f, s.zhen - ZhenMieRules.ZHEN_DECAY_PER_TICK);
+                changed = true;
+            }
+            if (idle > ZhenMieRules.MIE_DECAY_DELAY_TICKS && s.mie > 0f) {
+                s.mie = Math.max(0f, s.mie - ZhenMieRules.MIE_DECAY_PER_TICK);
+                changed = true;
+            }
+            if (changed) {
                 s.decaying = true;
                 boolean empty = s.zhen <= 0f && s.mie <= 0f;
                 if (empty || time % ZhenMieRules.DECAY_SYNC_INTERVAL == 0) DIRTY.add(e);
@@ -155,7 +160,12 @@ public final class ZhenMieManager {
     }
 
     private static SyncZhenMiePacket snapshot(LivingEntity e, State s, boolean withClash) {
-        return new SyncZhenMiePacket(e.getId(), s.zhen, s.mie, s.zhenBuff, s.mieBuff, s.decaying,
+        float cap = ZhenMieRules.maxCapacity(e.getMaxHealth(), getLevelSafe(e));
+        float normalizedZhen = cap > 0f ? s.zhen / cap : 0f;
+        float normalizedMie = cap > 0f ? s.mie / cap : 0f;
+        
+                
+        return new SyncZhenMiePacket(e.getId(), normalizedZhen, normalizedMie, s.zhenBuff, s.mieBuff, s.decaying,
                 withClash ? s.pendingClash : null, s.clashPoint);
     }
 

@@ -5,7 +5,7 @@
   "attributes": [ "Position" ],
   "samplers": [ 
     { "name": "BeforeSampler" }, 
-    { "name": "IsolatedSampler" } 
+    { "name": "AfterSampler" } 
   ],
   "uniforms": [
     { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },

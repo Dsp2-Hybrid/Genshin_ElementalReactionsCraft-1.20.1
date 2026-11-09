@@ -36,6 +36,14 @@ public final class ShaderPackAaaPostProcess {
     private static final Map<ResourceLocation, AAAEffectPostProcessor> ROUTES = new ConcurrentHashMap<>();
     private static final Set<AAAEffectPostProcessor> FAILED = Collections.newSetFromMap(new IdentityHashMap<>());
     private static final ThreadLocal<Captured> ACTIVE = new ThreadLocal<>();
+    private static final int MAX_PER_EMITTER_GROUPS = 8;
+    private static final boolean PER_EMITTER_IN_VANILLA = true;
+    private static List<ParticleEmitter> currentEmitters = List.of();
+    public static List<ParticleEmitter> currentEmitters() { return currentEmitters; }
+    private static boolean hasPerEmitterRoute(List<Source> sources) {
+        for (Source s : sources) if (ROUTES.get(s.id()) instanceof PerEmitterAaaPostProcessor) return true;
+        return false;
+    }
 
     private static RenderTarget before;
     private static RenderTarget after;
@@ -78,12 +86,13 @@ public final class ShaderPackAaaPostProcess {
         if (cap == null || cap.type() != ParticleEmitter.Type.WORLD || ROUTES.isEmpty() || !VixInternals.AVAILABLE) {
             return false;
         }
-        if (!OculusShaderCompat.isShaderPackActive() || OculusShaderCompat.isShadowPass()) {
-            return false;
-        }
+        if (OculusShaderCompat.isShadowPass()) return false;
 
         List<Source> sources = resolveSources(cap);
         if (sources.isEmpty()) return false;
+        if (!OculusShaderCompat.isShaderPackActive() && !(PER_EMITTER_IN_VANILLA && hasPerEmitterRoute(sources))) {
+            return false;
+        }
 
         Map<ParticleEmitter, Source> owner = new IdentityHashMap<>();
         List<ParticleEmitter> discovered = new ArrayList<>();
@@ -170,9 +179,11 @@ public final class ShaderPackAaaPostProcess {
                     List.copyOf(g.emitters()));
 
             Object processorState = VixInternals.capture();
+            currentEmitters = g.emitters();
             try {
                 g.processor().processScene(ctx, before, after, isolated, scene);
             } finally {
+                currentEmitters = List.of();
                 VixInternals.restore(processorState);
             }
 
@@ -274,15 +285,29 @@ public final class ShaderPackAaaPostProcess {
     }
 
     private static List<Group> buildGroups(List<ParticleEmitter> all, Map<ParticleEmitter, Source> owner) {
-        Map<AAAEffectPostProcessor, Group> map = new IdentityHashMap<>();
+        Map<Object, Group> map = new IdentityHashMap<>();
+        List<Group> out = new ArrayList<>();
+        int perEmitter = 0;
         for (ParticleEmitter e : all) {
             Source s = owner.get(e);
             if (s == null || !renderable(e)) continue;
             AAAEffectPostProcessor p = ROUTES.get(s.id());
             if (p == null || !p.isEnabled() || FAILED.contains(p)) continue;
-            map.computeIfAbsent(p, k -> new Group(p, s, new ArrayList<>())).emitters().add(e);
+
+            Object key = p;
+            if (p instanceof PerEmitterAaaPostProcessor && perEmitter < MAX_PER_EMITTER_GROUPS) {
+                key = e;
+                perEmitter++;
+            }
+            Group g = map.get(key);
+            if (g == null) {
+                g = new Group(p, s, new ArrayList<>());
+                map.put(key, g);
+                out.add(g);
+            }
+            g.emitters().add(e);
         }
-        return new ArrayList<>(map.values());
+        return out;
     }
 
     private static boolean renderable(ParticleEmitter e) {

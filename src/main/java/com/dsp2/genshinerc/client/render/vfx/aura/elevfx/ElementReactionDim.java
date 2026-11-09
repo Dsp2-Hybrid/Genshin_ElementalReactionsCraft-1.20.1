@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.vfx.element;
+package com.dsp2.genshinerc.client.render.vfx.aura.elevfx;
 
 import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import java.util.HashMap;

@@ -34,6 +34,9 @@ public class VFXConfig {
     @SerialEntry public int statusTextLifeTime = 30;
 
     @SerialEntry public boolean elementShellEnabled = true;
+    @SerialEntry public boolean elementLightEnabled = true;
+    @SerialEntry public float elementLightIntensity = 1.0f;
+    @SerialEntry public float elementLightRadiusScale = 6.0f;
     @SerialEntry public float shellScale = 1.0f;
     @SerialEntry public float shellReactionDim = 0.35f;
     @SerialEntry public float shellAlphaSmoothSpeed = 6.0f;

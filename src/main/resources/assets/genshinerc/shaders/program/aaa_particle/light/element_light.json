@@ -1,0 +1,14 @@
+{
+  "blend": { "func": "add", "srcrgb": "one", "dstrgb": "one" },
+  "vertex": "genshinerc:aaa_particle/light/element_light",
+  "fragment": "genshinerc:aaa_particle/light/element_light",
+  "attributes": [ "Position" ],
+  "samplers": [ { "name": "DepthSampler" }, { "name": "ColorSampler" } ],
+  "uniforms": [
+    { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+    { "name": "IProjMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] },
+    { "name": "OutSize", "type": "float", "count": 2, "values": [1920.0, 1080.0] },
+    { "name": "LightPos", "type": "float", "count": 4, "values": [0.0, 0.0, 0.0, 1.0] },
+    { "name": "LightColor", "type": "float", "count": 4, "values": [0.0, 0.0, 0.0, 0.0] }
+  ]
+}

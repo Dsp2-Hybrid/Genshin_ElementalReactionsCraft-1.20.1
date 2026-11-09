@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.client.render.world.component.damageindicator.event;
 
-import com.dsp2.genshinerc.client.render.vfx.element.ElementReactionDim;
+import com.dsp2.genshinerc.client.render.vfx.aura.elevfx.ElementReactionDim;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import com.dsp2.genshinerc.common.core.reaction.Reaction;

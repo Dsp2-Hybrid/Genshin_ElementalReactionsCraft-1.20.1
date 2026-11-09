@@ -1,10 +1,14 @@
-package com.dsp2.genshinerc.client.render.vfx.element;
+package com.dsp2.genshinerc.client.render.vfx.aura.elevfx;
 
 import com.dsp2.genshinerc.client.render.hud.bar.element.ClientAuraCache;
 import com.dsp2.genshinerc.client.render.hud.bar.element.EntityAuras;
 import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.client.render.vfx.manager.EffekVisibilityManager;
+import com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout.ElementEmitterAlpha;
+import com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout.ElementOpacityProcessor;
 import com.dsp2.genshinerc.common.core.element.ElementType;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.ElementLightRegistry;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.ElementLightRenderer;
 import com.mojang.logging.LogUtils;
 import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
 import mod.chloeprime.aaaparticles.api.client.EffectRegistry;
@@ -33,10 +37,13 @@ public final class ElementShellRenderer {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double MAX_DISTANCE_SQR = 48.0 * 48.0;
     private static final ResourceLocation HYDRO_EFFECT = new ResourceLocation("genshinerc", "hydro_eff");
+    private static final float[] HYDRO_LIGHT = {0.25f, 0.6f, 1.0f};
 
     private static final Map<Integer, Shell> SHELLS = new HashMap<>();
     private static final Set<ResourceLocation> WARNED = ConcurrentHashMap.newKeySet();
     private static long frame;
+    private static final float SHELL_SIZE_FACTOR = 0.8f;
+    private static long lastNanos;
 
     private ElementShellRenderer() {}
 
@@ -55,6 +62,10 @@ public final class ElementShellRenderer {
         float partialTick = event.getPartialTick();
         Vec3 cam = event.getCamera().getPosition();
         frame++;
+        
+        long now = System.nanoTime();
+        float dt = lastNanos == 0 ? 0.05f : Mth.clamp((now - lastNanos) / 1.0e9f, 0f, 0.25f);
+        lastNanos = now;
 
         float maxAlphaThisFrame = 0f;
 
@@ -91,7 +102,7 @@ public final class ElementShellRenderer {
             }
             shell.setVisible(true);
             shell.lastSeenFrame = frame;
-            maxAlphaThisFrame = Math.max(maxAlphaThisFrame, shell.tick(living, hydro, cfg, partialTick));
+            maxAlphaThisFrame = Math.max(maxAlphaThisFrame, shell.tick(living, hydro, cfg, partialTick, dt));
         }
 
         SHELLS.values().removeIf(s -> {
@@ -100,16 +111,18 @@ public final class ElementShellRenderer {
             return true;
         });
 
-        com.dsp2.genshinerc.client.render.vfx.element.elevfx.fadeout.ElementOpacityProcessor.currentAlpha = maxAlphaThisFrame;
+        ElementOpacityProcessor.currentAlpha = maxAlphaThisFrame;
     }
 
     @SubscribeEvent
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (!event.getLevel().isClientSide()) return;
         SHELLS.values().forEach(Shell::stop);
+        ElementEmitterAlpha.clear();
         SHELLS.clear();
         ElementReactionDim.clear();
         EffekVisibilityManager.clear();
+        ElementLightRegistry.clear();
     }
 
     private static final class Shell {
@@ -117,42 +130,51 @@ public final class ElementShellRenderer {
         private ParticleEmitter emitter;
         private boolean requested;
         private float alpha = 1f;
+        private boolean alphaInit;
         private float smoothedSize = -1f;
         private long lastSeenFrame;
+
+        private static float targetSize(LivingEntity entity, VFXConfig cfg) {
+            return Math.max(entity.getBbWidth(), entity.getBbHeight() * 0.5f) * cfg.shellScale * SHELL_SIZE_FACTOR;
+        }
 
         Shell(ResourceLocation effectId) { this.effectId = effectId; }
 
         void setVisible(boolean visible) {
             if (emitter != null && emitter.isVisible() != visible) {
+                if (!visible) ElementLightRegistry.remove(emitter);
                 emitter.setVisibility(visible);
             }
         }
 
-        float tick(LivingEntity entity, float gauge, VFXConfig cfg, float partialTick) {
+        float tick(LivingEntity entity, float gauge, VFXConfig cfg, float partialTick, float dt) {
             if (!requested) {
                 requested = true;
                 EffectRegistry.load(effectId)
                         .thenAcceptAsync(effek -> attach(effek, entity, cfg), Minecraft.getInstance())
                         .exceptionally(err -> {
-                            if (WARNED.add(effectId)) LOGGER.warn("[genshinerc] Failed to load element shell {}; check assets/{}/effeks/{}.efkefc", effectId, effectId.getNamespace(), effectId.getPath(), err);
+                            if (WARNED.add(effectId)) LOGGER.warn("[genshinerc] Failed to load aura shell {}; check assets/{}/effeks/{}.efkefc", effectId, effectId.getNamespace(), effectId.getPath(), err);
                             return null;
                         });
-                return alpha;
+                return 0f;
             }
-            if (emitter == null || !emitter.exists()) return alpha;
+            if (emitter == null || !emitter.exists()) return 0f;
 
             float gaugeAlpha = gauge >= 3f ? 1f : Mth.clamp(gauge / 3f, 0f, 1f);
             float reactionAlpha = ElementReactionDim.factor(entity.getId(), cfg);
             float target = gaugeAlpha * reactionAlpha;
 
-            float k = 1f - (float) Math.exp(-cfg.shellAlphaSmoothSpeed / 20f);
-            alpha += (target - alpha) * k;
+            float k = 1f - (float) Math.exp(-cfg.shellAlphaSmoothSpeed * dt);
+            if (!alphaInit) { 
+                alpha = target; 
+                alphaInit = true; 
+            } else {
+                alpha += (target - alpha) * k;
+            }
 
-            float size = Math.max(entity.getBbWidth(), entity.getBbHeight() * 0.5f);
-            float want = size * cfg.shellScale;
+            float want = targetSize(entity, cfg);
             if (smoothedSize < 0f) smoothedSize = want;
             smoothedSize += (want - smoothedSize) * k;
-
             emitter.setScale(smoothedSize, smoothedSize, smoothedSize);
 
             double x = Mth.lerp(partialTick, entity.xo, entity.getX());
@@ -160,19 +182,34 @@ public final class ElementShellRenderer {
             double z = Mth.lerp(partialTick, entity.zo, entity.getZ());
             emitter.setPosition((float) x, (float) y, (float) z);
 
+            float lightI = cfg.elementLightIntensity * alpha;
+            if (cfg.elementLightEnabled && ElementLightRenderer.isActive() && lightI > 0.01f) {
+                ElementLightRegistry.put(emitter, new ElementLightRegistry.Light(x, y, z,
+                        smoothedSize * cfg.elementLightRadiusScale,
+                        HYDRO_LIGHT[0], HYDRO_LIGHT[1], HYDRO_LIGHT[2], lightI));
+            } else {
+                ElementLightRegistry.remove(emitter);
+            }
+
+            ElementEmitterAlpha.put(emitter, alpha);
             return alpha;
         }
 
         private void attach(EffectDefinition effek, LivingEntity entity, VFXConfig cfg) {
             ParticleEmitter em = effek.play();
             if (em == ParticleEmitter.dummy(em.type)) return;
-            float s = Math.max(entity.getBbWidth(), entity.getBbHeight() * 0.5f) * cfg.shellScale;
+            float s = targetSize(entity, cfg);
             em.setScale(s, s, s);
+            ElementEmitterAlpha.put(em, 0f);
             this.emitter = em;
         }
 
         void stop() {
-            if (emitter != null && emitter.exists()) emitter.stop();
+            if (emitter != null) {
+                ElementLightRegistry.remove(emitter);
+                ElementEmitterAlpha.remove(emitter);
+                if (emitter.exists()) emitter.stop();
+            }
             emitter = null;
         }
     }

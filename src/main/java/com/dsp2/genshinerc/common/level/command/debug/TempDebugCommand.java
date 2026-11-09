@@ -130,7 +130,7 @@ public final class TempDebugCommand {
             ctx.getSource().sendSuccess(() -> Component.literal("§aApplied " + type.name() + " " + amount), false);
             return 1;
         } catch (Exception e) {
-            ctx.getSource().sendFailure(Component.literal("§cInvalid element"));
+            ctx.getSource().sendFailure(Component.literal("§cInvalid aura"));
             return 0;
         }
     }

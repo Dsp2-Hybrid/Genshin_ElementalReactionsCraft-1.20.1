@@ -1,7 +1,9 @@
-package com.dsp2.genshinerc.client.render.vfx.element.elevfx.fadeout;
+package com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout;
 
+import com.dsp2.genshinerc.client.render.vfx.feature.light.ElementLightRenderer;
 import com.guhao.vix.client.aaaeffect.AAAEffectPostProcessContext;
-import com.guhao.vix.client.aaaeffect.AAAEffectPostProcessor;
+import com.dsp2.genshinerc.client.render.vfx.aaapshader.PerEmitterAaaPostProcessor;
+import com.dsp2.genshinerc.client.render.vfx.aaapshader.ShaderPackAaaPostProcess;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -15,7 +17,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import org.joml.Matrix4f;
 import java.io.IOException;
 
-public final class ElementOpacityProcessor implements AAAEffectPostProcessor {
+public final class ElementOpacityProcessor implements PerEmitterAaaPostProcessor {
     private EffectInstance shader;
     public static boolean ENABLED = true;
     public static float currentAlpha = 1.0f;
@@ -27,9 +29,9 @@ public final class ElementOpacityProcessor implements AAAEffectPostProcessor {
     public void processScene(AAAEffectPostProcessContext ctx, RenderTarget before, RenderTarget after, RenderTarget isolated, RenderTarget scene) {
         if (shader == null) {
             try {
-                shader = new EffectInstance(Minecraft.getInstance().getResourceManager(), "genshinerc:aaa_particle/element/element_opacity");
+                shader = new EffectInstance(Minecraft.getInstance().getResourceManager(), "genshinerc:aaa_particle/aura/element_opacity");
             } catch (IOException e) {
-                throw new IllegalStateException("Unable to load genshinerc:aaa_particle/element/element_opacity", e);
+                throw new IllegalStateException("Unable to load genshinerc:aaa_particle/aura/element_opacity", e);
             }
         }
 
@@ -44,11 +46,11 @@ public final class ElementOpacityProcessor implements AAAEffectPostProcessor {
         RenderSystem.defaultBlendFunc();
 
         shader.setSampler("BeforeSampler", before::getColorTextureId);
-        shader.setSampler("IsolatedSampler", isolated::getColorTextureId);
+        shader.setSampler("AfterSampler", after::getColorTextureId);
 
         shader.safeGetUniform("ProjMat").set(new Matrix4f().setOrtho(0f, scene.width, 0f, scene.height, 0.1f, 1000f));
         shader.safeGetUniform("OutSize").set((float) scene.width, (float) scene.height);
-        shader.safeGetUniform("Alpha").set(currentAlpha);
+        shader.safeGetUniform("Alpha").set(ElementEmitterAlpha.resolve(ShaderPackAaaPostProcess.currentEmitters(), currentAlpha));
 
         shader.apply();
 
@@ -68,7 +70,8 @@ public final class ElementOpacityProcessor implements AAAEffectPostProcessor {
     @Override
     public void onResourceReload(ResourceManager rm) {
         close();
-        com.dsp2.genshinerc.client.render.vfx.aaapshader.ShaderPackAaaPostProcess.invalidate();
+        ShaderPackAaaPostProcess.invalidate();
+        ElementLightRenderer.invalidate();
     }
 
     @Override

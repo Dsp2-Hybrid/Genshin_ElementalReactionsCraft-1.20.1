@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.vfx.element;
+package com.dsp2.genshinerc.client.render.vfx.aura;
 
 import com.dsp2.genshinerc.common.core.element.ElementAuraManager;
 import com.dsp2.genshinerc.common.core.element.ElementType;
@@ -12,8 +12,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT)
-public final class FrozenVisuals {
-    private FrozenVisuals() {}
+public final class ReactionFrozenVisuals {
+    private ReactionFrozenVisuals() {}
 
     @SubscribeEvent
     public static void onRenderPre(RenderLivingEvent.Pre<?, ?> event) {

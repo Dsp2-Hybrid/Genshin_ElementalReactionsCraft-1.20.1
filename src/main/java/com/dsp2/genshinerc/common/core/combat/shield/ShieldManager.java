@@ -89,7 +89,7 @@ public final class ShieldManager {
         for (ShieldInstance s : list) {
             CompoundTag st = new CompoundTag();
             st.putString("kind", s.kind().name());
-            st.putString("element", s.element() == null ? "" : s.element().name());
+            st.putString("aura", s.element() == null ? "" : s.element().name());
             st.putFloat("amount", s.amount());
             st.putFloat("max", s.max());
             st.putInt("ticks", s.ticksLeft());
@@ -108,7 +108,7 @@ public final class ShieldManager {
             for (int i = 0; i < listTag.size(); i++) {
                 CompoundTag st = listTag.getCompound(i);
                 ShieldKind kind = ShieldKind.valueOf(st.getString("kind"));
-                String elStr = st.getString("element");
+                String elStr = st.getString("aura");
                 ElementType element = elStr.isEmpty() ? null : ElementType.valueOf(elStr);
                 list.add(new ShieldInstance(kind, element, st.getFloat("amount"), st.getFloat("max"), st.getInt("ticks")));
             }

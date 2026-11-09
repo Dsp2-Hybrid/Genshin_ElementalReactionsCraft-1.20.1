@@ -20,7 +20,7 @@ public final class ClientZhenMieState {
     boolean decaying;
 
     public void apply(SyncZhenMiePacket msg, long nowMs, BarConfig cfg) {
-        boolean trail = !msg.decaying();
+                boolean trail = !msg.decaying();
         zhenTarget = (float) msg.zhen();
         mieTarget = (float) msg.mie();
         decaying = msg.decaying();

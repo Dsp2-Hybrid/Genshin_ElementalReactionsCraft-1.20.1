@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.vfx.element.elevfx.fadeout;
+package com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout;
 
 import com.dsp2.genshinerc.client.render.vfx.aaapshader.ShaderPackAaaPostProcess;
 import com.guhao.vix.client.aaaeffect.AAAEffectPostProcessRegistry;

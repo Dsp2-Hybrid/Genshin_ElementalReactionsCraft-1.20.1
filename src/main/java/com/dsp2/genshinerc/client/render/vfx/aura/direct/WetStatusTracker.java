@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.vfx.element;
+package com.dsp2.genshinerc.client.render.vfx.aura.direct;
 
 import com.dsp2.genshinerc.client.render.hud.bar.element.ClientAuraCache;
 import com.dsp2.genshinerc.client.render.hud.bar.element.EntityAuras;

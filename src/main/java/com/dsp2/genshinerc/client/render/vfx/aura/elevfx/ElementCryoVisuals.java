@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.vfx.element;
+package com.dsp2.genshinerc.client.render.vfx.aura.elevfx;
 
 import com.dsp2.genshinerc.client.render.hud.bar.element.ClientAuraCache;
 import com.dsp2.genshinerc.client.render.hud.bar.element.EntityAuras;
@@ -6,7 +6,6 @@ import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -24,7 +23,7 @@ import org.joml.Matrix4f;
 
 @SuppressWarnings({"deprecation", "removal"})
 @Mod.EventBusSubscriber(modid = "genshinerc", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-public final class CryoVisuals {
+public final class ElementCryoVisuals {
 
     private static final ResourceLocation POWDER_SNOW_OUTLINE =
             new ResourceLocation("minecraft", "textures/misc/powder_snow_outline.png");
@@ -32,7 +31,7 @@ public final class CryoVisuals {
     private static float frostAlpha;
     private static long lastFrameNanos;
 
-    private CryoVisuals() {}
+    private ElementCryoVisuals() {}
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent event) {

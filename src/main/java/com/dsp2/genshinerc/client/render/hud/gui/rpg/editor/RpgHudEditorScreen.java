@@ -96,7 +96,7 @@ public final class RpgHudEditorScreen extends Screen {
         g.renderOutline(x, y, w, h, sel ? BOX_SEL : hover ? BOX_HOVER : BOX);
         if (!sel && !hover) return;
 
-        String label = Component.translatable("genshinerc.hud_editor.element." + e.key()).getString();
+        String label = Component.translatable("genshinerc.hud_editor.aura." + e.key()).getString();
         if (sel) {
             g.fill(x + w - HANDLE, y + h - HANDLE, x + w, y + h, BOX_SEL);
             Box b = e.get(cfg());
