@@ -34,6 +34,7 @@ import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 public final class WeaponSwingFxHandler {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double MAX_DISTANCE_SQR = 64.0 * 64.0;
+    private static final float SWING_LIGHT_SIZE = 1.0f;
     private static final boolean SKIP_LOCAL_FIRST_PERSON = true;
 
     private static final Map<Integer, SwingTracker> TRACKERS = new HashMap<>();
@@ -155,15 +156,15 @@ public final class WeaponSwingFxHandler {
         ResourceLocation id = follow ? profile.followEffect() : profile.sweptEffect();
         if (id == null) return;
 
-        float size = follow ? profile.followScale() : profile.sweptScale();
+        
         
         com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Spec spec = 
             com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.spec(id);
         if (spec == null) {
-            spec = new com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Spec(1.0f, 0.6f, 0.2f, 2.0f, 3.0f);
+            spec = new com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Spec(1.0f, 0.6f, 0.2f, 2.0f, 3.0f, true);
         }
 
-        tracker.light = com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.attach(spec, p.x, p.y, p.z, size);
+        tracker.light = com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.attach(spec, p.x, p.y, p.z, SWING_LIGHT_SIZE);
     }
 
     private static void spawnInSweptQuad(ClientLevel level, SwingFxProfile profile, SwingTracker tracker,

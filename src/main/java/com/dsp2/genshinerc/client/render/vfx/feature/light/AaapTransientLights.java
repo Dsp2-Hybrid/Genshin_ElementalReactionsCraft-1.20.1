@@ -2,6 +2,7 @@ package com.dsp2.genshinerc.client.render.vfx.feature.light;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class AaapTransientLights {
-    public record Spec(float r, float g, float b, float intensity, float radiusPerSize) {}
+    public record Spec(float r, float g, float b, float intensity, float radiusPerSize, boolean isTrail) {}
 
     private static final class Entry {
         final Object key = new Object();
@@ -91,9 +92,16 @@ public final class AaapTransientLights {
                 k = 1f - t * t * (3f - 2f * t);
             }
             Spec s = e.spec;
+            VFXConfig cfg = VFXConfig.get();
+            
+            float radiusBoost = AaapLightExtraBoost.getRadiusMultiplier(s.isTrail());
+            float intensityBoost = AaapLightExtraBoost.getIntensityMultiplier(s.isTrail());
+            float finalRadius = s.radiusPerSize() * e.size * cfg.aaaLightRadiusScale * radiusBoost;
+            float finalIntensity = s.intensity() * (float) Math.sqrt(e.size) * k * cfg.aaaLightIntensity * intensityBoost;
+            
             AaapLightRegistry.put(e.key, new AaapLightRegistry.Light(e.x, e.y, e.z,
-                    s.radiusPerSize() * e.size, 0f, s.r(), s.g(), s.b(),
-                    s.intensity() * (float) Math.sqrt(e.size) * k));
+                    finalRadius, 0f, s.r(), s.g(), s.b(),
+                    finalIntensity));
         }
     }
 
