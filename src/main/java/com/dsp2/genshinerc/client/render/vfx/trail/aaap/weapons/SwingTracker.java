@@ -16,6 +16,9 @@ final class SwingTracker {
     @Nullable
     ParticleEmitter follow;
 
+    @Nullable
+    com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Handle light;
+
     void endSwing() {
         this.swingId++;
         this.lastSegment = null;
@@ -25,6 +28,11 @@ final class SwingTracker {
         if (this.follow != null) {
             this.follow.stop();
             this.follow = null;
+        }
+        
+        if (this.light != null) {
+            this.light.release(0.25f);
+            this.light = null;
         }
     }
 }

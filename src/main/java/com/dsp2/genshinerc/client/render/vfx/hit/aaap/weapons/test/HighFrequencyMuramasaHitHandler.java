@@ -37,7 +37,7 @@ public class HighFrequencyMuramasaHitHandler {
                     
                     GenshinercNetwork.CHANNEL.send(
                             PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> target),
-                            new S2CHitEffectPacket(x, y, z, HIT_EFFECT_ID)
+                            new S2CHitEffectPacket(x, y, z, HIT_EFFECT_ID, 1.0f, 0.45f, 0.25f)
                     );
                 }
             }

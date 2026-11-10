@@ -119,6 +119,7 @@ public final class WeaponSwingFxHandler {
             tracker.lastTickCount = tickCount;
             tracker.lastPartial = partialTick;
             startFollow(patch, joint, profile, tracker);
+            updateLight(profile, tracker);
             return;
         }
 
@@ -135,6 +136,34 @@ public final class WeaponSwingFxHandler {
 
         tracker.lastTickCount = tickCount;
         tracker.lastPartial = partialTick;
+        
+        updateLight(profile, tracker);
+    }
+
+    private static void updateLight(SwingFxProfile profile, SwingTracker tracker) {
+        BladeSegment seg = tracker.lastSegment;
+        if (seg == null) return;
+
+        Vec3 p = seg.at(0.5f);
+
+        if (tracker.light != null && tracker.light.alive()) {
+            tracker.light.moveTo(p.x, p.y, p.z);
+            return;
+        }
+
+        boolean follow = profile.followEffect() != null;
+        ResourceLocation id = follow ? profile.followEffect() : profile.sweptEffect();
+        if (id == null) return;
+
+        float size = follow ? profile.followScale() : profile.sweptScale();
+        
+        com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Spec spec = 
+            com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.spec(id);
+        if (spec == null) {
+            spec = new com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Spec(1.0f, 0.6f, 0.2f, 2.0f, 3.0f);
+        }
+
+        tracker.light = com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.attach(spec, p.x, p.y, p.z, size);
     }
 
     private static void spawnInSweptQuad(ClientLevel level, SwingFxProfile profile, SwingTracker tracker,

@@ -60,12 +60,13 @@ public final class AaapLightRenderer {
     }
 
     public static void apply() {
+        AaapTransientLights.tick();
         if (!captured || failed) return;
         captured = false;
         if (!isActive()) return;
 
         VFXConfig cfg = VFXConfig.get();
-        if (!cfg.elementShellEnabled || !cfg.aaaLightEnabled) return;
+        if (!cfg.aaaLightEnabled) return;
 
         Minecraft mc = Minecraft.getInstance();
         RenderTarget main = mc.getMainRenderTarget();

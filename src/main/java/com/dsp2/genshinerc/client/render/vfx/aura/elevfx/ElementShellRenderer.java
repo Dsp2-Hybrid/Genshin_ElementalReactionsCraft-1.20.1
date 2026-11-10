@@ -185,7 +185,7 @@ public final class ElementShellRenderer {
             float lightI = cfg.aaaLightIntensity * alpha;
             if (cfg.aaaLightEnabled && AaapLightRenderer.isActive() && lightI > 0.01f) {
                 AaapLightRegistry.put(emitter, new AaapLightRegistry.Light(x, y, z,
-                        smoothedSize * cfg.aaaLightRadiusScale,
+                        smoothedSize * cfg.aaaLightRadiusScale, smoothedSize * 0.5f,
                         HYDRO_LIGHT[0], HYDRO_LIGHT[1], HYDRO_LIGHT[2], lightI));
             } else {
                 AaapLightRegistry.remove(emitter);

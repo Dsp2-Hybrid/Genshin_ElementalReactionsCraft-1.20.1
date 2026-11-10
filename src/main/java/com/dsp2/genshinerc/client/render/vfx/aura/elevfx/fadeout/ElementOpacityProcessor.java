@@ -29,9 +29,9 @@ public final class ElementOpacityProcessor implements PerEmitterAaaPostProcessor
     public void processScene(AAAEffectPostProcessContext ctx, RenderTarget before, RenderTarget after, RenderTarget isolated, RenderTarget scene) {
         if (shader == null) {
             try {
-                shader = new EffectInstance(Minecraft.getInstance().getResourceManager(), "genshinerc:aaa_particle/aura/element_opacity");
+                shader = new EffectInstance(Minecraft.getInstance().getResourceManager(), "genshinerc:aaa_particle/element/element_opacity");
             } catch (IOException e) {
-                throw new IllegalStateException("Unable to load genshinerc:aaa_particle/aura/element_opacity", e);
+                throw new IllegalStateException("Unable to load genshinerc:aaa_particle/element/element_opacity", e);
             }
         }
 
