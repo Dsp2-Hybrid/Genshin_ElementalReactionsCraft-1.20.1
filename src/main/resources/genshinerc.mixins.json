@@ -20,7 +20,8 @@
     "mods.shaders.efn.BloomTrailParticleMixin",
     "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher",
     "core.damage.MixinLivingEntityArmor",
-    "client.render.vfx.MixinAaapCurLight"
+    "client.render.vfx.MixinAaapCurLight",
+    "client.render.vfx.MixinAaapApplyLight"
 
 
 

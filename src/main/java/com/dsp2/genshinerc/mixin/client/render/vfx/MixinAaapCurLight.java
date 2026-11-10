@@ -14,17 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = LevelRenderer.class, priority = 2000)
 public abstract class MixinAaapCurLight {
-    @Inject(method = "renderLevel", at = @At("HEAD"))
-    private void genshinerc$captureLight(PoseStack pose, float partialTick, long nanos, boolean outline,
-                                         Camera camera, GameRenderer gr, LightTexture lt, Matrix4f projection,
-                                         CallbackInfo ci) {
+    @Inject(method = "renderLevel", require = 1, at = @At("HEAD"))
+    private void genshinerc$captureLight(PoseStack pose, float partialTick, long nanos, boolean outline, Camera camera, GameRenderer gr, LightTexture lt, Matrix4f projection, CallbackInfo ci) {
         AaapLightRenderer.capture(pose, camera, projection);
-    }
-
-    @Inject(method = "renderLevel", at = @At("RETURN"))
-    private void genshinerc$applyLight(PoseStack pose, float partialTick, long nanos, boolean outline,
-                                       Camera camera, GameRenderer gr, LightTexture lt, Matrix4f projection,
-                                       CallbackInfo ci) {
-        AaapLightRenderer.apply();
     }
 }

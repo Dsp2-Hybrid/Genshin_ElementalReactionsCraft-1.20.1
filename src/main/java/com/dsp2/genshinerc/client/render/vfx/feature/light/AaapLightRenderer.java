@@ -1,12 +1,12 @@
 package com.dsp2.genshinerc.client.render.vfx.feature.light;
 
 import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
+import com.guhao.vix.client.compat.oculus.OculusShaderCompat;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.guhao.vix.client.compat.oculus.OculusShaderCompat;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -31,15 +31,20 @@ public final class AaapLightRenderer {
     private static final Matrix4f VIEW = new Matrix4f();
     private static final Matrix4f PROJ = new Matrix4f();
     private static Vec3 camera = Vec3.ZERO;
-    private static boolean captured;
-    private static boolean failed;
+    private static boolean captured, failed;
     private static EffectInstance shader;
     private static TextureTarget snapshot;
+    private static int lightFbo = -1;
+    private static int lightFboColor = -1;
 
     private record ViewLight(float x, float y, float z, float radius, float r, float g, float b,
                              int[] box, float importance) {}
 
     private AaapLightRenderer() {}
+
+    public static boolean isActive() {
+        return OculusShaderCompat.isShaderPackActive() && !OculusShaderCompat.isShadowPass();
+    }
 
     public static void capture(PoseStack pose, Camera cam, Matrix4f projection) {
         VIEW.set(pose.last().pose());
@@ -55,14 +60,11 @@ public final class AaapLightRenderer {
         if (old != null) RenderSystem.recordRenderCall(old::close);
     }
 
-        public static boolean isActive() {
-        return OculusShaderCompat.isShaderPackActive() && !OculusShaderCompat.isShadowPass();
-    }
-
     public static void apply() {
         if (!captured || failed) return;
         captured = false;
         if (!isActive()) return;
+
         VFXConfig cfg = VFXConfig.get();
         if (!cfg.elementShellEnabled || !cfg.elementLightEnabled) return;
 
@@ -75,27 +77,34 @@ public final class AaapLightRenderer {
         int[] vp = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, vp);
         try {
-            ensureSnapshot(main, w, h);
+            ensureSnapshot(w, h);
             if (shader == null) shader = new EffectInstance(mc.getResourceManager(), SHADER);
 
             GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, main.frameBufferId);
             GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, snapshot.frameBufferId);
-            GlStateManager._glBlitFrameBuffer(0, 0, w, h, 0, 0, w, h,
-                    GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
-            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+            GlStateManager._glBlitFrameBuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 
-            main.bindWrite(false);
+            if (!bindLightTarget(main)) { 
+                failed = true; 
+                LOGGER.error("[genshinerc] light FBO incomplete"); 
+                main.bindWrite(false); 
+                return; 
+            }
+            
             RenderSystem.viewport(0, 0, w, h);
             RenderSystem.disableDepthTest();
             RenderSystem.depthMask(false);
             RenderSystem.disableCull();
             RenderSystem.colorMask(true, true, true, false);
+            RenderSystem.enableBlend();
+            RenderSystem.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
 
-            shader.setSampler("DepthSampler", snapshot::getDepthTextureId);
+            shader.setSampler("DepthSampler", main::getDepthTextureId);
             shader.setSampler("ColorSampler", snapshot::getColorTextureId);
             shader.safeGetUniform("ProjMat").set(new Matrix4f().setOrtho(0f, w, 0f, h, 0.1f, 1000f));
             shader.safeGetUniform("OutSize").set((float) w, (float) h);
             shader.safeGetUniform("IProjMat").set(new Matrix4f(PROJ).invert());
+
             try {
                 for (ViewLight l : lights) {
                     RenderSystem.enableScissor(l.box()[0], l.box()[1], l.box()[2], l.box()[3]);
@@ -119,6 +128,26 @@ public final class AaapLightRenderer {
         } catch (IOException | RuntimeException ex) {
             failed = true;
             LOGGER.error("[genshinerc] aura light pass disabled after error", ex);
+        }
+    }
+
+    private static boolean bindLightTarget(RenderTarget main) {
+        if (lightFbo < 0) lightFbo = GlStateManager.glGenFramebuffers();
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightFbo);
+        int color = main.getColorTextureId();
+        if (color != lightFboColor) {
+            GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, color, 0);
+            lightFboColor = color;
+        }
+        return GlStateManager.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER) == GL30.GL_FRAMEBUFFER_COMPLETE;
+    }
+
+    private static void ensureSnapshot(int w, int h) {
+        if (snapshot == null) {
+            snapshot = new TextureTarget(w, h, false, Minecraft.ON_OSX);
+            snapshot.setFilterMode(GL11.GL_NEAREST);
+        } else if (snapshot.width != w || snapshot.height != h) {
+            snapshot.resize(w, h, Minecraft.ON_OSX);
         }
     }
 
@@ -155,16 +184,6 @@ public final class AaapLightRenderer {
         int y1 = Math.min(h, (int) Math.ceil((cy + ey) * 0.5f * h + 0.5f * h) + 2);
         if (x1 <= x0 || y1 <= y0) return null;
         return new int[]{x0, y0, x1 - x0, y1 - y0};
-    }
-
-    private static void ensureSnapshot(RenderTarget main, int w, int h) {
-        if (snapshot == null) {
-            snapshot = new TextureTarget(w, h, true, Minecraft.ON_OSX);
-            snapshot.setFilterMode(GL11.GL_NEAREST);
-        } else if (snapshot.width != w || snapshot.height != h) {
-            snapshot.resize(w, h, Minecraft.ON_OSX);
-        }
-        if (main.isStencilEnabled() && !snapshot.isStencilEnabled()) snapshot.enableStencil();
     }
 
     private static void drawQuad(int w, int h) {
