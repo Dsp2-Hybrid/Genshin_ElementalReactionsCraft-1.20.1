@@ -27,16 +27,16 @@ public class VFXConfig {
     public static void load() { HANDLER.load(); }
     public static void save() { HANDLER.save(); }
 
-
     @SerialEntry public boolean statusTextEnabled = true;
     @SerialEntry public double statusTextOffsetY = 0.45;
     @SerialEntry public double statusTextScale = 0.9;
     @SerialEntry public int statusTextLifeTime = 30;
 
     @SerialEntry public boolean elementShellEnabled = true;
-    @SerialEntry public boolean elementLightEnabled = true;
-    @SerialEntry public float elementLightIntensity = 1.0f;
-    @SerialEntry public float elementLightRadiusScale = 6.0f;
+    @SerialEntry public boolean aaaLightEnabled = true;
+    @SerialEntry public float aaaLightIntensity = 5.0f;
+    @SerialEntry public int aaaLightMaxCount = 30;
+    @SerialEntry public float aaaLightRadiusScale = 6.0f;
     @SerialEntry public float shellScale = 1.0f;
     @SerialEntry public float shellReactionDim = 0.35f;
     @SerialEntry public float shellAlphaSmoothSpeed = 6.0f;
@@ -69,6 +69,10 @@ public class VFXConfig {
                 .option(dblOpt("status_text_scale", 0.9, () -> c.statusTextScale, v -> c.statusTextScale = v, 0.2, 3.0))
                 .option(intOpt("status_text_life_time", 30, () -> c.statusTextLifeTime, v -> c.statusTextLifeTime = v, 8, 80))
                 .option(boolOpt("element_shell_enabled", true, () -> c.elementShellEnabled, v -> c.elementShellEnabled = v))
+                .option(boolOpt("aaa_light_enabled", true, () -> c.aaaLightEnabled, v -> c.aaaLightEnabled = v))
+                .option(floatOpt("aaa_light_intensity", 5.0f, () -> c.aaaLightIntensity, v -> c.aaaLightIntensity = v, 0.0f, 50.0f))
+                .option(intOpt("aaa_light_max_count", 30, () -> c.aaaLightMaxCount, v -> c.aaaLightMaxCount = v, 8, 128))
+                .option(floatOpt("aaa_light_radius_scale", 6.0f, () -> c.aaaLightRadiusScale, v -> c.aaaLightRadiusScale = v, 0.1f, 64.0f))
                 .option(floatOpt("shell_scale", 1.0f, () -> c.shellScale, v -> c.shellScale = v, 0.1f, 3f))
                 .option(percentOpt("shell_reaction_dim", 0.35f, () -> c.shellReactionDim, v -> c.shellReactionDim = v, 0f, 1f))
                 .option(floatOpt("shell_alpha_smooth_speed", 6.0f, () -> c.shellAlphaSmoothSpeed, v -> c.shellAlphaSmoothSpeed = v, 0.1f, 20f))

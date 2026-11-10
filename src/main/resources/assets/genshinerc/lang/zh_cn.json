@@ -713,7 +713,14 @@
   "genshinerc.bar.config.player_element_offset_y": "玩家元素 HUD Y轴偏移",
   "genshinerc.bar.config.player_element_offset_y.desc": "仅对玩家生效的元素图标及条 Y轴偏移。",
   "genshinerc.bar.config.player_element_gauge_y_offset": "玩家元素量条 Y轴偏移",
-  "genshinerc.bar.config.player_element_gauge_y_offset.desc": "仅对玩家生效的元素量条 Y轴偏移。"
-
+  "genshinerc.bar.config.player_element_gauge_y_offset.desc": "仅对玩家生效的元素量条 Y轴偏移。",
+  "genshinerc.bar.config.aaa_light_enabled": "开启AAA粒子动态光源",
+  "genshinerc.bar.config.aaa_light_enabled.desc": "开启后，所有AAA粒子特效将在【光影(Iris/Oculus)开启时】提供实时光照，照亮周围环境。原版环境不支持此彩色光照。",
+  "genshinerc.bar.config.aaa_light_intensity": "AAA粒子光源强度",
+  "genshinerc.bar.config.aaa_light_intensity.desc": "控制光源的亮度倍数（1.0为原版光照强度，最高可调到10.0倍）。仅在光影生效时有效。",
+  "genshinerc.bar.config.aaa_light_max_count": "AAA粒子最大光源数量",
+  "genshinerc.bar.config.aaa_light_max_count.desc": "屏幕内最多同时渲染多少个动态光源。数量越多画面越亮，但性能消耗也越大（建议30-50）。",
+  "genshinerc.bar.config.aaa_light_radius_scale": "AAA粒子光源范围倍率",
+  "genshinerc.bar.config.aaa_light_radius_scale.desc": "控制动态光源能照亮周围多大范围（0.1 ~ 64.0）。数值越大，光晕覆盖面积越广。"
 
 }

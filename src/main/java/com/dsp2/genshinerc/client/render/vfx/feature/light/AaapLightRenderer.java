@@ -25,7 +25,6 @@ import java.util.List;
 
 public final class AaapLightRenderer {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int MAX_LIGHTS = 16;
     private static final String SHADER = "genshinerc:aaa_particle/light/element_light";
 
     private static final Matrix4f VIEW = new Matrix4f();
@@ -66,7 +65,7 @@ public final class AaapLightRenderer {
         if (!isActive()) return;
 
         VFXConfig cfg = VFXConfig.get();
-        if (!cfg.elementShellEnabled || !cfg.elementLightEnabled) return;
+        if (!cfg.elementShellEnabled || !cfg.aaaLightEnabled) return;
 
         Minecraft mc = Minecraft.getInstance();
         RenderTarget main = mc.getMainRenderTarget();
@@ -167,7 +166,7 @@ public final class AaapLightRenderer {
                     l.b() * intensity, box, imp));
         }
         out.sort(Comparator.comparingDouble((ViewLight v) -> v.importance()).reversed());
-        return out.size() > MAX_LIGHTS ? new ArrayList<>(out.subList(0, MAX_LIGHTS)) : out;
+        return out.size() > cfg.aaaLightMaxCount ? new ArrayList<>(out.subList(0, cfg.aaaLightMaxCount)) : out;
     }
 
     private static int[] screenBox(Vector3f p, float r, int w, int h) {

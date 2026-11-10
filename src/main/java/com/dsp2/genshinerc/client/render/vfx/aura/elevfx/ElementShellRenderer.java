@@ -182,10 +182,10 @@ public final class ElementShellRenderer {
             double z = Mth.lerp(partialTick, entity.zo, entity.getZ());
             emitter.setPosition((float) x, (float) y, (float) z);
 
-            float lightI = cfg.elementLightIntensity * alpha;
-            if (cfg.elementLightEnabled && AaapLightRenderer.isActive() && lightI > 0.01f) {
+            float lightI = cfg.aaaLightIntensity * alpha;
+            if (cfg.aaaLightEnabled && AaapLightRenderer.isActive() && lightI > 0.01f) {
                 AaapLightRegistry.put(emitter, new AaapLightRegistry.Light(x, y, z,
-                        smoothedSize * cfg.elementLightRadiusScale,
+                        smoothedSize * cfg.aaaLightRadiusScale,
                         HYDRO_LIGHT[0], HYDRO_LIGHT[1], HYDRO_LIGHT[2], lightI));
             } else {
                 AaapLightRegistry.remove(emitter);
