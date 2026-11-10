@@ -38,7 +38,7 @@ public final class MurasamaShaderSetup {
             ShaderPackAaaPostProcess.register(HIT_EFFECT_ID, thermal);
             
             com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.register(HIT_EFFECT_ID,
-                new com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Spec(1.0f, 0.45f, 0.15f, 2.0f, 4.0f));
+                new com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights.Spec(1.0f, 0.45f, 0.15f, 2.0f, 4.0f, false));
         });
     }
 
