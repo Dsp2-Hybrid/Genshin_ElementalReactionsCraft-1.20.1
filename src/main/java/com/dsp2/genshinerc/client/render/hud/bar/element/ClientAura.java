@@ -125,7 +125,7 @@ public final class ClientAura {
     }
 
     float opacity(double nowTicks, long nowMs, float shownGauge, BarConfig cfg, VFXConfig vfx) {
-        float gaugeAlpha = Mth.lerp(Mth.clamp(shownGauge / ElementGauge.MAX_GAUGE, 0f, 1f), vfx.elementMinOpacity, 1f);
+        float gaugeAlpha = Mth.lerp(Mth.clamp(shownGauge / ElementGauge.MAX_GAUGE, 0f, 1f), cfg.elementMinOpacity, 1f);
         float appear = Mth.clamp((nowMs - createdMs) / (float) APPEAR_MS, 0f, 1f);
         return gaugeAlpha * appear * flicker(nowTicks, nowMs, cfg) * ghostFade(nowMs, cfg);
     }

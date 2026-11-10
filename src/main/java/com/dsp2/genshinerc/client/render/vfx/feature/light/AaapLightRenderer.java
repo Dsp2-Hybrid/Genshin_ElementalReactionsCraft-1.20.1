@@ -110,6 +110,9 @@ public final class AaapLightRenderer {
                     shader.safeGetUniform("LightPos").set(l.x(), l.y(), l.z(), l.radius());
                     shader.safeGetUniform("LightColor").set(l.r(), l.g(), l.b(), 0f);
                     shader.apply();
+                    RenderSystem.enableBlend();
+                    RenderSystem.blendEquation(org.lwjgl.opengl.GL14.GL_FUNC_ADD);
+                    RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
                     drawQuad(w, h);
                 }
             } finally {

@@ -10,6 +10,10 @@ public final class ElementEmitterAlpha {
 
     private ElementEmitterAlpha() {}
 
+        public static float get(ParticleEmitter e) {
+        Float a = ALPHA.get(e);
+        return a == null ? 1.0f : a;
+    }
     public static void put(ParticleEmitter e, float a) { ALPHA.put(e, a); }
     public static void remove(ParticleEmitter e) { ALPHA.remove(e); }
     public static void clear() { ALPHA.clear(); }

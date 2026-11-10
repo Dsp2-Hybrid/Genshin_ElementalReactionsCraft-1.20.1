@@ -53,7 +53,6 @@ public class VFXConfig {
     @SerialEntry public float frostEaseInSpeed = 1.6f;
     @SerialEntry public float frostEaseOutSpeed = 2.4f;
 
-    @SerialEntry public float elementMinOpacity = 0.60f;
 
     private static Component t(String k) { return Component.translatable(k); }
     private static Component td(String k) { return Component.translatable(k + ".desc"); }
@@ -86,7 +85,6 @@ public class VFXConfig {
                 .option(percentOpt("frost_max_alpha", 0.55f, () -> c.frostMaxAlpha, v -> c.frostMaxAlpha = v, 0f, 1f))
                 .option(floatOpt("frost_ease_in_speed", 1.6f, () -> c.frostEaseInSpeed, v -> c.frostEaseInSpeed = v, 0.1f, 10f))
                 .option(floatOpt("frost_ease_out_speed", 2.4f, () -> c.frostEaseOutSpeed, v -> c.frostEaseOutSpeed = v, 0.1f, 10f))
-                .option(percentOpt("element_min_opacity", 0.60f, () -> c.elementMinOpacity, v -> c.elementMinOpacity = v, 0f, 1f))
                 .build();
     }
 

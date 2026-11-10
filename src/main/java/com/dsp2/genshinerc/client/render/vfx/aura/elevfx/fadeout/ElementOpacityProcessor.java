@@ -42,9 +42,6 @@ public final class ElementOpacityProcessor implements PerEmitterAaaPostProcessor
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.disableCull();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-
         shader.setSampler("BeforeSampler", before::getColorTextureId);
         shader.setSampler("AfterSampler", after::getColorTextureId);
 
@@ -53,6 +50,7 @@ public final class ElementOpacityProcessor implements PerEmitterAaaPostProcessor
         shader.safeGetUniform("Alpha").set(ElementEmitterAlpha.resolve(ShaderPackAaaPostProcess.currentEmitters(), currentAlpha));
 
         shader.apply();
+        RenderSystem.disableBlend();
 
         try {
             BufferBuilder b = Tesselator.getInstance().getBuilder();

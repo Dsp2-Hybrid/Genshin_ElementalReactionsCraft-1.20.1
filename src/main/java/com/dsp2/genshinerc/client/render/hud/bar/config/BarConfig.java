@@ -148,6 +148,7 @@ public class BarConfig {
     @SerialEntry public float playerElementOffsetY = -5.0f;
     @SerialEntry public int elementOffsetX = 4;
     @SerialEntry public float elementScale = 1.50f;
+    @SerialEntry public float elementMinOpacity = 0.60f;
 
     @SerialEntry public float elementGaugeWidth = 80.0f;
     @SerialEntry public float elementGaugeHeight = 8.0f;
@@ -406,6 +407,7 @@ public class BarConfig {
                 .option(floatOpt("player_element_offset_y", -5.0f, () -> c.playerElementOffsetY, v -> c.playerElementOffsetY = v, -100f, 100f))
                 .option(intOpt("element_offset_x", 4, () -> c.elementOffsetX, v -> c.elementOffsetX = v, -100, 100, 1))
                 .option(floatOpt("element_scale", 1.50f, () -> c.elementScale, v -> c.elementScale = v, 0.1f, 2.0f))
+                .option(percentOpt("element_min_opacity", 0.60f, () -> c.elementMinOpacity, v -> c.elementMinOpacity = v, 0f, 1f))
                 .option(floatOpt("buff_offset_z", 0.0f, () -> c.buffOffsetZ, v -> c.buffOffsetZ = v, -1f, 1f))
                 .option(floatOpt("element_offset_z", 0.0f, () -> c.elementOffsetZ, v -> c.elementOffsetZ = v, -1f, 1f))
                 .option(floatOptCustomStep("element_gauge_width", 80f, () -> c.elementGaugeWidth, v -> c.elementGaugeWidth = v, 20f, 150f, 1f, "%.0f"))
