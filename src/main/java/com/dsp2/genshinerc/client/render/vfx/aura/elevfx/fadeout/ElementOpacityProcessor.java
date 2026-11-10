@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout;
 
-import com.dsp2.genshinerc.client.render.vfx.feature.light.ElementLightRenderer;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.AaapLightRenderer;
 import com.guhao.vix.client.aaaeffect.AAAEffectPostProcessContext;
 import com.dsp2.genshinerc.client.render.vfx.aaapshader.PerEmitterAaaPostProcessor;
 import com.dsp2.genshinerc.client.render.vfx.aaapshader.ShaderPackAaaPostProcess;
@@ -71,7 +71,7 @@ public final class ElementOpacityProcessor implements PerEmitterAaaPostProcessor
     public void onResourceReload(ResourceManager rm) {
         close();
         ShaderPackAaaPostProcess.invalidate();
-        ElementLightRenderer.invalidate();
+        AaapLightRenderer.invalidate();
     }
 
     @Override

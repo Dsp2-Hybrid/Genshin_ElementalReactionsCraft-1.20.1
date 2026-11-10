@@ -7,8 +7,8 @@ import com.dsp2.genshinerc.client.render.vfx.manager.EffekVisibilityManager;
 import com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout.ElementEmitterAlpha;
 import com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout.ElementOpacityProcessor;
 import com.dsp2.genshinerc.common.core.element.ElementType;
-import com.dsp2.genshinerc.client.render.vfx.feature.light.ElementLightRegistry;
-import com.dsp2.genshinerc.client.render.vfx.feature.light.ElementLightRenderer;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.AaapLightRegistry;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.AaapLightRenderer;
 import com.mojang.logging.LogUtils;
 import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
 import mod.chloeprime.aaaparticles.api.client.EffectRegistry;
@@ -122,7 +122,7 @@ public final class ElementShellRenderer {
         SHELLS.clear();
         ElementReactionDim.clear();
         EffekVisibilityManager.clear();
-        ElementLightRegistry.clear();
+        AaapLightRegistry.clear();
     }
 
     private static final class Shell {
@@ -142,7 +142,7 @@ public final class ElementShellRenderer {
 
         void setVisible(boolean visible) {
             if (emitter != null && emitter.isVisible() != visible) {
-                if (!visible) ElementLightRegistry.remove(emitter);
+                if (!visible) AaapLightRegistry.remove(emitter);
                 emitter.setVisibility(visible);
             }
         }
@@ -165,9 +165,9 @@ public final class ElementShellRenderer {
             float target = gaugeAlpha * reactionAlpha;
 
             float k = 1f - (float) Math.exp(-cfg.shellAlphaSmoothSpeed * dt);
-            if (!alphaInit) { 
-                alpha = target; 
-                alphaInit = true; 
+            if (!alphaInit) {
+                alpha = target;
+                alphaInit = true;
             } else {
                 alpha += (target - alpha) * k;
             }
@@ -183,12 +183,12 @@ public final class ElementShellRenderer {
             emitter.setPosition((float) x, (float) y, (float) z);
 
             float lightI = cfg.elementLightIntensity * alpha;
-            if (cfg.elementLightEnabled && ElementLightRenderer.isActive() && lightI > 0.01f) {
-                ElementLightRegistry.put(emitter, new ElementLightRegistry.Light(x, y, z,
+            if (cfg.elementLightEnabled && AaapLightRenderer.isActive() && lightI > 0.01f) {
+                AaapLightRegistry.put(emitter, new AaapLightRegistry.Light(x, y, z,
                         smoothedSize * cfg.elementLightRadiusScale,
                         HYDRO_LIGHT[0], HYDRO_LIGHT[1], HYDRO_LIGHT[2], lightI));
             } else {
-                ElementLightRegistry.remove(emitter);
+                AaapLightRegistry.remove(emitter);
             }
 
             ElementEmitterAlpha.put(emitter, alpha);
@@ -206,7 +206,7 @@ public final class ElementShellRenderer {
 
         void stop() {
             if (emitter != null) {
-                ElementLightRegistry.remove(emitter);
+                AaapLightRegistry.remove(emitter);
                 ElementEmitterAlpha.remove(emitter);
                 if (emitter.exists()) emitter.stop();
             }

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public final class ElementLightRenderer {
+public final class AaapLightRenderer {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int MAX_LIGHTS = 16;
     private static final String SHADER = "genshinerc:aaa_particle/light/element_light";
@@ -39,7 +39,7 @@ public final class ElementLightRenderer {
     private record ViewLight(float x, float y, float z, float radius, float r, float g, float b,
                              int[] box, float importance) {}
 
-    private ElementLightRenderer() {}
+    private AaapLightRenderer() {}
 
     public static void capture(PoseStack pose, Camera cam, Matrix4f projection) {
         VIEW.set(pose.last().pose());
@@ -126,7 +126,7 @@ public final class ElementLightRenderer {
         VFXConfig cfg = VFXConfig.get();
         List<ViewLight> out = new ArrayList<>();
         Vector3f p = new Vector3f();
-        for (ElementLightRegistry.Light l : ElementLightRegistry.all()) {
+        for (AaapLightRegistry.Light l : AaapLightRegistry.all()) {
             float intensity = l.intensity();
             if (!(intensity > 0.01f) || !(l.radius() > 0.01f)) continue;
             double dx = l.x() - camera.x, dy = l.y() - camera.y, dz = l.z() - camera.z;

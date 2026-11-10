@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.mixin.client.render.vfx;
 
-import com.dsp2.genshinerc.client.render.vfx.feature.light.ElementLightRenderer;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.AaapLightRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
@@ -18,13 +18,13 @@ public abstract class MixinAaapCurLight {
     private void genshinerc$captureLight(PoseStack pose, float partialTick, long nanos, boolean outline,
                                          Camera camera, GameRenderer gr, LightTexture lt, Matrix4f projection,
                                          CallbackInfo ci) {
-        ElementLightRenderer.capture(pose, camera, projection);
+        AaapLightRenderer.capture(pose, camera, projection);
     }
 
     @Inject(method = "renderLevel", at = @At("RETURN"))
     private void genshinerc$applyLight(PoseStack pose, float partialTick, long nanos, boolean outline,
                                        Camera camera, GameRenderer gr, LightTexture lt, Matrix4f projection,
                                        CallbackInfo ci) {
-        ElementLightRenderer.apply();
+        AaapLightRenderer.apply();
     }
 }
