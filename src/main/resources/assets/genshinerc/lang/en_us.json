@@ -132,7 +132,7 @@
   "genshinerc.config.title": "Genshin ERC Config",
   "genshinerc.config.category.display": "Display",
   "genshinerc.bar.group.title": "Status Bar Settings",
-  "genshinerc.bar.group.desc": "Configure the health bars above entities",
+  "genshinerc.bar.group.desc": "Configure the WORLD-INFO bars above entities",
   "genshinerc.bar.config.enabled": "Enabled",
   "genshinerc.bar.config.enabled.desc": "Toggle rendering of health bars",
   "genshinerc.bar.config.y_offset": "Y Offset",

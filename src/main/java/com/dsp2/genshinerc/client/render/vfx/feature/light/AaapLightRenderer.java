@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;
 import org.slf4j.Logger;
 
@@ -26,15 +27,18 @@ import java.util.List;
 public final class AaapLightRenderer {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String SHADER = "genshinerc:aaa_particle/light/element_light";
+    private static final int RETRY_COOLDOWN_FRAMES = 300;
+    private static final int MAX_LOGGED_FAILURES = 3;
 
     private static final Matrix4f VIEW = new Matrix4f();
     private static final Matrix4f PROJ = new Matrix4f();
     private static Vec3 camera = Vec3.ZERO;
-    private static boolean captured, failed;
+    private static boolean captured;
+    private static int failures;
+    private static int cooldownFrames;
     private static EffectInstance shader;
     private static TextureTarget snapshot;
     private static int lightFbo = -1;
-    private static int lightFboColor = -1;
 
     private record ViewLight(float x, float y, float z, float radius, float r, float g, float b,
                              int[] box, float importance) {}
@@ -55,14 +59,16 @@ public final class AaapLightRenderer {
     public static void invalidate() {
         EffectInstance old = shader;
         shader = null;
-        failed = false;
+        failures = 0;
+        cooldownFrames = 0;
         if (old != null) RenderSystem.recordRenderCall(old::close);
     }
 
     public static void apply() {
         AaapTransientLights.tick();
-        if (!captured || failed) return;
+        if (!captured) return;
         captured = false;
+        if (cooldownFrames > 0) { cooldownFrames--; return; }
         if (!isActive()) return;
 
         VFXConfig cfg = VFXConfig.get();
@@ -71,26 +77,25 @@ public final class AaapLightRenderer {
         Minecraft mc = Minecraft.getInstance();
         RenderTarget main = mc.getMainRenderTarget();
         int w = main.width, h = main.height;
-        List<ViewLight> lights = collect(w, h);
-        if (lights.isEmpty()) return;
-
+        
         int[] vp = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, vp);
+        boolean touchedGl = false;
+        Throwable error = null;
         try {
+            List<ViewLight> lights = collect(w, h);
+            if (lights.isEmpty()) return;
+
             ensureSnapshot(w, h);
             if (shader == null) shader = new EffectInstance(mc.getResourceManager(), SHADER);
+            touchedGl = true;
 
             GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, main.frameBufferId);
             GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, snapshot.frameBufferId);
             GlStateManager._glBlitFrameBuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 
-            if (!bindLightTarget(main)) { 
-                failed = true; 
-                LOGGER.error("[genshinerc] light FBO incomplete"); 
-                main.bindWrite(false); 
-                return; 
-            }
-            
+            if (!bindLightTarget(main)) throw new IllegalStateException("light FBO incomplete");
+
             RenderSystem.viewport(0, 0, w, h);
             RenderSystem.disableDepthTest();
             RenderSystem.depthMask(false);
@@ -105,18 +110,21 @@ public final class AaapLightRenderer {
             shader.safeGetUniform("OutSize").set((float) w, (float) h);
             shader.safeGetUniform("IProjMat").set(new Matrix4f(PROJ).invert());
 
-            try {
-                for (ViewLight l : lights) {
-                    RenderSystem.enableScissor(l.box()[0], l.box()[1], l.box()[2], l.box()[3]);
-                    shader.safeGetUniform("LightPos").set(l.x(), l.y(), l.z(), l.radius());
-                    shader.safeGetUniform("LightColor").set(l.r(), l.g(), l.b(), 0f);
-                    shader.apply();
-                    RenderSystem.enableBlend();
-                    RenderSystem.blendEquation(org.lwjgl.opengl.GL14.GL_FUNC_ADD);
-                    RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.ONE, com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
-                    drawQuad(w, h);
-                }
-            } finally {
+            for (ViewLight l : lights) {
+                RenderSystem.enableScissor(l.box()[0], l.box()[1], l.box()[2], l.box()[3]);
+                shader.safeGetUniform("LightPos").set(l.x(), l.y(), l.z(), l.radius());
+                shader.safeGetUniform("LightColor").set(l.r(), l.g(), l.b(), 0f);
+                shader.apply();
+                RenderSystem.enableBlend();
+                RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
+                RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
+                drawQuad(w, h);
+            }
+            failures = 0;
+        } catch (IOException | RuntimeException ex) {
+            error = ex;
+        } finally {
+            if (touchedGl) {
                 shader.clear();
                 RenderSystem.disableScissor();
                 RenderSystem.colorMask(true, true, true, true);
@@ -128,20 +136,26 @@ public final class AaapLightRenderer {
                 main.bindWrite(false);
                 RenderSystem.viewport(vp[0], vp[1], vp[2], vp[3]);
             }
-        } catch (IOException | RuntimeException ex) {
-            failed = true;
-            LOGGER.error("[genshinerc] aura light pass disabled after error", ex);
+        }
+        if (error != null) onFailure(error);
+    }
+
+    private static void onFailure(Throwable ex) {
+        failures++;
+        cooldownFrames = RETRY_COOLDOWN_FRAMES;
+        EffectInstance old = shader;
+        shader = null;
+        if (old != null) RenderSystem.recordRenderCall(old::close);
+        if (failures <= MAX_LOGGED_FAILURES) {
+            LOGGER.error("[genshinerc] aura light pass failed (failure #{}), retrying in {} frames",
+                    failures, RETRY_COOLDOWN_FRAMES, ex);
         }
     }
 
     private static boolean bindLightTarget(RenderTarget main) {
         if (lightFbo < 0) lightFbo = GlStateManager.glGenFramebuffers();
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightFbo);
-        int color = main.getColorTextureId();
-        if (color != lightFboColor) {
-            GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, color, 0);
-            lightFboColor = color;
-        }
+        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, main.getColorTextureId(), 0);
         return GlStateManager.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER) == GL30.GL_FRAMEBUFFER_COMPLETE;
     }
 

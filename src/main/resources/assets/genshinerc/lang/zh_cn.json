@@ -142,7 +142,7 @@
   "genshinerc.config.title": "Genshin ERC 综合配置",
   "genshinerc.config.category.display": "显示",
   "genshinerc.bar.group.title": "状态条综合",
-  "genshinerc.bar.group.desc": "设置生物头顶血条的样式与位置",
+  "genshinerc.bar.group.desc": "设置生物头顶状态信息的样式与位置",
   "genshinerc.bar.config.enabled": "启用状态条",
   "genshinerc.bar.config.enabled.desc": "是否在生物头顶渲染状态条",
   "genshinerc.bar.config.y_offset": "Y轴偏移",

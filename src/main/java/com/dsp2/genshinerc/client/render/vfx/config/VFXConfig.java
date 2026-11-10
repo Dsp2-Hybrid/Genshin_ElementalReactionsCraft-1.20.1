@@ -28,10 +28,7 @@ public class VFXConfig {
     public static void save() { HANDLER.save(); }
 
     @SerialEntry public boolean statusTextEnabled = true;
-    @SerialEntry public double statusTextOffsetY = 0.45;
     @SerialEntry public double statusTextScale = 0.9;
-    @SerialEntry public int statusTextLifeTime = 30;
-
     @SerialEntry public boolean elementShellEnabled = true;
     @SerialEntry public boolean aaaLightEnabled = true;
     @SerialEntry public float aaaLightIntensity = 5.0f;
@@ -63,11 +60,6 @@ public class VFXConfig {
         return OptionGroup.createBuilder()
                 .name(t("genshinerc.bar.group.visuals"))
                 .description(OptionDescription.of(td("genshinerc.bar.group.visuals")))
-                .option(boolOpt("status_text_enabled", true, () -> c.statusTextEnabled, v -> c.statusTextEnabled = v))
-                .option(dblOpt("status_text_offset_y", 0.45, () -> c.statusTextOffsetY, v -> c.statusTextOffsetY = v, -1.0, 3.0))
-                .option(dblOpt("status_text_scale", 0.9, () -> c.statusTextScale, v -> c.statusTextScale = v, 0.2, 3.0))
-                .option(intOpt("status_text_life_time", 30, () -> c.statusTextLifeTime, v -> c.statusTextLifeTime = v, 8, 80))
-                .option(boolOpt("element_shell_enabled", true, () -> c.elementShellEnabled, v -> c.elementShellEnabled = v))
                 .option(boolOpt("aaa_light_enabled", true, () -> c.aaaLightEnabled, v -> c.aaaLightEnabled = v))
                 .option(floatOpt("aaa_light_intensity", 5.0f, () -> c.aaaLightIntensity, v -> c.aaaLightIntensity = v, 0.0f, 50.0f))
                 .option(intOpt("aaa_light_max_count", 30, () -> c.aaaLightMaxCount, v -> c.aaaLightMaxCount = v, 8, 128))

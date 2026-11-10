@@ -67,6 +67,8 @@ public final class AaapTransientLights {
     }
 
     private static Entry add(Spec spec, double x, double y, double z, float size) {
+        com.mojang.logging.LogUtils.getLogger().info("[lightdiag] transient light spawned size={} intensity={} radiusPerSize={}",
+                size, spec.intensity(), spec.radiusPerSize());
         if (ACTIVE.size() >= MAX_ACTIVE) kill(ACTIVE.remove(0));
         Entry e = new Entry(spec, x, y, z, size);
         ACTIVE.add(e);

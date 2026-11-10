@@ -10,13 +10,18 @@ public final class ElementEmitterAlpha {
 
     private ElementEmitterAlpha() {}
 
-        public static float get(ParticleEmitter e) {
+    public static float get(ParticleEmitter e) {
         Float a = ALPHA.get(e);
         return a == null ? 1.0f : a;
     }
+
     public static void put(ParticleEmitter e, float a) { ALPHA.put(e, a); }
     public static void remove(ParticleEmitter e) { ALPHA.remove(e); }
     public static void clear() { ALPHA.clear(); }
+
+    public static void prune() {
+        ALPHA.keySet().removeIf(e -> !e.exists());
+    }
 
     public static float resolve(List<ParticleEmitter> group, float fallback) {
         if (group == null || group.isEmpty()) return fallback;
@@ -25,6 +30,6 @@ public final class ElementEmitterAlpha {
             Float a = ALPHA.get(e);
             if (a != null && a > best) best = a;
         }
-        return best < 0f ? fallback : best;
+        return best < 0f ? 1.0f : best;
     }
 }

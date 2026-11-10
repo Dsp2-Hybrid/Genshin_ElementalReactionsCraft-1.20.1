@@ -110,6 +110,7 @@ public final class ElementShellRenderer {
             s.stop();
             return true;
         });
+        com.dsp2.genshinerc.client.render.vfx.aura.elevfx.fadeout.ElementEmitterAlpha.prune();
 
         ElementOpacityProcessor.currentAlpha = maxAlphaThisFrame;
     }
@@ -207,7 +208,6 @@ public final class ElementShellRenderer {
         void stop() {
             if (emitter != null) {
                 AaapLightRegistry.remove(emitter);
-                ElementEmitterAlpha.remove(emitter);
                 if (emitter.exists()) emitter.stop();
             }
             emitter = null;

@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.common.config;
 
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
+import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig;
 import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -16,5 +17,6 @@ public class ConfigInitCore {
     public static void load() {
         DamageIndicatorConfig.load();
         BarConfig.load();
+        VFXConfig.load();
     }
 }
