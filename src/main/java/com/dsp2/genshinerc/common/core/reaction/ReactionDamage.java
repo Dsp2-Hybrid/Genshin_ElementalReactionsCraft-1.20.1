@@ -33,7 +33,7 @@ public final class ReactionDamage {
         if (!(target.level() instanceof ServerLevel level) || !target.isAlive()) return;
         if (!allow(target, reaction, level.getGameTime())) return;
         double amount = ElementalMath.transformative(reaction.coefficient(), stats);
-        amount = ElementalMath.capReaction(amount, target);
+        if (!(attacker instanceof net.minecraft.world.entity.player.Player) && stats.mastery() <= 0.0) amount *= com.dsp2.genshinerc.common.level.WorldLevelScaling.damageMultiplier(); amount = ElementalMath.capReaction(amount, target);
         if (amount <= 0.0) return;
 
         Entity cause = (reaction == Reaction.BURNING || reaction == Reaction.ELECTRO_CHARGED) ? null : attacker;

@@ -98,7 +98,7 @@ public class DamageTracker {
             Vector3d p1 = new Vector3d(basePos.x - offX, basePos.y, basePos.z);
             Vector3d p2 = new Vector3d(basePos.x + offX, basePos.y, basePos.z);
             String absorbText = "-" + trim(info.absorbed, cfg.numberFormat);
-            addOne(p1, velBase, absorbText, CustomColor.fromHexString(cfg.absorbColor), null, scale, cfg, false, false);
+            addOne(p1, velBase, absorbText, "physical".equals(info.typeKey) ? CustomColor.fromHexString(cfg.absorbColor) : color, null, scale, cfg, false, false);
             if (info.amount > 0.001f) {
                 String realText = trim(info.amount, cfg.numberFormat);
                 addOne(p2, velBase, realText, color, null, scale, cfg, false, true);

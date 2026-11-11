@@ -134,26 +134,7 @@ public final class ElementReactions {
         switch (r) {
             case MELT -> { if (res.amplify() == 1f) res.setAmplify(ElementalMath.amplify(trigger == ElementType.PYRO ? 2f : 1.5f, s.mastery())); }
             case VAPORIZE -> { if (res.amplify() == 1f) res.setAmplify(ElementalMath.amplify(trigger == ElementType.HYDRO ? 2f : 1.5f, s.mastery())); }
-            case OVERLOAD -> { 
-                ReactionDamage.deal(t, atk, DamageKind.PYRO, r, s); 
-                OverloadImpulse.apply(t, atk, s); 
-                float radius = 4.0f;
-                for (LivingEntity near : ReactionTargets.nearbyEnemies(t, atk, radius)) {
-                    double dist = near.distanceTo(t);
-                    if (dist <= radius) {
-                        float power = (float)(1.0 - (dist / radius));
-                        double dx = near.getX() - t.getX();
-                        double dz = near.getZ() - t.getZ();
-                        double len = Math.sqrt(dx*dx + dz*dz);
-                        if (len > 0.001) {
-                            near.push((dx/len) * power * 1.5, power * 1.2, (dz/len) * power * 1.5);
-                        } else {
-                            near.push((Math.random()-0.5) * power * 1.5, power * 1.2, (Math.random()-0.5) * power * 1.5);
-                        }
-                        near.hurtMarked = true; 
-                    }
-                }
-            }
+            case OVERLOAD -> overload(t, atk, s);
             case SUPERCONDUCT -> {
                 ReactionDamage.deal(t, atk, DamageKind.CRYO, r, s);
                 ResistanceShred.apply(t, ModAttributes.PHYSICAL_RESISTANCE, SUPERCONDUCT_SHRED, ServerConfig.SUPERCONDUCT_RES_SHRED.get(), Math.round(ServerConfig.SUPERCONDUCT_RES_SECONDS.get().floatValue() * 20f));
@@ -172,6 +153,14 @@ public final class ElementReactions {
         return false;
     }
 
+    private static void overload(LivingEntity t, @Nullable Entity atk, ElementalStats s) {
+        double radius = ServerConfig.OVERLOAD_RADIUS.get();
+        ReactionDamage.deal(t, atk, DamageKind.PYRO, Reaction.OVERLOAD, s);
+        for (LivingEntity near : ReactionTargets.nearbyEnemies(t, atk, radius)) {
+            ReactionDamage.deal(near, atk, DamageKind.PYRO, Reaction.OVERLOAD, s);
+        }
+        OverloadImpulse.apply(t, atk, s);
+    }
     private static void shatter(LivingEntity t, @Nullable Entity atk, ElementalStats s) {
         ElementAuraManager.remove(t, ElementType.FROZEN, true);
         ReactionDamage.deal(t, atk, DamageKind.PHYSICAL, Reaction.SHATTER, s);

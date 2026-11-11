@@ -7,6 +7,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import java.util.List;
 import java.util.stream.Stream;
+
 public final class ModAttributes {
     public static final DeferredRegister<Attribute> REGISTRY = DeferredRegister.create(ForgeRegistries.ATTRIBUTES, GenshinERC.MODID);
     public static final RegistryObject<Attribute> PYRO_RESISTANCE = resistance("pyro_resistance");

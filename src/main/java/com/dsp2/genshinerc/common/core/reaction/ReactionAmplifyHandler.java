@@ -3,7 +3,7 @@ package com.dsp2.genshinerc.common.core.reaction;
 import com.dsp2.genshinerc.common.core.element.ElementAuraManager;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,13 +15,13 @@ public final class ReactionAmplifyHandler {
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onHurt(LivingHurtEvent event) {
-        if (event.getEntity().level().isClientSide() || event.getAmount() <= 0) return;
+        if (event.getEntity().level().isClientSide() || event.getAmount() <= 0 || ReactionDamage.isDealing()) return;
         LivingEntity entity = event.getEntity();
         
         ElementType trigger = null;
-        if (event.getSource().is(DamageTypes.ON_FIRE) || event.getSource().is(DamageTypes.IN_FIRE)) {
+        if (event.getSource().is(DamageTypeTags.IS_FIRE)) {
             trigger = ElementType.PYRO;
-        } else if (event.getSource().is(DamageTypes.FREEZE)) {
+        } else if (event.getSource().is(DamageTypeTags.IS_FREEZING)) {
             trigger = ElementType.CRYO;
         }
 

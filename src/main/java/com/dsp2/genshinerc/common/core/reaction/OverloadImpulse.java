@@ -27,8 +27,8 @@ public final class OverloadImpulse {
         double emFactor = 1.0 + stats.mastery() / (stats.mastery() + 1200.0);
         emFactor = Math.min(ServerConfig.OVERLOAD_EM_CAP.get(), emFactor);
 
-        for (LivingEntity t : ReactionTargets.nearbyEnemies(center, attacker, radius)) {
-            double d = t.position().distanceTo(center.position());
+        java.util.List<LivingEntity> targets = new java.util.ArrayList<>(ReactionTargets.nearbyEnemies(center, attacker, radius)); if (ReactionTargets.isEnemy(attacker, center)) targets.add(center); for (LivingEntity t : targets) {
+            if (t instanceof net.minecraft.world.entity.animal.IronGolem) continue; double d = t.position().distanceTo(center.position());
             double falloff = 1.0 - Mth.clamp(d / radius, 0.0, 1.0);
 
             double up = (ServerConfig.OVERLOAD_UP_BASE.get()
@@ -55,7 +55,7 @@ public final class OverloadImpulse {
         AIRBORNE.entrySet().removeIf(e -> {
             LivingEntity t = e.getKey();
             if (t.isRemoved() || !t.isAlive()) return true;
-            boolean landed = t.onGround() || t.isInWater() || t.isInLava();
+            boolean landed = t.level().getGameTime() - e.getValue().landTick() >= 3 && (t.onGround() || t.isInWater() || t.isInLava());
             if (!landed) {
                 if (t.level().getGameTime() - e.getValue().landTick() > 100) {
                     ZhenMieManager.add(t, 0f, 1f);

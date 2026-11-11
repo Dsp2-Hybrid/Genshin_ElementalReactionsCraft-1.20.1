@@ -1,7 +1,6 @@
 package com.dsp2.genshinerc.server.render.damageindicator;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
-import com.dsp2.genshinerc.common.core.damage.DamageKind;
 import com.dsp2.genshinerc.common.core.damage.DamageMapper;
 import com.dsp2.genshinerc.common.core.reaction.ReactionDamage;
 import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
@@ -33,7 +32,7 @@ public class DamageServerEventHandler {
         float preAbsorb;
         String key;
         float reactionHealth;
-        float reactionAbsorb;
+        float reactionAbsorb; float shield;
     }
     private static final Map<Integer, PreDamageState> PRE_STATE = new HashMap<>();
 
@@ -45,7 +44,7 @@ public class DamageServerEventHandler {
         }
     }
 
-    public static void tag(LivingEntity e, String key) {
+    public static void shieldAbsorb(LivingEntity e, float blocked, String key) { if (blocked <= 0f) return; PreDamageState s = PRE_STATE.get(e.getId()); if (s != null && !ReactionDamage.isDealing()) { s.shield += blocked; return; } if (ServerConfig.ENABLED.get()) DamageIndicatorNetworkHandler.sendDamage(e, key, 0f, false, false, false, blocked, null, null, false, false); } public static void tag(LivingEntity e, String key) {
         KEY_OVERRIDE.put(e.getId(), key);
     }
 
@@ -93,10 +92,10 @@ public class DamageServerEventHandler {
             float healthLoss = state.preHealth - e.getHealth() - state.reactionHealth;
             float absorbLoss = state.preAbsorb - e.getAbsorptionAmount() - state.reactionAbsorb;
 
-            if (healthLoss < 0.001f && absorbLoss < 0.001f) continue;
+            if (healthLoss < 0.001f && absorbLoss < 0.001f && state.shield < 0.001f) continue;
 
             float actualDamage = Math.max(0f, healthLoss);
-            float absorbed = Math.max(0f, absorbLoss);
+            float absorbed = Math.max(0f, absorbLoss) + state.shield;
             boolean kill = e.getHealth() <= 0.001f;
 
             String key = KEY_OVERRIDE.getOrDefault(e.getId(), state.key != null ? state.key : "physical");

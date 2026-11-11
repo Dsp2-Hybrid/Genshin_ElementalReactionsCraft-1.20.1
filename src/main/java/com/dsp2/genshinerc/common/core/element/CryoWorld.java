@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.common.core.element;
 
 import com.dsp2.genshinerc.GenshinERC;
+import com.dsp2.genshinerc.common.config.ServerConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -20,7 +21,7 @@ public final class CryoWorld {
     @SubscribeEvent
     public static void onTick(LivingEvent.LivingTickEvent event) {
         LivingEntity e = event.getEntity();
-        if (e.level().isClientSide() || !e.isAlive()) return;
+        if (e.level().isClientSide() || !e.isAlive() || !ServerConfig.CRYO_FREEZE_BLOCKS.get()) return;
         if ((e.tickCount + e.getId()) % PERIOD != 0) return;
 
         boolean cryo = ElementAuraManager.hasAura(e, ElementType.CRYO)

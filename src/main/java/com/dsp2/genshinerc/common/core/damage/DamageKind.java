@@ -7,6 +7,7 @@ import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.Nullable;
+
 public enum DamageKind {
     PHYSICAL("physical", ModDamageTypes.PHYSICAL, ModAttributes.PHYSICAL_RESISTANCE),
     PYRO("pyro", ModDamageTypes.PYRO, ModAttributes.PYRO_RESISTANCE),

@@ -1,23 +1,29 @@
 package com.dsp2.genshinerc.common.core.combat.shield;
 
 import com.dsp2.genshinerc.common.core.damage.DamageKind;
+import com.dsp2.genshinerc.common.core.damage.DamageKindResolver;
+import com.dsp2.genshinerc.server.render.damageindicator.DamageServerEventHandler;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = "genshinerc")
 public final class ElementShieldHandler {
-    @SubscribeEvent
+    private ElementShieldHandler() {}
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onHurt(LivingHurtEvent event) {
         LivingEntity entity = event.getEntity();
-        if (entity.level().isClientSide() || event.getAmount() <= 0) return;
+        float amount = event.getAmount();
+        if (entity.level().isClientSide() || amount <= 0f) return;
 
-        DamageKind kind = DamageKind.PHYSICAL;
-        ShieldManager.AbsorbResult res = ShieldManager.absorbElemental(entity, event.getAmount(), kind);
+        DamageKind kind = DamageKindResolver.of(event.getSource());
+        ShieldManager.AbsorbResult res = ShieldManager.absorbElemental(entity, amount, kind);
+        if (res.blocked() <= 0f) return;
 
-        if (res.blocked() > 0) {
-            event.setAmount(event.getAmount() - res.blocked());
-        }
+        event.setAmount(Math.max(0f, amount - res.blocked()));
+        DamageServerEventHandler.shieldAbsorb(entity, res.blocked(), kind.indicatorKey());
     }
 }
