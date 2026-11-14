@@ -1,7 +1,11 @@
 package com.dsp2.genshinerc.common.core.damage;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
+import com.dsp2.genshinerc.common.level.WorldLevel;
+import com.dsp2.genshinerc.common.registry.ModAttributes;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import org.jetbrains.annotations.Nullable;
 
 public final class ElementalMath {
     private ElementalMath() {}
@@ -50,6 +54,25 @@ public final class ElementalMath {
         return (b + (1.0 - b) * Math.pow((x - b) / (1.0 - b), p)) * hpCurr;
     }
 
+    public static double toughnessDamage(double damage, float hpCurr, double tough, DamageKind kind) {
+        return toughnessDamage(damage, (double) hpCurr, tough);
+    }
+
+    @Nullable
+    public static Attribute toughnessAttribute(DamageKind kind) {
+        return switch (kind) {
+            case PYRO -> ModAttributes.ELEMENTAL_TOUGHNESS_PYRO.get();
+            case HYDRO -> ModAttributes.ELEMENTAL_TOUGHNESS_HYDRO.get();
+            case DENDRO -> ModAttributes.ELEMENTAL_TOUGHNESS_DENDRO.get();
+            case ELECTRO -> ModAttributes.ELEMENTAL_TOUGHNESS_ELECTRO.get();
+            case ANEMO -> ModAttributes.ELEMENTAL_TOUGHNESS_ANEMO.get();
+            case CRYO -> ModAttributes.ELEMENTAL_TOUGHNESS_CRYO.get();
+            case GEO -> ModAttributes.ELEMENTAL_TOUGHNESS_GEO.get();
+            case PHYSICAL -> ModAttributes.ELEMENTAL_TOUGHNESS_PHYSICAL.get();
+            default -> null;
+        };
+    }
+
     public static double capReaction(double damage, LivingEntity target) {
         double cap = ServerConfig.REACTION_MAX_HP_FRACTION.get() * target.getMaxHealth();
         return Math.min(damage, cap);
@@ -58,5 +81,11 @@ public final class ElementalMath {
     public static double crystallizeShield(int level, double em) {
         double emBonus = 1.0 + (40.0 / 9.0) * em / (em + 1400.0);
         return ServerConfig.CRYSTALLIZE_SHIELD_COEF.get() * levelMultiplier(level) * ServerConfig.SCALE.get() * emBonus;
+    }
+
+    public static double transformativeNoEM(float coefficient, int level) {
+        double levelBase = 2.75 * level;
+        double wlMultiplier = Math.pow(1.5, WorldLevel.get() / 2.0);
+        return coefficient * levelBase * wlMultiplier * 0.9;
     }
 }

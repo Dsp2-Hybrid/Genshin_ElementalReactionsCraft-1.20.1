@@ -1,4 +1,5 @@
 package com.dsp2.genshinerc.common.network;
+import com.dsp2.genshinerc.common.network.sync.packet.SyncElementsPacket;
 
 import com.dsp2.genshinerc.common.network.packet.vfx.aaap.S2CHitEffectPacket;
 import com.dsp2.genshinerc.common.network.base.combat.SyncShieldPacket;
@@ -13,7 +14,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 
 @SuppressWarnings({"deprecation", "removal"})
 public final class GenshinercNetwork {
-    private static final String VERSION = "3";
+    private static final String VERSION = "4";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation("genshinerc", "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 

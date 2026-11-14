@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.common.level.command.debug;
 
-import com.dsp2.genshinerc.common.api.ElementalCombatAPI;
+import com.dsp2.genshinerc.common.api.sys.fight.ElementalCombatAPI;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;

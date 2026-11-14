@@ -3,6 +3,7 @@ package com.dsp2.genshinerc.common.core.reaction;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.damage.DamageKind;
 import com.dsp2.genshinerc.common.core.damage.ElementalStats;
+import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -69,7 +70,10 @@ public class DendroCoreEntity extends Entity {
         }
         for (LivingEntity target : targets) {
             ReactionDamage.deal(target, attacker, DamageKind.DENDRO, reaction, stats);
-            if (reaction != Reaction.BLOOM) ReactionText.send(target, reaction, null, null);
+            if (reaction != Reaction.BLOOM) {
+                ElementType trigger = reaction == Reaction.HYPERBLOOM ? ElementType.ELECTRO : ElementType.PYRO;
+                ReactionText.send(target, reaction, trigger, ElementType.DENDRO);
+            }
         }
 
         server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 12, 0.3, 0.3, 0.3, 0.02);

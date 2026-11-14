@@ -1,9 +1,6 @@
 package com.dsp2.genshinerc.common.network.packet.vfx.aaap;
 
-import mod.chloeprime.aaaparticles.api.common.AAALevel;
-import mod.chloeprime.aaaparticles.api.common.ParticleEmitterInfo;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
+import com.dsp2.genshinerc.client.nwhander.sys.fight.HitEffectClientHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -39,22 +36,7 @@ public class S2CHitEffectPacket {
     }
 
     public static void handle(S2CHitEffectPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                ClientLevel level = Minecraft.getInstance().level;
-                if (level != null) {
-                    ParticleEmitterInfo info = ParticleEmitterInfo.create(level, msg.effectId)
-                            .position(msg.x, msg.y, msg.z)
-                            .scale(msg.scale);
-                    AAALevel.addParticle(level, true, info);
-                    
-                    if (msg.lightSec > 0f) {
-                        com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights
-                                .spawnCustom(msg.effectId, msg.x, msg.y, msg.z, msg.scale, msg.lightSec, msg.fadeSec);
-                    }
-                }
-            });
-        });
-        ctx.get().setPacketHandled(true);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> HitEffectClientHandler.spawn(
+                msg.x, msg.y, msg.z, msg.effectId, msg.scale, msg.lightSec, msg.fadeSec));
     }
 }

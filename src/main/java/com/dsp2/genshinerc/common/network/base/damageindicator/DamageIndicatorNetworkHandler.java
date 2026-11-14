@@ -30,7 +30,7 @@ public class DamageIndicatorNetworkHandler {
         double r = currentRange;
         double rSq = r * r;
         for (ServerPlayer sp : e.getServer().getPlayerList().getPlayers()) {
-            if (sp.distanceToSqr(e) <= rSq) {
+            if (sp.level() == e.level() && sp.distanceToSqr(e) <= rSq) {
                 CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), p);
             }
         }

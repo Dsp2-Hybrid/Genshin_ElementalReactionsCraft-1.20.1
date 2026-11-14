@@ -2,12 +2,12 @@ package com.dsp2.genshinerc.common.core.damage;
 
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.config.ServerConfig;
+import com.dsp2.genshinerc.common.core.combat.shield.ElementShieldHandler;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import com.dsp2.genshinerc.common.core.reaction.ElementReactions;
 import com.dsp2.genshinerc.common.core.reaction.ReactionDamage;
 import com.dsp2.genshinerc.common.core.reaction.ReactionResult;
-import com.dsp2.genshinerc.common.network.base.damageindicator.DamageIndicatorNetworkHandler;
 import com.dsp2.genshinerc.common.registry.ModAttributes;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
@@ -34,7 +34,7 @@ public final class ElementalSettlement {
         if (victim.level().isClientSide()) return;
         DamageSource source = event.getSource();
         boolean explosion = source.is(DamageTypeTags.IS_EXPLOSION);
-        DamageKind kind = explosion ? DamageKind.PYRO : DamageMapper.classify(source);
+        DamageKind kind = DamageMapper.classify(source);
 
         if ((kind == DamageKind.PYRO && victim instanceof MagmaCube && !explosion)
                 || (kind == DamageKind.DENDRO && victim instanceof Slime && !(victim instanceof MagmaCube))) {
@@ -55,7 +55,6 @@ public final class ElementalSettlement {
                 ReactionResult rr = ElementReactions.trigger(victim, source.getEntity(), ElementType.PYRO, gauge);
                 if (rr.amplify() != 1f) damage *= rr.amplify();
             }
-            
             if (!ServerConfig.EXPLOSION_USES_PYRO_RESISTANCE.get()) {
                 event.setAmount((float) damage);
                 return;
@@ -71,21 +70,11 @@ public final class ElementalSettlement {
         if (resistance != null) damage *= ElementalMath.resistanceMultiplier(value(victim, resistance));
 
         double tough = value(victim, Attributes.ARMOR_TOUGHNESS) * 10.0 + value(victim, ModAttributes.ELEMENTAL_TOUGHNESS.get());
-        damage = ElementalMath.toughnessDamage(damage, victim.getHealth(), tough);
+        Attribute perElem = ElementalMath.toughnessAttribute(kind);
+        if (perElem != null) tough += value(victim, perElem);
+        damage = ElementalMath.toughnessDamage(damage, victim.getHealth(), tough, kind);
 
         if (source.is(DamageTypes.DROWN)) damage = Math.max(damage, original * ServerConfig.DROWN_FLOOR.get());
-
-        if (ServerConfig.SHIELD_ENABLED.get()) {
-            ShieldManager.AbsorbResult ar = ShieldManager.absorbElemental(victim, (float) damage, kind);
-            if (ar.blocked() > 0f) {
-                if (ar.shieldSpent() > 0f) {
-                    DamageIndicatorNetworkHandler.sendDamage(victim, kind.indicatorKey(), -ar.shieldSpent(),
-                            false, false, false, 0f, null, null, false, true);
-                }
-                damage -= ar.blocked();
-                if (damage <= 0.001) { event.setAmount(0f); event.setCanceled(true); return; }
-            }
-        }
 
         event.setAmount((float) damage);
     }

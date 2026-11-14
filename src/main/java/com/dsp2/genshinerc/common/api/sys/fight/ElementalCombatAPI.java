@@ -1,8 +1,7 @@
-package com.dsp2.genshinerc.common.api;
+package com.dsp2.genshinerc.common.api.sys.fight;
 
 import com.dsp2.genshinerc.common.core.damage.DamageKind;
 import com.dsp2.genshinerc.common.core.damage.ElementalDamage;
-import com.dsp2.genshinerc.common.core.damage.ElementalMath;
 import com.dsp2.genshinerc.common.core.element.*;
 import com.dsp2.genshinerc.common.core.reaction.ElementReactions;
 import com.dsp2.genshinerc.common.core.reaction.ReactionResult;

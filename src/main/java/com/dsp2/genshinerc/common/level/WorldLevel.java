@@ -5,6 +5,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -18,6 +20,14 @@ public final class WorldLevel {
 
     public static void set(int v) { level = Mth.clamp(v, 0, ServerConfig.WORLD_LEVEL_MAX.get()); }
 
+    public static void loadFromConfig() {
+        try { set(ServerConfig.WORLD_LEVEL.get()); } catch (Exception ignored) {}
+    }
+
+    public static void saveToConfig() {
+        try { ServerConfig.WORLD_LEVEL.set(level); } catch (Exception ignored) {}
+    }
+
     public static int rollLevel(LivingEntity entity) {
         int wl = level;
         if (wl <= 0) return 0;
@@ -25,6 +35,12 @@ public final class WorldLevel {
         int jitter = entity.getRandom().nextInt(11) - 5;
         return Mth.clamp(base + jitter, 0, 120);
     }
+
+    @SubscribeEvent
+    public static void onServerStarting(ServerStartingEvent event) { loadFromConfig(); }
+
+    @SubscribeEvent
+    public static void onServerStopping(ServerStoppingEvent event) { saveToConfig(); }
 
     @SubscribeEvent
     public static void onJoin(EntityJoinLevelEvent e) {

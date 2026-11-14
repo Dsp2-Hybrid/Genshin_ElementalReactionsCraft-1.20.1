@@ -9,20 +9,28 @@ public final class ReactionColors {
     public record Ends(String a, @Nullable String b) {}
 
     public static Ends ends(Reaction r, @Nullable ElementType first, @Nullable ElementType second) {
-        String extra = extraKey(r);
-        
+        if (first == null && second == null) {
+            ElementType partner = switch (r) {
+                case HYPERBLOOM -> ElementType.ELECTRO;
+                case BURGEON -> ElementType.PYRO;
+                default -> null;
+            };
+            if (partner != null) { first = partner; second = ElementType.DENDRO; }
+        }
+
         if (r == Reaction.SWIRL) return new Ends(key("anemo"), null);
         if (r == Reaction.CRYSTALLIZE) return new Ends(key("geo"), null);
 
+        String extra = extraKey(r);
         if (extra != null) {
             ElementType pure = pureOwner(r, first, second);
             ElementType oth = other(pure, first, second);
             String otherKey = oth != null ? oth.colorKey() : "physical";
             return new Ends(key(extra), key(otherKey));
         }
-        
+
         if (first != null && second != null) return new Ends(key(first.colorKey()), key(second.colorKey()));
-        
+
         ElementType pure = pureOwner(r, first, second);
         String pk = pure != null ? pure.colorKey() : "physical";
         return new Ends(key(pk), null);
@@ -32,12 +40,10 @@ public final class ReactionColors {
     private static ElementType pureOwner(Reaction r, @Nullable ElementType first, @Nullable ElementType second) {
         return switch (r) {
             case OVERLOAD, BURNING, VAPORIZE -> ElementType.PYRO;
-            case SUPERCONDUCT, FREEZE, MELT  -> ElementType.CRYO;
-            case ELECTRO_CHARGED, AGGRAVATE  -> ElementType.ELECTRO;
-            case BLOOM, CATALYZE             -> ElementType.DENDRO;
-            case SPREAD                      -> ElementType.DENDRO;
-            case SHATTER                     -> ElementType.CRYO;
-            default                          -> first != null ? first : second;
+            case SUPERCONDUCT, FREEZE, MELT, SHATTER -> ElementType.CRYO;
+            case ELECTRO_CHARGED, AGGRAVATE -> ElementType.ELECTRO;
+            case BLOOM, CATALYZE, SPREAD, HYPERBLOOM, BURGEON -> ElementType.DENDRO;
+            default -> first != null ? first : second;
         };
     }
 
@@ -45,29 +51,28 @@ public final class ReactionColors {
     private static ElementType other(@Nullable ElementType pure, @Nullable ElementType a, @Nullable ElementType b) {
         if (a != null && a != pure) return a;
         if (b != null && b != pure) return b;
+        if (pure == null) return null;
         return switch (pure) {
-            case PYRO         -> ElementType.ELECTRO;
-            case CRYO         -> ElementType.ELECTRO;
-            case ELECTRO      -> ElementType.HYDRO;
-            case DENDRO       -> ElementType.ELECTRO;
-            default           -> null;
+            case PYRO, CRYO, DENDRO -> ElementType.ELECTRO;
+            case ELECTRO -> ElementType.HYDRO;
+            default -> null;
         };
     }
 
     @Nullable
     private static String extraKey(Reaction r) {
         return switch (r) {
-            case OVERLOAD        -> "overload";
+            case OVERLOAD -> "overload";
             case ELECTRO_CHARGED -> "electro_charged";
-            case SHATTER         -> "shatter";
-            case BLOOM           -> "bloom";
-            case BURNING         -> "burning";
-            case CATALYZE        -> "quicken";
-            case AGGRAVATE       -> "aggravate";
-            case SPREAD          -> "spread";
-            case HYPERBLOOM      -> "hyperbloom";
-            case BURGEON         -> "burgeon";
-            default              -> null;
+            case SHATTER -> "shatter";
+            case BLOOM -> "bloom";
+            case BURNING -> "burning";
+            case CATALYZE -> "quicken";
+            case AGGRAVATE -> "aggravate";
+            case SPREAD -> "spread";
+            case HYPERBLOOM -> "hyperbloom";
+            case BURGEON -> "burgeon";
+            default -> null;
         };
     }
 

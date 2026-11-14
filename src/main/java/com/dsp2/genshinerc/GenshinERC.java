@@ -1,6 +1,5 @@
 package com.dsp2.genshinerc;
 
-import com.dsp2.genshinerc.client.render.hud.bar.StatusBar;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.config.ConfigInitCore;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
@@ -25,7 +24,6 @@ public class GenshinERC {
         //Config
         context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         ConfigInitCore.init();
-        MinecraftForge.EVENT_BUS.register(StatusBar.class);
         MinecraftForge.EVENT_BUS.register(EntityLevelManager.class);
 
         //Network

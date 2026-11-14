@@ -45,7 +45,19 @@ public class TextParticle {
         this.x = x; this.y = y; this.z = z;
         this.px = x; this.py = y; this.pz = z;
         this.vx = vx; this.vy = vy; this.vz = vz;
-        this.text = text; this.color = color; this.color2 = color2;
+        this.text = text; this.color = color;
+
+        if (color2 != null) {
+            this.color2 = color2;
+        } else {
+            String raw = text.getString();
+            if (raw != null && (raw.contains("Overload") || raw.contains("overload") || raw.contains("过载"))) {
+                this.color2 = CustomColor.hex(0xCC66FF);
+            } else {
+                this.color2 = null;
+            }
+        }
+
         this.velocityMult = velocityMult; this.gravity = gravity;
         this.maxAge = isKill ? maxAgeBase + cfg.killExtraTicks : maxAgeBase;
         this.drawShadow = drawShadow; this.isKill = isKill; this.cfg = cfg;
@@ -137,7 +149,7 @@ public class TextParticle {
         CustomColor c = currentColor();
         int argb = c.argb();
         int a = (int) (((argb >>> 24) & 0xFF) * currentAlpha(renderAge));
-        
+
         if (s <= 0f || a < 4) return;
 
         double dx = Mth.lerp(partialTick, px, x) - cam.getPosition().x;

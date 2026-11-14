@@ -101,7 +101,7 @@ public final class ElementReactions {
                 boolean first = result.add(reaction);
                 if (!first && reaction.once()) continue;
                 force |= effect(reaction, target, attacker, stats, trigger, aura, used, triggerUsed, result);
-                
+
                 ReactionText.send(target, reaction, trigger, aura);
             }
             result.setRemaining(gauge);
@@ -132,22 +132,65 @@ public final class ElementReactions {
 
     private static boolean effect(Reaction r, LivingEntity t, @Nullable Entity atk, ElementalStats s, ElementType trigger, ElementType aura, float used, float triggerUsed, ReactionResult res) {
         switch (r) {
-            case MELT -> { if (res.amplify() == 1f) res.setAmplify(ElementalMath.amplify(trigger == ElementType.PYRO ? 2f : 1.5f, s.mastery())); }
-            case VAPORIZE -> { if (res.amplify() == 1f) res.setAmplify(ElementalMath.amplify(trigger == ElementType.HYDRO ? 2f : 1.5f, s.mastery())); }
-            case OVERLOAD -> overload(t, atk, s);
+            case MELT -> {
+                if (res.amplify() == 1f) res.setAmplify(ElementalMath.amplify(trigger == ElementType.PYRO ? 2f : 1.5f, s.mastery()));
+                ReactionSoundEvents.playMelt(t);
+                ReactionParticles.spawnMelt(t);
+            }
+            case VAPORIZE -> {
+                if (res.amplify() == 1f) res.setAmplify(ElementalMath.amplify(trigger == ElementType.HYDRO ? 2f : 1.5f, s.mastery()));
+                ReactionSoundEvents.playVaporize(t);
+                ReactionParticles.spawnVaporize(t);
+            }
+            case OVERLOAD -> {
+                overload(t, atk, s);
+                ReactionSoundEvents.playOverload(t);
+                ReactionParticles.spawnOverload(t);
+            }
             case SUPERCONDUCT -> {
                 ReactionDamage.deal(t, atk, DamageKind.CRYO, r, s);
                 ResistanceShred.apply(t, ModAttributes.PHYSICAL_RESISTANCE, SUPERCONDUCT_SHRED, ServerConfig.SUPERCONDUCT_RES_SHRED.get(), Math.round(ServerConfig.SUPERCONDUCT_RES_SECONDS.get().floatValue() * 20f));
+                ReactionSoundEvents.playSuperconduct(t);
+                ReactionParticles.spawnSuperconduct(t);
             }
-            case FREEZE -> ElementAuraManager.freeze(t, 2f * Math.min(triggerUsed, used));
-            case SHATTER -> shatter(t, atk, s);
-            case SWIRL -> swirl(t, atk, s, aura);
-            case CRYSTALLIZE -> crystallize(atk, aura, s);
-            case BLOOM -> { if (!naturalMode) DendroCores.spawn(t, atk, s); }
+            case FREEZE -> {
+                ElementAuraManager.freeze(t, 2f * Math.min(triggerUsed, used));
+                ReactionSoundEvents.playFreeze(t);
+                ReactionParticles.spawnFreeze(t);
+            }
+            case SHATTER -> {
+                shatter(t, atk, s);
+                ReactionSoundEvents.playShatter(t);
+                ReactionParticles.spawnShatter(t);
+            }
+            case SWIRL -> {
+                swirl(t, atk, s, aura);
+                ReactionSoundEvents.playSwirl(t);
+                ReactionParticles.spawnSwirl(t);
+            }
+            case CRYSTALLIZE -> {
+                crystallize(atk, aura, s);
+                ReactionSoundEvents.playCrystallize(t);
+                ReactionParticles.spawnCrystallize(t);
+            }
+            case BLOOM -> {
+                if (!naturalMode) DendroCores.spawn(t, atk, s);
+                ReactionSoundEvents.playBloom(t);
+                ReactionParticles.spawnBloom(t);
+            }
             case CATALYZE -> ElementAuraManager.quicken(t, used);
             case AGGRAVATE -> res.raiseFlat(ElementalMath.catalyze(1.15f, s));
             case SPREAD -> res.raiseFlat(ElementalMath.catalyze(1.25f, s));
-            case ELECTRO_CHARGED, BURNING -> { return true; }
+            case ELECTRO_CHARGED -> {
+                ReactionSoundEvents.playElectroCharged(t);
+                ReactionParticles.spawnElectroCharged(t);
+                return true;
+            }
+            case BURNING -> {
+                ReactionSoundEvents.playBurning(t);
+                ReactionParticles.spawnBurning(t);
+                return true;
+            }
             default -> { }
         }
         return false;

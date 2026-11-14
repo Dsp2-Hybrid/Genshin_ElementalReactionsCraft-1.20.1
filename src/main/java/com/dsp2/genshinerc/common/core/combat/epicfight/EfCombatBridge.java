@@ -9,14 +9,20 @@ import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 import yesman.epicfight.world.damagesource.EpicFightDamageSource;
 import yesman.epicfight.world.damagesource.StunType;
 
+import java.util.Optional;
+
 public final class EfCombatBridge {
     private static final float HEAVY_IMPACT = 2.0f;
-
     private EfCombatBridge() {}
 
     public static void applyStun(LivingEntity entity, ClashResult result) {
-        EpicFightCapabilities.getUnparameterizedEntityPatch(entity, LivingEntityPatch.class)
-                .ifPresent(patch -> ((LivingEntityPatch<?>) patch).applyStun(result.stunType(), result.stunSeconds()));
+        if (entity == null || result == null) return;
+        try {
+            Optional<?> opt = EpicFightCapabilities.getUnparameterizedEntityPatch(entity, LivingEntityPatch.class);
+            if (opt != null && opt.isPresent()) {
+                ((LivingEntityPatch<?>) opt.get()).applyStun(result.stunType(), result.stunSeconds());
+            }
+        } catch (NoSuchMethodError ignored) {}
     }
 
     public static AttackIntensity classify(DamageSource source) {

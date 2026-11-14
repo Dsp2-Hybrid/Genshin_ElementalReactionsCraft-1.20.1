@@ -19,17 +19,19 @@ public class ServerConfig {
     public static final ForgeConfigSpec.DoubleValue TNT_BLAST_RADIUS, OVERLOAD_RADIUS, OVERLOAD_UP_BASE, OVERLOAD_UP_SCALE, OVERLOAD_SIDE_BASE, OVERLOAD_SIDE_SCALE, OVERLOAD_EM_CAP;
     public static final ForgeConfigSpec.BooleanValue EXPLOSION_REACTION_ENABLED, EXPLOSION_USES_PYRO_RESISTANCE, SHIELD_ENABLED, CRYO_FREEZE_BLOCKS;
     public static final ForgeConfigSpec.IntValue WORLD_LEVEL_MAX, WORLD_LEVEL;
+    public static final ForgeConfigSpec.BooleanValue USE_BASE_BONUS_ATK, USE_CRIT_SYSTEM;
+    public static final ForgeConfigSpec.DoubleValue OVERLOAD_COEFFICIENT, SUPERCONDUCT_COEFFICIENT, ELECTRO_CHARGED_COEFFICIENT, SWIRL_COEFFICIENT, BLOOM_COEFFICIENT, SHATTER_COEFFICIENT;
 
     static {
         BUILDER.push("Damage Indicator Settings");
-        ENABLED = BUILDER.comment("Globally enable or disable damage indicators.").define("enabled", true);
-        MAX_DISTANCE = BUILDER.comment("Max broadcast distance.").defineInRange("maxDistance", 35, 1, 128);
+        ENABLED = BUILDER.define("enabled", true);
+        MAX_DISTANCE = BUILDER.defineInRange("maxDistance", 35, 1, 128);
         BUILDER.pop();
         BUILDER.push("Elements");
-        SCALE = BUILDER.comment("Genshin to MC scale.").defineInRange("scale", 1.0, 0.01, 1000.0);
-        LEVEL_MULT_1 = BUILDER.comment("Level multiplier anchor 1.").defineInRange("levelMult1", 1.330, 0.01, 100000.0);
-        LEVEL_MULT_80 = BUILDER.comment("Level multiplier anchor 80.").defineInRange("levelMult80", 180.3, 0.01, 100000.0);
-        LEVEL_MULT_90 = BUILDER.comment("Level multiplier anchor 90.").defineInRange("levelMult90", 335.7, 0.01, 100000.0);
+        SCALE = BUILDER.defineInRange("scale", 1.0, 0.01, 1000.0);
+        LEVEL_MULT_1 = BUILDER.defineInRange("levelMult1", 1.330, 0.01, 100000.0);
+        LEVEL_MULT_80 = BUILDER.defineInRange("levelMult80", 180.3, 0.01, 100000.0);
+        LEVEL_MULT_90 = BUILDER.defineInRange("levelMult90", 335.7, 0.01, 100000.0);
         FREEZE_MEMORY_TICKS = BUILDER.defineInRange("freezeMemoryTicks", 120, 0, 72000);
         FREEZE_SLOW_AMPLIFIER = BUILDER.defineInRange("freezeSlowAmplifier", 6, 0, 30);
         SWIRL_RADIUS = BUILDER.defineInRange("swirlRadius", 5.0, 0.5, 32.0);
@@ -83,6 +85,14 @@ public class ServerConfig {
         OVERLOAD_EM_CAP = BUILDER.defineInRange("overloadEmCap", 1.6, 1.0, 4.0);
         WORLD_LEVEL_MAX = BUILDER.defineInRange("worldLevelMax", 8, 0, 8);
         WORLD_LEVEL = BUILDER.defineInRange("worldLevel", 0, 0, 8);
+        USE_BASE_BONUS_ATK = BUILDER.define("useBaseBonusAtk", true);
+        USE_CRIT_SYSTEM = BUILDER.define("useCritSystem", true);
+        OVERLOAD_COEFFICIENT = BUILDER.defineInRange("overloadCoefficient", 4.0, 0.0, 100.0);
+        SUPERCONDUCT_COEFFICIENT = BUILDER.defineInRange("superconductCoefficient", 1.0, 0.0, 100.0);
+        ELECTRO_CHARGED_COEFFICIENT = BUILDER.defineInRange("electroChargedCoefficient", 2.4, 0.0, 100.0);
+        SWIRL_COEFFICIENT = BUILDER.defineInRange("swirlCoefficient", 1.2, 0.0, 100.0);
+        BLOOM_COEFFICIENT = BUILDER.defineInRange("bloomCoefficient", 4.0, 0.0, 100.0);
+        SHATTER_COEFFICIENT = BUILDER.defineInRange("shatterCoefficient", 3.0, 0.0, 100.0);
         BUILDER.pop();
         SPEC = BUILDER.build();
     }

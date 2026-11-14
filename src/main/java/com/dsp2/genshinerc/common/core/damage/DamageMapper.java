@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.common.core.damage;
 
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 
@@ -7,7 +8,12 @@ public final class DamageMapper {
     private DamageMapper() {}
 
     public static DamageKind classify(DamageSource source) {
-        if (source.is(DamageTypes.IN_FIRE)
+        for (DamageKind k : DamageKind.values()) {
+            if (source.is(k.typeKey())) return k;
+        }
+        if (source.is(DamageTypeTags.IS_EXPLOSION)) return DamageKind.PYRO;
+        if (source.is(DamageTypeTags.IS_FIRE)
+                || source.is(DamageTypes.IN_FIRE)
                 || source.is(DamageTypes.ON_FIRE)
                 || source.is(DamageTypes.LAVA)
                 || source.is(DamageTypes.HOT_FLOOR)) {
@@ -15,7 +21,7 @@ public final class DamageMapper {
         }
         if (source.is(DamageTypes.DROWN)) return DamageKind.HYDRO;
         if (source.is(DamageTypes.LIGHTNING_BOLT)) return DamageKind.ELECTRO;
-        if (source.is(DamageTypes.FREEZE)) return DamageKind.CRYO;
+        if (source.is(DamageTypeTags.IS_FREEZING) || source.is(DamageTypes.FREEZE)) return DamageKind.CRYO;
         if (source.is(DamageTypes.MAGIC)
                 || source.is(DamageTypes.INDIRECT_MAGIC)
                 || source.is(DamageTypes.WITHER)
