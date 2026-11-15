@@ -83,7 +83,7 @@ public final class RpgHudOverlay {
     private static final WhiteOverlay ZH_W = new WhiteOverlay(), MI_W = new WhiteOverlay();
     private static final WhiteOverlay SHIELD_O1 = new WhiteOverlay(), SHIELD_O2 = new WhiteOverlay(), SHIELD_O3 = new WhiteOverlay();
     private static float zhLast = 0f, miLast = 0f;
-    private static float lastT1 = 0f, lastT2 = 0f, lastT3 = 0f;
+    private static float lastL1 = 0f, lastL2 = 0f, lastL3 = 0f;
 
     @Nullable private static LocalPlayer lastPlayer;
     private static long deathStart = -1L;
@@ -147,7 +147,7 @@ public final class RpgHudOverlay {
         N_HP.reset(); N_SHIELD.reset(); T_ABS.reset(); T_XP.reset(); XP.reset(); C_HP.reset();
         ZH_W.reset(); MI_W.reset(); zhLast = miLast = 0f;
         SHIELD_O1.reset(); SHIELD_O2.reset(); SHIELD_O3.reset();
-        lastT1 = lastT2 = lastT3 = 0f;
+        lastL1 = lastL2 = lastL3 = 0f;
         RpgStatBars.reset();
         deathStart = -1L;
     }
@@ -290,30 +290,31 @@ public final class RpgHudOverlay {
         ClientShieldState ss = ClientCombatBars.shield(lp.getId());
         float hpMax = (float) lp.getMaxHealth();
 
-        if (!preview && (ss == null || (ss.amount() <= 0.001f && !SHIELD_O1.busy() && !SHIELD_O2.busy() && !SHIELD_O3.busy()))) return;
+        if (!preview && (ss == null || ss.amount() <= 0.001f) && !SHIELD_O1.busy() && !SHIELD_O2.busy() && !SHIELD_O3.busy()) return;
 
         Box absBox = RpgHudElement.SHIELD.get(cfg).abs();
 
         float currentShield = ss != null ? ss.amount() : 0f;
-        float targetShield = ss != null ? ss.bar.target() : 0f;
         float maxShield = hpMax * 3f;
 
         float main3 = (currentShield / maxShield) * 3f;
-        float target3 = (targetShield / maxShield) * 3f;
 
         float l1 = Mth.clamp(main3, 0f, 1f);
         float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
         float l3 = Mth.clamp(main3 - 2f, 0f, 1f);
 
-        float t1 = Mth.clamp(target3, 0f, 1f);
-        float t2 = Mth.clamp(target3 - 1f, 0f, 1f);
-        float t3 = Mth.clamp(target3 - 2f, 0f, 1f);
-
-        if (Math.abs(t1 - lastT1) > 0.001f) SHIELD_O1.trigger(lastT1, t1, now);
-        if (Math.abs(t2 - lastT2) > 0.001f) SHIELD_O2.trigger(lastT2, t2, now);
-        if (Math.abs(t3 - lastT3) > 0.001f) SHIELD_O3.trigger(lastT3, t3, now);
-
-        lastT1 = t1; lastT2 = t2; lastT3 = t3;
+        if (Math.abs(l1 - lastL1) > 0.001f) {
+            SHIELD_O1.trigger(lastL1, l1, now);
+            lastL1 = l1;
+        }
+        if (Math.abs(l2 - lastL2) > 0.001f) {
+            SHIELD_O2.trigger(lastL2, l2, now);
+            lastL2 = l2;
+        }
+        if (Math.abs(l3 - lastL3) > 0.001f) {
+            SHIELD_O3.trigger(lastL3, l3, now);
+            lastL3 = l3;
+        }
 
         SHIELD_O1.update(now, l1, cfg);
         SHIELD_O2.update(now, l2, cfg);
@@ -324,29 +325,28 @@ public final class RpgHudOverlay {
                 : 0xFF404040;
         HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x2(), absBox.y2(), argb(a, bgColor));
 
-        if (ss != null && main3 > 0.001f) {
+        if (ss != null) {
             if (l1 > 0.001f) {
-                int c = ss.color(cfg, hpMax, 0);
-                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l1, absBox.y2(), argb(a, c));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l1, absBox.y2(), argb(a, ss.color(cfg, hpMax, 0)));
             }
             if (l2 > 0.001f) {
-                int c = ss.color(cfg, hpMax, 1);
-                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l2, absBox.y2(), argb(a, c));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l2, absBox.y2(), argb(a, ss.color(cfg, hpMax, 1)));
             }
             if (l3 > 0.001f) {
-                int c = ss.color(cfg, hpMax, 2);
-                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l3, absBox.y2(), argb(a, c));
+                HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l3, absBox.y2(), argb(a, ss.color(cfg, hpMax, 2)));
             }
 
             float sa = ss.bar.whiteness(now, cfg.subBarFlashTime);
             if (sa > 0.01f) {
                 HudGeom.rect(g, absBox.x(), absBox.y(), absBox.x() + absBox.w() * l1, absBox.y2(), argb(a * sa, WHITE));
             }
+        }
 
-            SHIELD_O1.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
-            SHIELD_O2.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
-            SHIELD_O3.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
+        SHIELD_O1.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
+        SHIELD_O2.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
+        SHIELD_O3.emit((lo, hi, wa) -> HudGeom.rect(g, absBox.x() + absBox.w() * lo, absBox.y(), absBox.x() + absBox.w() * hi, absBox.y2(), argb(a * wa, WHITE)));
 
+        if (ss != null) {
             float shownVal = N_SHIELD.shown();
             float pop = N_SHIELD.scale(now);
             float ta = a * N_SHIELD.alpha();

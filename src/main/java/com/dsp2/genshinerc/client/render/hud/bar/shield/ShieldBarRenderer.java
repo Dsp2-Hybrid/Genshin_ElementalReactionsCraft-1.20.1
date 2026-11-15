@@ -24,9 +24,10 @@ public final class ShieldBarRenderer {
     private static final Map<Integer, WhiteOverlay> O1_MAP = new HashMap<>();
     private static final Map<Integer, WhiteOverlay> O2_MAP = new HashMap<>();
     private static final Map<Integer, WhiteOverlay> O3_MAP = new HashMap<>();
-    private static final Map<Integer, Float> LAST_T1 = new HashMap<>();
-    private static final Map<Integer, Float> LAST_T2 = new HashMap<>();
-    private static final Map<Integer, Float> LAST_T3 = new HashMap<>();
+    
+    private static final Map<Integer, Float> LAST_L1 = new HashMap<>();
+    private static final Map<Integer, Float> LAST_L2 = new HashMap<>();
+    private static final Map<Integer, Float> LAST_L3 = new HashMap<>();
 
     public static void render(LivingEntity entity, Matrix4f m, MultiBufferSource buffers,
                               BarConfig cfg, BarAnchor anchor, float alpha) {
@@ -39,16 +40,15 @@ public final class ShieldBarRenderer {
         if (hpMax <= 0f) return;
 
         float main3 = s.bar.main() / Math.max(1f, hpMax);
-        float target3 = s.bar.target() / Math.max(1f, hpMax);
 
         if (s.bar.isIdle(now, cfg.subBarFlashTime) && main3 <= 0.001f) {
             ClientCombatBars.removeShield(entity.getId());
             O1_MAP.remove(entity.getId());
             O2_MAP.remove(entity.getId());
             O3_MAP.remove(entity.getId());
-            LAST_T1.remove(entity.getId());
-            LAST_T2.remove(entity.getId());
-            LAST_T3.remove(entity.getId());
+            LAST_L1.remove(entity.getId());
+            LAST_L2.remove(entity.getId());
+            LAST_L3.remove(entity.getId());
             return;
         }
 
@@ -70,41 +70,39 @@ public final class ShieldBarRenderer {
         float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
         float l3 = Mth.clamp(main3 - 2f, 0f, 1f);
 
-        float t1 = Mth.clamp(target3, 0f, 1f);
-        float t2 = Mth.clamp(target3 - 1f, 0f, 1f);
-        float t3 = Mth.clamp(target3 - 2f, 0f, 1f);
-
         WhiteOverlay o1 = O1_MAP.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
         WhiteOverlay o2 = O2_MAP.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
         WhiteOverlay o3 = O3_MAP.computeIfAbsent(entity.getId(), k -> new WhiteOverlay());
 
-        float lastT1 = LAST_T1.getOrDefault(entity.getId(), 0f);
-        float lastT2 = LAST_T2.getOrDefault(entity.getId(), 0f);
-        float lastT3 = LAST_T3.getOrDefault(entity.getId(), 0f);
+        float lastL1 = LAST_L1.getOrDefault(entity.getId(), 0f);
+        float lastL2 = LAST_L2.getOrDefault(entity.getId(), 0f);
+        float lastL3 = LAST_L3.getOrDefault(entity.getId(), 0f);
 
-        if (Math.abs(t1 - lastT1) > 0.001f) o1.trigger(lastT1, t1, now);
-        if (Math.abs(t2 - lastT2) > 0.001f) o2.trigger(lastT2, t2, now);
-        if (Math.abs(t3 - lastT3) > 0.001f) o3.trigger(lastT3, t3, now);
-
-        LAST_T1.put(entity.getId(), t1);
-        LAST_T2.put(entity.getId(), t2);
-        LAST_T3.put(entity.getId(), t3);
+        if (Math.abs(l1 - lastL1) > 0.001f) {
+            o1.trigger(lastL1, l1, now);
+            LAST_L1.put(entity.getId(), l1);
+        }
+        if (Math.abs(l2 - lastL2) > 0.001f) {
+            o2.trigger(lastL2, l2, now);
+            LAST_L2.put(entity.getId(), l2);
+        }
+        if (Math.abs(l3 - lastL3) > 0.001f) {
+            o3.trigger(lastL3, l3, now);
+            LAST_L3.put(entity.getId(), l3);
+        }
 
         o1.update(now, l1, cfg);
         o2.update(now, l2, cfg);
         o3.update(now, l3, cfg);
 
         if (l1 > 0.001f) {
-            int c = s.color(cfg, hpMax, 0);
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l1, z, c, alpha);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l1, z, s.color(cfg, hpMax, 0), alpha);
         }
         if (l2 > 0.001f) {
-            int c = s.color(cfg, hpMax, 1);
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l2, z, c, alpha);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l2, z, s.color(cfg, hpMax, 1), alpha);
         }
         if (l3 > 0.001f) {
-            int c = s.color(cfg, hpMax, 2);
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l3, z, c, alpha);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l3, z, s.color(cfg, hpMax, 2), alpha);
         }
 
         float sa = s.bar.whiteness(now, cfg.subBarFlashTime);

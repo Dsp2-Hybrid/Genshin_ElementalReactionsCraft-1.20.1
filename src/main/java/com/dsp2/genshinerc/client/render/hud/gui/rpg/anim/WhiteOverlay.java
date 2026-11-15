@@ -4,19 +4,20 @@ import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import net.minecraft.util.Mth;
 
 public final class WhiteOverlay {
-    private static final float EXTEND_MS = 350f, OLD_FADE_MS = 150f;
+    private static final float OLD_FADE_MS = 150f;
 
     public interface Sink { void seg(float lo, float hi, float alpha); }
 
-    private boolean active, healing, extending, shrinking;
+    private boolean active, healing, shrinking;
     private float start, end, maxWidth, base, alpha = 1f;
+    private float initStart, initEnd;
     private long animStart;
 
     private boolean oldActive;
     private float oldStart, oldEnd, oldAlpha = 1f;
     private long oldAnimStart;
 
-    public void reset() { active = oldActive = extending = shrinking = false; }
+    public void reset() { active = oldActive = shrinking = false; }
 
     public boolean busy() { return active || oldActive; }
 
@@ -30,18 +31,27 @@ public final class WhiteOverlay {
         active = false;
     }
 
-    public void trigger(float visual, float target, long now) {
+    public void trigger(float oldValue, float newValue, long now) {
         interrupt(now);
-        maxWidth = Math.abs(target - visual);
+        maxWidth = Math.abs(newValue - oldValue);
         if (maxWidth <= 0.001f) return;
-        healing = target > visual;
-        base = visual;
-        start = visual;
-        end = visual;
+        
+        healing = newValue > oldValue;
+        base = oldValue;
+        
+        if (healing) {
+            start = base;
+            end = newValue;
+        } else {
+            start = newValue;
+            end = base;
+        }
+        
+        initStart = start;
+        initEnd = end;
         animStart = now;
         active = true;
-        extending = true;
-        shrinking = false;
+        shrinking = true;
         alpha = 1f;
     }
 
@@ -60,19 +70,8 @@ public final class WhiteOverlay {
         if (!active) return;
 
         long elapsed = now - animStart;
-        if (extending) {
-            float p = Math.min(1f, elapsed / EXTEND_MS);
-            float e = BarConfig.interpolate(p, cfg.whiteEasing);
-            if (healing) end = base + maxWidth * e; else start = base - maxWidth * e;
-            if (p >= 1f) {
-                if (healing) { start = base; end = base + maxWidth; }
-                else { start = base - maxWidth; end = base; }
-                extending = false;
-                shrinking = true;
-                animStart = now;
-            }
-        } else if (shrinking) {
-            float durMs = Math.max(0.3f, maxWidth * cfg.playerOverlayShrinkTime) * 1000f;
+        if (shrinking) {
+            float durMs = 800f;
             if (elapsed >= (long) durMs) {
                 active = false;
                 shrinking = false;
@@ -80,14 +79,13 @@ public final class WhiteOverlay {
             }
             float p = Math.min(1f, elapsed / durMs);
             float e = BarConfig.interpolate(p, cfg.whiteEasing);
+            
             if (healing) {
-                float hi = Math.min(base + maxWidth, visual);
-                end = hi;
-                start = Math.min(Mth.lerp(e, base, hi), hi);
+                end = initEnd;
+                start = Mth.lerp(e, initStart, initEnd);
             } else {
-                float lo = Math.min(base - maxWidth, visual);
-                start = lo;
-                end = Math.max(Mth.lerp(e, base, lo), lo);
+                start = initStart;
+                end = Mth.lerp(e, initEnd, initStart);
             }
             alpha = 1.0f - 0.7f * e;
         }
