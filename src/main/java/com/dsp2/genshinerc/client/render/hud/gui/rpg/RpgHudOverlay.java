@@ -290,7 +290,7 @@ public final class RpgHudOverlay {
         ClientShieldState ss = ClientCombatBars.shield(lp.getId());
         float hpMax = (float) lp.getMaxHealth();
 
-        if (!preview && (ss == null || ss.amount() <= 0.001f) && !SHIELD_O1.busy() && !SHIELD_O2.busy() && !SHIELD_O3.busy()) return;
+        if (!preview && (ss == null || (ss.amount() <= 0.001f && !SHIELD_O1.busy() && !SHIELD_O2.busy() && !SHIELD_O3.busy()))) return;
 
         Box absBox = RpgHudElement.SHIELD.get(cfg).abs();
 
@@ -351,9 +351,30 @@ public final class RpgHudOverlay {
             float pop = N_SHIELD.scale(now);
             float ta = a * N_SHIELD.alpha();
 
-            int topLayer = main3 > 2f ? 2 : (main3 > 1f ? 1 : 0);
-            int numColor = HudDraw.lerpRgb(ss.color(cfg, hpMax, topLayer), 0xFFFFFF, 0.20f);
-            String numStr = String.valueOf(Math.round(shownVal));
+            String numStr;
+            if (shownVal < 1000f) {
+                numStr = String.format(Locale.ROOT, "%.1f", shownVal);
+            } else {
+                numStr = String.format(Locale.ROOT, "%.0f", shownVal);
+            }
+
+            int baseColor;
+            if (l2 > 0.01f) {
+                baseColor = ss.color(cfg, hpMax, 0);
+            } else {
+                baseColor = ss.color(cfg, hpMax, 1);
+            }
+            
+            int cr = (baseColor >> 16) & 0xFF;
+            int cg = (baseColor >> 8) & 0xFF;
+            int cb = baseColor & 0xFF;
+
+            cr = Math.min(255, Math.round(cr + (255 - cr) * 0.4f));
+            cg = Math.min(255, Math.round(cg + (255 - cg) * 0.4f));
+            cb = Math.min(255, Math.round(cb + (255 - cb) * 0.4f));
+            
+            int numColor = (cr << 16) | (cg << 8) | cb;
+
             text(g, Component.literal(numStr), absBox.cx(), absBox.cy(), 0.6f * pop, numColor, ta, true);
         }
     }

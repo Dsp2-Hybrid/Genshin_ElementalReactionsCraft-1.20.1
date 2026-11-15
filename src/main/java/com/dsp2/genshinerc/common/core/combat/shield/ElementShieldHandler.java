@@ -26,7 +26,10 @@ public final class ElementShieldHandler {
         ShieldManager.AbsorbResult res = ShieldManager.absorbElemental(entity, amount, kind);
         if (res.blocked() <= 0f) return;
 
-        DamageServerEventHandler.shieldAbsorb(entity, res.blocked(), kind.indicatorKey());
+        if (res.shieldSpent() > 0f) {
+            DamageServerEventHandler.shieldAbsorb(entity, res.shieldSpent(), kind.indicatorKey());
+        }
+        
         float left = amount - res.blocked();
         if (left <= 0.001f) {
             event.setAmount(0f);
