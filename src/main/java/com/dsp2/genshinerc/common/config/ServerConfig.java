@@ -20,6 +20,7 @@ public class ServerConfig {
     public static final ForgeConfigSpec.BooleanValue EXPLOSION_REACTION_ENABLED, EXPLOSION_USES_PYRO_RESISTANCE, SHIELD_ENABLED, CRYO_FREEZE_BLOCKS;
     public static final ForgeConfigSpec.IntValue WORLD_LEVEL_MAX, WORLD_LEVEL;
     public static final ForgeConfigSpec.BooleanValue USE_BASE_BONUS_ATK, USE_CRIT_SYSTEM;
+    public static final ForgeConfigSpec.DoubleValue SHATTER_REACTION_BONUS;
     public static final ForgeConfigSpec.DoubleValue OVERLOAD_COEFFICIENT, SUPERCONDUCT_COEFFICIENT, ELECTRO_CHARGED_COEFFICIENT, SWIRL_COEFFICIENT, BLOOM_COEFFICIENT, SHATTER_COEFFICIENT;
 
     static {
@@ -93,6 +94,7 @@ public class ServerConfig {
         SWIRL_COEFFICIENT = BUILDER.defineInRange("swirlCoefficient", 1.2, 0.0, 100.0);
         BLOOM_COEFFICIENT = BUILDER.defineInRange("bloomCoefficient", 4.0, 0.0, 100.0);
         SHATTER_COEFFICIENT = BUILDER.defineInRange("shatterCoefficient", 3.0, 0.0, 100.0);
+        SHATTER_REACTION_BONUS = BUILDER.defineInRange("shatterReactionBonus", 0.0, 0.0, 100.0);
         BUILDER.pop();
         SPEC = BUILDER.build();
     }

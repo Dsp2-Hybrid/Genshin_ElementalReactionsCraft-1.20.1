@@ -45,7 +45,7 @@ public final class WetStatusTracker {
             boolean isFrozen = false;
             
             if (auras != null) {
-                isFrozen = auras.has(ElementType.FROZEN);
+                isFrozen = auras.hasActive(ElementType.FROZEN);
                 float hydro = auras.gauge(ElementType.HYDRO);
                 isWet = hydro > 0.05f;
             }

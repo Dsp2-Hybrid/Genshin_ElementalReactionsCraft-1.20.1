@@ -1,5 +1,7 @@
 package com.dsp2.genshinerc.mixin.mods.gui.epicfight.fixguimodelbyef;
 
+import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.FrozenSurface;
+
 import com.dsp2.genshinerc.patch.core.gui.render.GuiRenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -92,5 +94,19 @@ public abstract class MixinPatchedLivingEntityRenderer {
 
         poseStack.popPose();
         ci.cancel();
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Inject(method = "renderLayer", at = @At("HEAD"), remap = false)
+    private void genshinerc$iceSurface(LivingEntityRenderer<?, ?> renderer, LivingEntityPatch<?> patch,
+                                      LivingEntity entity, OpenMatrix4f[] poses, MultiBufferSource buffer,
+                                      PoseStack pose, int light, float partial, CallbackInfo ci) {
+        float alpha = FrozenSurface.alpha(entity);
+        if (alpha <= 0f) return;
+        PatchedEntityRenderer base = (PatchedEntityRenderer) (Object) this;
+        SkinnedMesh mesh = (SkinnedMesh) base.getMeshProvider(patch).get();
+        Armature armature = patch.getArmature();
+        mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light, 0.66f, 0.86f, 1.0f, alpha,
+                OverlayTexture.NO_OVERLAY, armature, poses);
     }
 }

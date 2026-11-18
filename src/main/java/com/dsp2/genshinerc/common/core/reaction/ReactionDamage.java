@@ -21,6 +21,11 @@ import java.util.WeakHashMap;
 public final class ReactionDamage {
     private static final int WINDOW_TICKS = 10;
     private static boolean dealing;
+    private static String activeIndicatorKey;
+
+    public static String indicatorKey(String fallback) {
+        return activeIndicatorKey == null ? fallback : activeIndicatorKey;
+    }
     private static final Map<LivingEntity, Map<Reaction, ArrayDeque<Long>>> HITS = new WeakHashMap<>();
 
     private ReactionDamage() {}
@@ -33,14 +38,30 @@ public final class ReactionDamage {
         if (!(target.level() instanceof ServerLevel level) || !target.isAlive()) return;
         if (!allow(target, reaction, level.getGameTime())) return;
 
+        float coefficient = switch (reaction) {
+            case OVERLOAD -> ServerConfig.OVERLOAD_COEFFICIENT.get().floatValue();
+            case SHATTER -> ServerConfig.SHATTER_COEFFICIENT.get().floatValue();
+            default -> reaction.coefficient();
+        };
+
         double amount;
-        if (stats.mastery() > 0.0) {
-            amount = ElementalMath.transformative(reaction.coefficient(), stats);
+        if (reaction == Reaction.SHATTER) {
+            double mastery = Math.max(0.0, stats.mastery());
+            double multiplier = 1.0 + 16.0 * mastery / (mastery + 2000.0)
+                    + ServerConfig.SHATTER_REACTION_BONUS.get();
+            amount = coefficient * ElementalMath.levelMultiplier(stats.level()) * multiplier * ServerConfig.SCALE.get();
+        } else if (stats.mastery() > 0.0) {
+            amount = ElementalMath.transformative(coefficient, stats);
         } else {
-            amount = ElementalMath.transformativeNoEM(reaction.coefficient(), stats.level());
+            amount = ElementalMath.transformativeNoEM(coefficient, stats.level());
+        }
+        if (reaction == Reaction.SHATTER || reaction == Reaction.OVERLOAD) {
+            var attribute = kind.resistanceAttribute();
+            var instance = attribute == null ? null : target.getAttribute(attribute);
+            if (instance != null) amount *= ElementalMath.resistanceMultiplier(instance.getValue());
         }
         amount = ElementalMath.capReaction(amount, target);
-        if (amount <= 0.0) return;
+        if (!Double.isFinite(amount) || amount <= 0.0) return;
 
         Entity cause = (reaction == Reaction.BURNING || reaction == Reaction.ELECTRO_CHARGED) ? null : attacker;
         DamageSource source = ElementalDamage.source(level, kind, attacker, cause);
@@ -49,6 +70,8 @@ public final class ReactionDamage {
         float absorb = target.getAbsorptionAmount();
         int invulnerable = target.invulnerableTime;
         boolean previous = dealing;
+        String previousKey = activeIndicatorKey;
+        activeIndicatorKey = reaction.indicatorKey(kind);
         dealing = true;
         try {
             target.invulnerableTime = 0;
@@ -56,6 +79,7 @@ public final class ReactionDamage {
         } finally {
             target.invulnerableTime = invulnerable;
             dealing = previous;
+            activeIndicatorKey = previousKey;
         }
 
         float lostHp = Math.max(0f, hp - target.getHealth());

@@ -23,6 +23,7 @@ public final class OverloadImpulse {
 
     private record Pending(long launchTick) {}
     private static final Map<LivingEntity, Pending> AIRBORNE = new WeakHashMap<>();
+    private static final Map<LivingEntity, Vec3> QUEUED = new WeakHashMap<>();
     private static final Map<LivingEntity, Long> COOLDOWN = new WeakHashMap<>();
     private static final int COOLDOWN_TICKS = 10;
     private static final int MAX_AIRBORNE_TICKS = 100;
@@ -31,7 +32,14 @@ public final class OverloadImpulse {
 
     public static void apply(LivingEntity center, @Nullable Entity attacker, ElementalStats stats) {
         if (center == null) return;
-        long now = center.level().getGameTime();
+        List<LivingEntity> targets = new ArrayList<>(ReactionTargets.nearbyEnemies(center, attacker, ServerConfig.OVERLOAD_RADIUS.get()));
+        if (ReactionTargets.isEnemy(attacker, center)) targets.add(center);
+        if (center.level() instanceof ServerLevel level) applyAt(level, center.position(), attacker, stats, targets);
+    }
+
+    public static void applyAt(ServerLevel level, Vec3 center, @Nullable Entity attacker, ElementalStats stats,
+                               List<LivingEntity> targets) {
+        long now = level.getGameTime();
         double radius = ServerConfig.OVERLOAD_RADIUS.get();
         Vec3 dir = attackDirection(center, attacker);
         double emFactor = stats.mastery() > 0.0
@@ -39,31 +47,34 @@ public final class OverloadImpulse {
                 : 1.0 + WorldLevel.get() * 0.15;
         emFactor = Math.min(ServerConfig.OVERLOAD_EM_CAP.get(), emFactor);
 
-        List<LivingEntity> targets = new ArrayList<>(ReactionTargets.nearbyEnemies(center, attacker, radius));
-        if (ReactionTargets.isEnemy(attacker, center)) targets.add(center);
-
         for (LivingEntity t : targets) {
+            if (!ReactionTargets.isEnemy(attacker, t)) continue;
             Long last = COOLDOWN.get(t);
             if (last != null && now - last < COOLDOWN_TICKS) continue;
             if (t instanceof net.minecraft.world.entity.animal.IronGolem) continue;
-            double d = t.position().distanceTo(center.position());
+            double d = t.getBoundingBox().getCenter().distanceTo(center);
             double falloff = 1.0 - Math.pow(Mth.clamp(d / radius, 0.0, 1.0), 1.5);
             double up = (ServerConfig.OVERLOAD_UP_BASE.get() + ServerConfig.OVERLOAD_UP_SCALE.get() * falloff) * emFactor;
             double side = (ServerConfig.OVERLOAD_SIDE_BASE.get() + ServerConfig.OVERLOAD_SIDE_SCALE.get() * falloff) * emFactor;
             Vec3 push = (dir != null ? dir : randomDir(t)).multiply(side, 0.0, side).add(0.0, up, 0.0);
-            t.setDeltaMovement(t.getDeltaMovement().add(push));
-            t.hurtMarked = true;
-            t.hasImpulse = true;
             COOLDOWN.put(t, now);
             if (t.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE) >= 0.9) {
                 ZhenMieManager.add(t, 0f, 1f);
             } else {
-                AIRBORNE.put(t, new Pending(now));
+                QUEUED.merge(t, push, Vec3::add);
             }
         }
     }
 
     public static void tick() {
+        QUEUED.forEach((target, push) -> {
+            if (!target.isAlive() || target.isRemoved()) return;
+            target.setDeltaMovement(target.getDeltaMovement().add(push));
+            target.hurtMarked = true;
+            target.hasImpulse = true;
+            AIRBORNE.put(target, new Pending(target.level().getGameTime()));
+        });
+        QUEUED.clear();
         AIRBORNE.entrySet().removeIf(e -> {
             LivingEntity t = e.getKey();
             if (t.isRemoved() || !t.isAlive()) return true;
@@ -81,12 +92,12 @@ public final class OverloadImpulse {
         });
     }
 
-    public static void reset() { AIRBORNE.clear(); COOLDOWN.clear(); }
+    public static void reset() { AIRBORNE.clear(); COOLDOWN.clear(); QUEUED.clear(); }
 
     @Nullable
-    private static Vec3 attackDirection(LivingEntity center, @Nullable Entity attacker) {
+    private static Vec3 attackDirection(Vec3 center, @Nullable Entity attacker) {
         if (attacker == null) return null;
-        Vec3 v = center.position().subtract(attacker.position());
+        Vec3 v = center.subtract(attacker.position());
         v = new Vec3(v.x, 0.0, v.z);
         return v.lengthSqr() < 1.0e-4 ? null : v.normalize();
     }

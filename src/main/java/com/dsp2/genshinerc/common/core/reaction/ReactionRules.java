@@ -10,11 +10,11 @@ final class ReactionRules {
 
     static ElementType[] order(ElementType trigger) {
         return switch (trigger) {
-            case PYRO -> new ElementType[]{ElementType.ELECTRO, ElementType.CRYO, ElementType.FROZEN,
+            case PYRO -> new ElementType[]{ElementType.FROZEN, ElementType.ELECTRO, ElementType.CRYO,
                     ElementType.HYDRO, ElementType.QUICKEN, ElementType.DENDRO};
             case HYDRO -> new ElementType[]{ElementType.PYRO, ElementType.CRYO, ElementType.QUICKEN,
                     ElementType.DENDRO, ElementType.ELECTRO};
-            case ELECTRO -> new ElementType[]{ElementType.PYRO, ElementType.CRYO, ElementType.FROZEN,
+            case ELECTRO -> new ElementType[]{ElementType.PYRO, ElementType.FROZEN, ElementType.CRYO,
                     ElementType.QUICKEN, ElementType.DENDRO, ElementType.HYDRO};
             case CRYO -> new ElementType[]{ElementType.PYRO, ElementType.ELECTRO, ElementType.HYDRO};
             case DENDRO -> new ElementType[]{ElementType.PYRO, ElementType.ELECTRO, ElementType.HYDRO,

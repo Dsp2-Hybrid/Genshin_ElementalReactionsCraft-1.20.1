@@ -1,5 +1,7 @@
 package com.dsp2.genshinerc.common.world.block;
 
+import net.minecraft.core.particles.BlockParticleOption;
+
 import com.dsp2.genshinerc.common.core.element.ElementGauge;
 import com.dsp2.genshinerc.common.registry.block.ModBlocks;
 import net.minecraft.core.BlockPos;
@@ -25,10 +27,14 @@ public class EleIceBlock extends HalfTransparentBlock {
 
     public static void freeze(ServerLevel level, BlockPos pos, boolean source, float units) {
         BlockPos at = pos.immutable();
-        level.setBlockAndUpdate(at, ModBlocks.SPECIAL_ICE.get().defaultBlockState().setValue(SOURCE, source));
-        level.scheduleTick(at, ModBlocks.SPECIAL_ICE.get(), ElementGauge.durationTicksFromUnits(units) + level.random.nextInt(10));
+        if (!level.getBlockState(at).is(Blocks.WATER)) return;
+        var ice = ModBlocks.SPECIAL_ICE.get();
+        level.scheduleTick(at, ice, ElementGauge.durationTicksFromUnits(units) + level.random.nextInt(10));
+        if (!level.setBlockAndUpdate(at, ice.defaultBlockState().setValue(SOURCE, source))) return;
         level.playSound(null, at, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS, 0.6f, 1.4f);
-        level.sendParticles(ParticleTypes.SNOWFLAKE, at.getX() + 0.5, at.getY() + 0.6, at.getZ() + 0.5, 8, 0.3, 0.3, 0.3, 0.01);
+        level.sendParticles(ParticleTypes.SNOWFLAKE, at.getX() + 0.5, at.getY() + 0.72, at.getZ() + 0.5, 10, 0.28, 0.16, 0.28, 0.025);
+        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.ICE.defaultBlockState()),
+                at.getX() + 0.5, at.getY() + 0.78, at.getZ() + 0.5, 6, 0.25, 0.14, 0.25, 0.05);
     }
 
     public static void melt(ServerLevel level, BlockPos pos) {
@@ -37,7 +43,7 @@ public class EleIceBlock extends HalfTransparentBlock {
         level.setBlockAndUpdate(pos, state.getValue(SOURCE) ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState());
         level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5f, 1.3f);
         level.sendParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.4, pos.getZ() + 0.5, 4, 0.25, 0.2, 0.25, 0.01);
-        level.sendParticles(ParticleTypes.ITEM_SNOWBALL, pos.getX() + 0.5, pos.getY() + 0.4, pos.getZ() + 0.5, 6, 0.25, 0.2, 0.25, 0.04);
+        level.sendParticles(ParticleTypes.FALLING_WATER, pos.getX() + 0.5, pos.getY() + 0.65, pos.getZ() + 0.5, 8, 0.25, 0.18, 0.25, 0.02);
     }
 
     @Override

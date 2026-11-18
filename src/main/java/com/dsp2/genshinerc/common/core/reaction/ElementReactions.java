@@ -1,5 +1,11 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
+import com.dsp2.genshinerc.common.core.element.ElementGauge;
+import com.dsp2.genshinerc.common.core.element.FrozenControl;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
 import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
@@ -23,7 +29,7 @@ public final class ElementReactions {
     public static float calcAmplify(ElementType trigger, ElementType aura) {
         if (trigger == ElementType.PYRO && aura == ElementType.HYDRO) return 1.5f;
         if (trigger == ElementType.HYDRO && aura == ElementType.PYRO) return 2.0f;
-        if (trigger == ElementType.PYRO && aura == ElementType.CRYO) return 2.0f;
+        if (trigger == ElementType.PYRO && (aura == ElementType.CRYO || aura == ElementType.FROZEN)) return 2.0f;
         if (trigger == ElementType.CRYO && aura == ElementType.PYRO) return 1.5f;
         return 1.0f;
     }
@@ -65,9 +71,14 @@ public final class ElementReactions {
     }
 
     public static ReactionResult run(LivingEntity target, @Nullable Entity attacker, ElementType trigger, float units, boolean natural, boolean applyWear) {
+        return run(target, attacker, trigger, units, natural, applyWear, true);
+    }
+
+    public static ReactionResult run(LivingEntity target, @Nullable Entity attacker, ElementType trigger, float units,
+                                     boolean natural, boolean applyWear, boolean allowElectroCharged) {
         ReactionResult result = new ReactionResult();
         result.setRemaining(units);
-        if (target.level().isClientSide() || !target.isAlive()) return result;
+        if (target.level().isClientSide() || !target.isAlive() || !Float.isFinite(units) || units <= EPS) return result;
         boolean previous = naturalMode;
         naturalMode = natural;
         try {
@@ -84,7 +95,7 @@ public final class ElementReactions {
             for (ElementType aura : ReactionRules.order(trigger)) {
                 if (ElementAuraManager.amount(target, aura) <= EPS) continue;
                 Reaction reaction = ReactionRules.rule(trigger, aura);
-                if (reaction == null) continue;
+                if (reaction == null || (!allowElectroCharged && reaction == Reaction.ELECTRO_CHARGED)) continue;
 
                 float used = 0f;
                 float triggerUsed = 0f;
@@ -107,8 +118,11 @@ public final class ElementReactions {
             result.setRemaining(gauge);
 
             if (!natural && attachable(trigger) && (!consumedAny || force)) {
-                float finalUnits = consumedAny ? units : units * 0.8f;
-                ElementAuraManager.apply(target, trigger, finalUnits, Math.max(1, Math.round((2.5f * finalUnits + 7f) * 20f)));
+                if (consumedAny) {
+                    ElementAuraManager.apply(target, trigger, units, ElementGauge.durationTicksFromUnits(units));
+                } else {
+                    ElementAuraManager.applyUnits(target, trigger, units);
+                }
             }
 
             if (result.has(Reaction.BURNING)) BurningTracker.start(target, attacker);
@@ -121,8 +135,8 @@ public final class ElementReactions {
 
     public static boolean blunt(LivingEntity target, @Nullable Entity attacker) {
         if (target.level().isClientSide() || !ElementAuraManager.hasAura(target, ElementType.FROZEN)) return false;
+        ReactionText.send(target, Reaction.SHATTER, ElementType.FROZEN, null);
         shatter(target, attacker, ElementalStats.of(attacker));
-        ReactionText.send(target, Reaction.SHATTER, ElementType.FROZEN, ElementType.GEO);
         return true;
     }
 
@@ -144,8 +158,7 @@ public final class ElementReactions {
             }
             case OVERLOAD -> {
                 overload(t, atk, s);
-                ReactionSoundEvents.playOverload(t);
-                ReactionParticles.spawnOverload(t);
+                OverloadVFX.play(t);
             }
             case SUPERCONDUCT -> {
                 ReactionDamage.deal(t, atk, DamageKind.CRYO, r, s);
@@ -155,13 +168,13 @@ public final class ElementReactions {
             }
             case FREEZE -> {
                 ElementAuraManager.freeze(t, 2f * Math.min(triggerUsed, used));
-                ReactionSoundEvents.playFreeze(t);
-                ReactionParticles.spawnFreeze(t);
+                if (FrozenControl.active(t)) {
+                    ReactionSoundEvents.playFreeze(t);
+                    ReactionParticles.spawnFreeze(t);
+                }
             }
             case SHATTER -> {
                 shatter(t, atk, s);
-                ReactionSoundEvents.playShatter(t);
-                ReactionParticles.spawnShatter(t);
             }
             case SWIRL -> {
                 swirl(t, atk, s, aura);
@@ -206,6 +219,8 @@ public final class ElementReactions {
     }
     private static void shatter(LivingEntity t, @Nullable Entity atk, ElementalStats s) {
         ElementAuraManager.remove(t, ElementType.FROZEN, true);
+        ReactionSoundEvents.playShatter(t);
+        ReactionParticles.spawnShatter(t);
         ReactionDamage.deal(t, atk, DamageKind.PHYSICAL, Reaction.SHATTER, s);
     }
 
@@ -235,5 +250,19 @@ public final class ElementReactions {
         float amount = (float) ElementalMath.crystallizeShield(s.level(), s.mastery());
         int ticks = Math.round(ServerConfig.CRYSTALLIZE_SECONDS.get().floatValue() * 20f);
         ShieldManager.add(owner, ShieldKind.ELEMENTAL, aura, amount, ticks);
+    }
+
+    public static void overloadAt(ServerLevel level, LivingEntity attacker, Vec3 at) {
+        double radius = ServerConfig.OVERLOAD_RADIUS.get();
+        var targets = level.getEntitiesOfClass(LivingEntity.class, new AABB(at, at).inflate(radius),
+                target -> ReactionTargets.isEnemy(attacker, target)
+                        && target.getBoundingBox().getCenter().distanceToSqr(at) <= radius * radius);
+        ElementalStats stats = ElementalStats.of(attacker);
+        OverloadVFX.play(level, at);
+        for (LivingEntity target : targets) {
+            ReactionText.send(target, Reaction.OVERLOAD, ElementType.ELECTRO, ElementType.PYRO);
+            ReactionDamage.deal(target, attacker, DamageKind.PYRO, Reaction.OVERLOAD, stats);
+        }
+        OverloadImpulse.applyAt(level, at, attacker, stats, targets);
     }
 }

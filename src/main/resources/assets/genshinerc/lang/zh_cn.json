@@ -662,6 +662,7 @@
 
   "genshinerc.status.wet": "潮湿",
   "genshinerc.status.frozen": "冻结",
+  "attribute.name.genshinerc.freeze_resistance": "冻结抗性",
   "genshinerc.bar.config.element_hud_enabled": "显示元素HUD",
   "genshinerc.bar.config.element_hud_enabled.desc": "在目标的生命条上方绘制元素图标及其小进度条。",
   "genshinerc.bar.config.element_hud_y_offset": "元素HUD Y轴偏移",

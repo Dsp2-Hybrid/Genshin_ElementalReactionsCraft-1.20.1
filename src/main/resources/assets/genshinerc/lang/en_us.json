@@ -634,6 +634,7 @@
   "genshinerc.damageindicator.config.reaction_text_spacing.desc": "Vertical gap between stacked reaction texts.",
   "genshinerc.status.wet": "Wet",
   "genshinerc.status.frozen": "Frozen",
+  "attribute.name.genshinerc.freeze_resistance": "Freeze Resistance",
   "genshinerc.bar.config.element_hud_enabled": "Show Element HUD",
   "genshinerc.bar.config.element_hud_enabled.desc": "Draw element icons and their small gauge bars above the target's health bar.",
   "genshinerc.bar.config.element_hud_y_offset": "Element HUD Y Offset",

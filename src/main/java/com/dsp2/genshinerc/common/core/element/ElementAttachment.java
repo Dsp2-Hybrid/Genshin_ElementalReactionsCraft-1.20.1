@@ -37,9 +37,15 @@ public final class ElementAttachment {
 
     public static ReactionResult attach(LivingEntity target, @Nullable Entity attacker, ElementType element,
                                         GaugeTier tier, String attackKey, AttachCooldown cooldown) {
-        if (target.level().isClientSide() || !target.isAlive() || !isTrigger(element)) return ReactionResult.none();
+        return attach(target, attacker, element, tier.units(), attackKey, cooldown, true);
+    }
+
+    public static ReactionResult attach(LivingEntity target, @Nullable Entity attacker, ElementType element,
+                                        float units, String attackKey, AttachCooldown cooldown, boolean allowElectroCharged) {
+        if (target.level().isClientSide() || !target.isAlive() || !isTrigger(element)
+                || !Float.isFinite(units) || units <= 0f) return ReactionResult.none();
         if (!passes(target, attacker, attackKey, cooldown)) return ReactionResult.none();
-        return ElementReactions.trigger(target, attacker, element, tier.units());
+        return ElementReactions.run(target, attacker, element, units, false, false, allowElectroCharged);
     }
 
     public static boolean isTrigger(ElementType element) {

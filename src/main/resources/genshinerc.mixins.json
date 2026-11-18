@@ -5,11 +5,15 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "genshinerc.refmap.json",
   "mixins": [
+    "core.damage.MixinLivingEntityArmor",
+    "core.damage.DamageSourceTypeAccessor",
+    "mods.core.combat.epicfight.MixinAttackAnimationImbue",
     "mods.core.combat.epicfight.MixinGuardSkill",
     "mods.core.combat.epicfight.MixinImpactGuardSkill",
     "mods.core.combat.epicfight.MixinBattleModeGui"
   ],
   "client": [
+    "client.render.MixinVanillaFrozenSurface",
     "mods.gui.epicfight.EntityRenderDispatcherMixin",
     "mods.gui.libs.yacl.YACLScreenActionMixin",
     "mods.gui.epicfight.fixguimodelbyef.MixinScreen",
@@ -19,7 +23,7 @@
     "mods.shaders.efn.AirTrailParticleMixin",
     "mods.shaders.efn.BloomTrailParticleMixin",
     "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher",
-    "core.damage.MixinLivingEntityArmor",
+
     "client.render.vfx.MixinAaapCurLight",
     "client.render.vfx.MixinAaapApplyLight"
 

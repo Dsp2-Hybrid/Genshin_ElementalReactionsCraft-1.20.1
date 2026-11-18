@@ -1,5 +1,8 @@
 package com.dsp2.genshinerc.server.render.damageindicator;
 
+import net.minecraft.world.damagesource.DamageSource;
+import java.util.ArrayDeque;
+
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.damage.DamageMapper;
 import com.dsp2.genshinerc.common.core.reaction.ReactionDamage;
@@ -10,9 +13,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -24,87 +25,85 @@ import java.util.UUID;
 public class DamageServerEventHandler {
 
     private static final Map<UUID, Float> LAST_ABSORPTION = new HashMap<>();
-    private static final Map<Integer, String> KEY_OVERRIDE = new HashMap<>();
+    private static final ThreadLocal<ArrayDeque<Hit>> HITS = ThreadLocal.withInitial(ArrayDeque::new);
 
-    private static class PreDamageState {
-        LivingEntity entity;
-        float preHealth;
-        float preAbsorb;
+    private static final class Hit {
+        final LivingEntity entity;
+        final DamageSource source;
+        final float health;
+        final float absorption;
         String key;
-        float reactionHealth;
-        float reactionAbsorb; float shield;
-    }
-    private static final Map<Integer, PreDamageState> PRE_STATE = new HashMap<>();
+        float nestedHealth;
+        float nestedAbsorption;
+        float shield;
+        boolean critical;
 
-    public static void discount(LivingEntity e, float health, float absorb) {
-        PreDamageState s = PRE_STATE.get(e.getId());
-        if (s != null) {
-            s.reactionHealth += Math.max(0f, health);
-            s.reactionAbsorb += Math.max(0f, absorb);
+        Hit(LivingEntity entity, DamageSource source) {
+            this.entity = entity;
+            this.source = source;
+            this.health = entity.getHealth();
+            this.absorption = entity.getAbsorptionAmount();
+            this.key = source.is(DamageTypeTags.IS_EXPLOSION) ? "pyro" : DamageMapper.classify(source).indicatorKey();
         }
     }
 
-    public static void shieldAbsorb(LivingEntity e, float blocked, String key) { if (blocked <= 0f) return; PreDamageState s = PRE_STATE.get(e.getId()); if (s != null && !ReactionDamage.isDealing()) { s.shield += blocked; return; } if (ServerConfig.ENABLED.get()) DamageIndicatorNetworkHandler.sendDamage(e, key, 0f, false, false, false, blocked, null, null, false, false); } public static void tag(LivingEntity e, String key) {
-        KEY_OVERRIDE.put(e.getId(), key);
+    private static Hit find(LivingEntity entity) {
+        for (Hit hit : HITS.get()) {
+            if (hit.entity == entity) return hit;
+        }
+        return null;
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void onLivingHurtPre(LivingHurtEvent event) {
-        LivingEntity e = event.getEntity();
-        if (e.level().isClientSide()) return;
+    public static void begin(LivingEntity entity, DamageSource source) {
+        if (entity.level().isClientSide() || ReactionDamage.isDealing() || !ServerConfig.ENABLED.get()) return;
+        HITS.get().push(new Hit(entity, source));
+    }
 
-        if (!ServerConfig.ENABLED.get()) return;
-        if (ReactionDamage.isDealing()) return;
+    public static void end(LivingEntity entity, DamageSource source, boolean accepted) {
+        if (entity.level().isClientSide() || ReactionDamage.isDealing()) return;
+        ArrayDeque<Hit> stack = HITS.get();
+        Hit hit = stack.peek();
+        if (hit == null || hit.entity != entity || hit.source != source) return;
+        stack.pop();
+        float rawHealth = Math.max(0f, hit.health - entity.getHealth());
+        float rawAbsorption = Math.max(0f, hit.absorption - entity.getAbsorptionAmount());
+        discount(entity, rawHealth, rawAbsorption);
+        if (stack.isEmpty()) HITS.remove();
+        float damage = accepted ? Math.max(0f, rawHealth - hit.nestedHealth) : 0f;
+        float absorbed = hit.shield + (accepted ? Math.max(0f, rawAbsorption - hit.nestedAbsorption) : 0f);
+        if (damage < 0.001f && absorbed < 0.001f) return;
+        DamageIndicatorNetworkHandler.sendDamage(entity, hit.key, damage, hit.critical,
+                damage > 0f && !entity.isAlive(), false, absorbed, null, null, false, false);
+    }
 
-        if (!PRE_STATE.containsKey(e.getId())) {
-            PreDamageState state = new PreDamageState();
-            state.entity = e;
-            state.preHealth = e.getHealth();
-            state.preAbsorb = e.getAbsorptionAmount();
-            
-            if (event.getSource().is(DamageTypeTags.IS_EXPLOSION)) {
-                state.key = "pyro";
-            } else {
-                state.key = DamageMapper.classify(event.getSource()).indicatorKey();
-            }
-            PRE_STATE.put(e.getId(), state);
+    public static void discount(LivingEntity entity, float health, float absorb) {
+        Hit hit = find(entity);
+        if (hit != null) {
+            hit.nestedHealth += Math.max(0f, health);
+            hit.nestedAbsorption += Math.max(0f, absorb);
         }
     }
 
-    @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-        if (PRE_STATE.isEmpty()) {
-            KEY_OVERRIDE.clear();
-            return;
+    public static void shieldAbsorb(LivingEntity entity, float blocked, String key) {
+        if (blocked <= 0f || !ServerConfig.ENABLED.get()) return;
+        Hit hit = ReactionDamage.isDealing() ? null : find(entity);
+        if (hit != null) {
+            hit.shield += blocked;
+        } else {
+            DamageIndicatorNetworkHandler.sendDamage(entity, ReactionDamage.indicatorKey(key), 0f,
+                    false, false, false, blocked, null, null, false, false);
         }
-
-        if (!ServerConfig.ENABLED.get()) {
-            PRE_STATE.clear();
-            KEY_OVERRIDE.clear();
-            return;
-        }
-
-        for (PreDamageState state : PRE_STATE.values()) {
-            LivingEntity e = state.entity;
-            if (e == null || e.isRemoved()) continue;
-
-            float healthLoss = state.preHealth - e.getHealth() - state.reactionHealth;
-            float absorbLoss = state.preAbsorb - e.getAbsorptionAmount() - state.reactionAbsorb;
-
-            if (healthLoss < 0.001f && absorbLoss < 0.001f && state.shield < 0.001f) continue;
-
-            float actualDamage = Math.max(0f, healthLoss);
-            float absorbed = Math.max(0f, absorbLoss) + state.shield;
-            boolean kill = e.getHealth() <= 0.001f;
-
-            String key = KEY_OVERRIDE.getOrDefault(e.getId(), state.key != null ? state.key : "physical");
-            DamageIndicatorNetworkHandler.sendDamage(e, key, actualDamage, false, kill, false, absorbed, null, null, false, false);
-        }
-        PRE_STATE.clear();
-        KEY_OVERRIDE.clear();
     }
 
+    public static void tag(LivingEntity entity, String key) {
+        Hit hit = find(entity);
+        if (hit != null) hit.key = key;
+    }
+
+    public static void markCrit(LivingEntity entity) {
+        Hit hit = find(entity);
+        if (hit != null) hit.critical = true;
+    }
     @SubscribeEvent
     public static void onLivingHeal(LivingHealEvent event) {
         if (event.getEntity().level().isClientSide()) return;

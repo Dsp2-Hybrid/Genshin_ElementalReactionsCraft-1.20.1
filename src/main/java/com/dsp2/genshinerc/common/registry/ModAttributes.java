@@ -76,9 +76,11 @@ public final class ModAttributes {
     public static final List<RegistryObject<Attribute>> DAMAGE_BONUSES = List.of(
             PYRO_DAMAGE_BONUS, HYDRO_DAMAGE_BONUS, ELECTRO_DAMAGE_BONUS, CRYO_DAMAGE_BONUS,
             ANEMO_DAMAGE_BONUS, GEO_DAMAGE_BONUS, DENDRO_DAMAGE_BONUS, PHYSICAL_DAMAGE_BONUS);
+    public static final RegistryObject<Attribute> FREEZE_RESISTANCE = resistance("freeze_resistance");
+
     public static final List<RegistryObject<Attribute>> LIVING_ATTRIBUTES = Stream.concat(
             Stream.concat(RESISTANCES.stream(), DAMAGE_BONUSES.stream()),
-            Stream.of(ELEMENTAL_MASTERY, DEFENSE, ELEMENTAL_TOUGHNESS,
+            Stream.of(FREEZE_RESISTANCE, ELEMENTAL_MASTERY, DEFENSE, ELEMENTAL_TOUGHNESS,
                     BASE_ATTACK, BONUS_ATTACK, FLAT_ATTACK_BONUS, FLAT_HP_BONUS, FLAT_DEFENSE_BONUS,
                     BONUS_DEFENSE, SCALED_DEFENSE, INNATE_DEFENSE,
                     ELEMENTAL_TOUGHNESS_PYRO, ELEMENTAL_TOUGHNESS_HYDRO, ELEMENTAL_TOUGHNESS_DENDRO,

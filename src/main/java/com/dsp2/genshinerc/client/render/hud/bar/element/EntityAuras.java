@@ -69,4 +69,9 @@ public final class EntityAuras {
         ClientAura a = auras.get(type);
         return a == null ? 0f : a.display(ClientAura.nowTicks(), System.currentTimeMillis());
     }
+
+    public boolean hasActive(ElementType type) {
+        ClientAura aura = auras.get(type);
+        return aura != null && aura.level(ClientAura.nowTicks()) > 1.0e-3f;
+    }
 }

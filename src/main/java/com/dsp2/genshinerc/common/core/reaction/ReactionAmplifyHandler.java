@@ -1,5 +1,7 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
+import com.dsp2.genshinerc.common.core.combat.epicfight.EfElementalHit;
+
 import com.dsp2.genshinerc.common.core.element.ElementAuraManager;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.world.entity.LivingEntity;
@@ -16,6 +18,7 @@ public final class ReactionAmplifyHandler {
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onHurt(LivingHurtEvent event) {
         if (event.getEntity().level().isClientSide() || event.getAmount() <= 0 || ReactionDamage.isDealing()) return;
+        if (EfElementalHit.converted(event.getSource()) || event.getSource().is(DamageTypeTags.IS_EXPLOSION)) return;
         LivingEntity entity = event.getEntity();
         
         ElementType trigger = null;
@@ -47,12 +50,16 @@ public final class ReactionAmplifyHandler {
             Reaction r = null;
             if (trigger == ElementType.PYRO) {
                 if (aura == ElementType.HYDRO) r = Reaction.VAPORIZE;
-                else if (aura == ElementType.CRYO) r = Reaction.MELT;
+                else if (aura == ElementType.CRYO || aura == ElementType.FROZEN) r = Reaction.MELT;
             } else if (trigger == ElementType.CRYO) {
                 if (aura == ElementType.PYRO) r = Reaction.MELT;
             }
             if (r != null) {
-                ReactionText.send(entity, r, trigger, aura, true);
+                if (r == Reaction.MELT) {
+                    ReactionSoundEvents.playMelt(entity);
+                    ReactionParticles.spawnMelt(entity);
+                }
+                ReactionText.send(entity, r, trigger, aura);
             }
         }
     }

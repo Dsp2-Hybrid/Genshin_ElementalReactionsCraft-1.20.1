@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.WeakHashMap;
 
 public final class SwingVolumeSampler {
-    public record SwingSample(float phaseStart, List<SwingVolume> volumes) {
-        public static final SwingSample EMPTY = new SwingSample(0f, List.of());
+    public record SwingSample(AttackAnimation animation, float phaseStart, float elapsed, List<SwingVolume> volumes) {
+        public static final SwingSample EMPTY = new SwingSample(null, 0f, 0f, List.of());
     }
     private record Shape(double cx, double cy, double cz, double hx, double hy, double hz) {}
 
@@ -56,7 +56,7 @@ public final class SwingVolumeSampler {
                 volumes.add(new SwingVolume(world, shape.cx, shape.cy, shape.cz, shape.hx, shape.hy, shape.hz));
             }
         }
-        return volumes.isEmpty() ? SwingSample.EMPTY : new SwingSample(phase.start, volumes);
+        return volumes.isEmpty() ? SwingSample.EMPTY : new SwingSample(attack, phase.start, now, volumes);
     }
 
     private static OpenMatrix4f jointMatrix(LivingEntityPatch<?> patch, AttackAnimation attack, Joint joint, float time, float partial) {

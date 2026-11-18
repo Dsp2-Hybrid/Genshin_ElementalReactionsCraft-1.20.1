@@ -1,5 +1,7 @@
 package com.dsp2.genshinerc.client.render.hud.bar.element;
 
+import com.dsp2.genshinerc.common.core.element.FrozenControl;
+
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
 import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.common.core.element.ElementGauge;
@@ -96,7 +98,8 @@ public final class ClientAura {
                 offset = animFrom * (1f - BarConfig.interpolate(t, BarConfig.EasingType.EASE_OUT_CUBIC));
             }
         }
-        return Mth.clamp(level(nowTicks) + offset, 0f, ElementGauge.MAX_GAUGE);
+        return Mth.clamp(level(nowTicks) + offset, 0f,
+                type() == ElementType.FROZEN ? FrozenControl.MAX_GAUGE : ElementGauge.MAX_GAUGE);
     }
 
     boolean isVisible(double nowTicks) {

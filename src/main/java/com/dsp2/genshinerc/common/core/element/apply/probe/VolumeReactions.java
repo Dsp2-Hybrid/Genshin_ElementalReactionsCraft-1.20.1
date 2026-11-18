@@ -1,11 +1,11 @@
 package com.dsp2.genshinerc.common.core.element.apply.probe;
 
+import com.dsp2.genshinerc.common.core.element.FrozenControl;
+
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.config.ServerConfig;
-import com.dsp2.genshinerc.common.core.element.ElementAuraManager;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import com.dsp2.genshinerc.common.core.reaction.ElementReactions;
-import com.dsp2.genshinerc.common.core.reaction.ReactionTargets;
 import com.dsp2.genshinerc.common.world.block.EleIceBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -23,7 +23,6 @@ import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -33,7 +32,6 @@ import net.minecraftforge.fml.common.Mod;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -42,8 +40,16 @@ import java.util.WeakHashMap;
 public final class VolumeReactions {
     private static final int MAX_POSITIONS = 192;
     private static final int MAX_IGNITE = 8;
-    private static final WeakHashMap<LivingEntity, Integer> ENTITY_PHASE = new WeakHashMap<>();
-    private static final WeakHashMap<LivingEntity, Integer> OVERLOAD_PHASE = new WeakHashMap<>();
+    private static final WeakHashMap<LivingEntity, SweepState> SWEEPS = new WeakHashMap<>();
+
+    private static final class SweepState {
+        Object animation;
+        float phase;
+        float elapsed;
+        long tick = Long.MIN_VALUE;
+        boolean overloaded;
+        int ignited;
+    }
 
     private VolumeReactions() {}
 
@@ -51,45 +57,40 @@ public final class VolumeReactions {
     public static void onTick(LivingEvent.LivingTickEvent event) {
         LivingEntity attacker = event.getEntity();
         if (attacker.level().isClientSide() || !attacker.isAlive()) return;
+        if (FrozenControl.active(attacker)) {
+            SWEEPS.remove(attacker);
+            return;
+        }
         ElementImbue.State imbue = ElementImbue.get(attacker);
-        if (imbue == null) return;
+        if (imbue == null || !Float.isFinite(imbue.units()) || imbue.units() <= 0f
+                || (imbue.element() != ElementType.CRYO && imbue.element() != ElementType.PYRO
+                && imbue.element() != ElementType.ELECTRO && imbue.element() != ElementType.HYDRO)) {
+            SWEEPS.remove(attacker);
+            return;
+        }
         Optional<?> found = EpicFightCapabilities.getUnparameterizedEntityPatch(attacker, LivingEntityPatch.class);
         if (found == null || found.isEmpty()) return;
         SwingVolumeSampler.SwingSample sample = SwingVolumeSampler.sample((LivingEntityPatch<?>) found.get());
-        if (sample.volumes().isEmpty() || !(attacker.level() instanceof ServerLevel level)) return;
-        int phaseKey = attacker.getId() * 31 + Float.floatToIntBits(sample.phaseStart()) + imbue.element().ordinal();
-        affectEntities(level, attacker, imbue, sample, phaseKey);
-        affectBlocks(level, attacker, imbue, sample, canGrief(attacker));
-    }
-
-    private static void affectEntities(ServerLevel level, LivingEntity attacker, ElementImbue.State imbue, SwingVolumeSampler.SwingSample sample, int phaseKey) {
-        AABB area = null;
-        for (SwingVolume volume : sample.volumes()) area = area == null ? volume.bounds() : area.minmax(volume.bounds());
-        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area, e -> e != attacker && ReactionTargets.isEnemy(attacker, e))) {
-            if (ENTITY_PHASE.getOrDefault(target, Integer.MIN_VALUE) == phaseKey) continue;
-            boolean hit = false;
-            for (SwingVolume volume : sample.volumes()) if (volume.intersects(target.getBoundingBox())) { hit = true; break; }
-            if (!hit) continue;
-            ENTITY_PHASE.put(target, phaseKey);
-            applyToEntity(target, attacker, imbue);
+        if (sample.volumes().isEmpty() || !(attacker.level() instanceof ServerLevel level)) {
+            SWEEPS.remove(attacker);
+            return;
         }
-    }
-
-    private static void applyToEntity(LivingEntity target, LivingEntity attacker, ElementImbue.State imbue) {
-        switch (imbue.element()) {
-            case CRYO, PYRO -> ElementReactions.trigger(target, attacker, imbue.element(), imbue.units());
-            case ELECTRO -> {
-                boolean pyro = ElementAuraManager.hasAura(target, ElementType.PYRO);
-                boolean cryo = ElementAuraManager.hasAura(target, ElementType.CRYO) || ElementAuraManager.hasAura(target, ElementType.FROZEN);
-                if (pyro || cryo) ElementReactions.trigger(target, attacker, ElementType.ELECTRO, imbue.units());
-                else if (!ElementAuraManager.hasAura(target, ElementType.HYDRO)) ElementAuraManager.applyUnits(target, ElementType.ELECTRO, imbue.units());
-            }
-            default -> { }
+        SweepState state = SWEEPS.computeIfAbsent(attacker, ignored -> new SweepState());
+        long now = level.getGameTime();
+        if (state.animation != sample.animation() || state.phase != sample.phaseStart()
+                || sample.elapsed() < state.elapsed || state.tick < now - 1 || state.tick > now) {
+            state.animation = sample.animation();
+            state.phase = sample.phaseStart();
+            state.overloaded = false;
+            state.ignited = 0;
         }
+        state.elapsed = sample.elapsed();
+        state.tick = now;
+        affectBlocks(level, attacker, imbue, sample, state, canGrief(attacker));
     }
 
-    private static void affectBlocks(ServerLevel level, LivingEntity attacker, ElementImbue.State imbue, SwingVolumeSampler.SwingSample sample, boolean grief) {
-        Set<BlockPos> positions = new HashSet<>();
+    private static void affectBlocks(ServerLevel level, LivingEntity attacker, ElementImbue.State imbue,
+                                     SwingVolumeSampler.SwingSample sample, SweepState sweep, boolean grief) {        Set<BlockPos> positions = new java.util.LinkedHashSet<>();
         for (SwingVolume volume : sample.volumes()) {
             if (positions.size() >= MAX_POSITIONS) break;
             BlockPos min = BlockPos.containing(volume.worldCenter.x - volume.radius, volume.worldCenter.y - volume.radius, volume.worldCenter.z - volume.radius);
@@ -100,25 +101,56 @@ public final class VolumeReactions {
                 positions.add(cursor.immutable());
             }
         }
-        int ignited = 0;
-        boolean overloaded = false;
+        Vec3 blast = null;
+        Vec3 lava = null;
         for (BlockPos pos : positions) {
             BlockState state = level.getBlockState(pos);
+            boolean fire = state.is(BlockTags.FIRE);
             switch (imbue.element()) {
-                case CRYO -> { if (grief && state.is(Blocks.WATER)) EleIceBlock.freeze(level, pos, state.getFluidState().isSource(), imbue.units()); }
+                case CRYO -> {
+                    if (!grief) break;
+                    if (fire && level.removeBlock(pos, false)) {
+                        extinguish(level, pos, true);
+                    } else if (state.is(Blocks.WATER) && ServerConfig.CRYO_FREEZE_BLOCKS.get()) {
+                        EleIceBlock.freeze(level, pos, state.getFluidState().isSource(), imbue.units());
+                    }
+                }
                 case PYRO -> {
                     if (!grief) break;
-                    if (state.getBlock() instanceof EleIceBlock) EleIceBlock.melt(level, pos);
-                    else if (ignited < MAX_IGNITE && ignite(level, pos, state, imbue.units())) ignited++;
+                    if (state.getBlock() instanceof EleIceBlock) {
+                        EleIceBlock.melt(level, pos);
+                    } else if (sweep.ignited < MAX_IGNITE && ignite(level, pos, state, imbue.units())) {
+                        sweep.ignited++;
+                    }
+                }
+                case HYDRO -> {
+                    if (grief && fire && level.removeBlock(pos, false)) extinguish(level, pos, false);
                 }
                 case ELECTRO -> {
-                    if (!overloaded && heat(state) && overload(level, attacker, imbue, sample, Vec3.atCenterOf(pos))) overloaded = true;
+                    if (fire) {
+                        if (grief) level.removeBlock(pos, false);
+                        if (blast == null) blast = Vec3.atCenterOf(pos);
+                    } else if (lava == null && (state.is(Blocks.LAVA) || state.getFluidState().is(Fluids.LAVA))) {
+                        lava = Vec3.atCenterOf(pos);
+                    }
                 }
                 default -> { }
             }
         }
+        Vec3 at = blast == null ? lava : blast;
+        if (at != null && !sweep.overloaded) {
+            sweep.overloaded = true;
+            ElementReactions.overloadAt(level, attacker, at);
+        }
     }
 
+    private static void extinguish(ServerLevel level, BlockPos pos, boolean cryo) {
+        Vec3 at = Vec3.atCenterOf(pos);
+        level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.55f, 1.25f);
+        level.sendParticles(ParticleTypes.CLOUD, at.x, at.y, at.z, 8, 0.22, 0.18, 0.22, 0.025);
+        level.sendParticles(cryo ? ParticleTypes.SNOWFLAKE : ParticleTypes.SPLASH,
+                at.x, at.y, at.z, 8, 0.25, 0.18, 0.25, 0.03);
+    }
     private static boolean ignite(ServerLevel level, BlockPos pos, BlockState state, float units) {
         if (!level.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK)) return false;
         int flam = ((FireBlock) Blocks.FIRE).getBurnOdds(state);
@@ -139,32 +171,6 @@ public final class VolumeReactions {
             return true;
         }
         return false;
-    }
-
-    private static boolean overload(ServerLevel level, LivingEntity attacker, ElementImbue.State imbue, SwingVolumeSampler.SwingSample sample, Vec3 at) {
-        int phaseKey = Float.floatToIntBits(sample.phaseStart());
-        if (OVERLOAD_PHASE.getOrDefault(attacker, Integer.MIN_VALUE) == phaseKey) return true;
-        OVERLOAD_PHASE.put(attacker, phaseKey);
-        double radius = ServerConfig.OVERLOAD_RADIUS.get();
-        LivingEntity victim = null;
-        double best = radius * radius;
-        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, new AABB(at, at).inflate(radius), e -> ReactionTargets.isEnemy(attacker, e))) {
-            double distance = target.distanceToSqr(at);
-            if (distance < best) { best = distance; victim = target; }
-        }
-        if (victim != null) {
-            ElementAuraManager.applyUnits(victim, ElementType.ELECTRO, imbue.units());
-            ElementReactions.trigger(victim, attacker, ElementType.PYRO, imbue.units());
-            return true;
-        }
-        level.playSound(null, BlockPos.containing(at), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 0.7f, 0.9f);
-        level.sendParticles(ParticleTypes.FLAME, at.x, at.y, at.z, 12, 0.3, 0.3, 0.3, 0.02);
-        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 10, 0.3, 0.3, 0.3, 0.08);
-        return true;
-    }
-
-    private static boolean heat(BlockState state) {
-        return state.is(Blocks.LAVA) || state.getFluidState().is(Fluids.LAVA) || state.is(BlockTags.FIRE);
     }
 
     private static boolean canGrief(LivingEntity attacker) {

@@ -6,10 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
@@ -39,11 +36,18 @@ public final class ElementAuraManager {
         raise(entity, type, clamped, clamped / durationTicks, 0);
     }
     public static void freeze(LivingEntity entity, float amount) {
-        if (entity.level().isClientSide() || amount <= 0f) return;
+        if (entity.level().isClientSide() || !entity.isAlive() || !Float.isFinite(amount)
+                || amount <= 0f || FrozenControl.resistance(entity) >= 1.0) return;
         int age = 0;
-        FrozenMemory m = FROZEN_MEMORY.get(entity);
-        if (m != null && entity.level().getGameTime() - m.tick() <= ServerConfig.FREEZE_MEMORY_TICKS.get()) age = m.age();
-        raise(entity, ElementType.FROZEN, Math.min(ElementGauge.MAX_GAUGE, amount), frozenRate(age), age);
+        FrozenMemory memory = FROZEN_MEMORY.get(entity);
+        if (memory != null) {
+            long elapsed = entity.level().getGameTime() - memory.tick();
+            if (elapsed >= 0 && elapsed <= ServerConfig.FREEZE_MEMORY_TICKS.get()) {
+                age = (int) Math.max(0L, memory.age() - 2L * elapsed);
+            }
+        }
+        raise(entity, ElementType.FROZEN, Math.min(FrozenControl.MAX_GAUGE, amount), frozenRate(entity, age), age);
+        FrozenControl.apply(entity);
     }
     public static void quicken(LivingEntity entity, float amount) {
         if (entity.level().isClientSide() || amount <= 0f) return;
@@ -89,7 +93,10 @@ public final class ElementAuraManager {
         LinkedHashMap<ElementType, Aura> auras = AURAS.remove(entity);
         if (auras == null) return;
         Aura frozen = auras.get(ElementType.FROZEN);
-        if (frozen != null) rememberFrozen(entity, frozen);
+        if (frozen != null) {
+            rememberFrozen(entity, frozen);
+            FrozenControl.release(entity);
+        }
         markDirty(entity, null);
     }
     public static boolean hasAura(LivingEntity entity, ElementType type) {
@@ -113,7 +120,10 @@ public final class ElementAuraManager {
             LinkedHashMap<ElementType, Aura> auras = entry.getValue();
             if (entity.isRemoved() || !entity.isAlive()) {
                 Aura frozen = auras.get(ElementType.FROZEN);
-                if (frozen != null) rememberFrozen(entity, frozen);
+                if (frozen != null) {
+                    rememberFrozen(entity, frozen);
+                    FrozenControl.release(entity);
+                }
                 it.remove();
                 if (!entity.isRemoved()) markDirty(entity, null);
                 continue;
@@ -134,16 +144,28 @@ public final class ElementAuraManager {
                         if (aura.decayPerTick <= 0f) { aura.decayPerTick = aura.holdBase > 0f ? aura.holdBase : 0f; changed = true; }
                     }
                 }
+                boolean frozen = ae.getKey() == ElementType.FROZEN;
+                if (frozen) {
+                    if (FrozenControl.resistance(entity) >= 1.0) {
+                        aura.amount = 0f;
+                    } else {
+                        aura.decayPerTick = frozenRate(entity, aura.age);
+                        if (aura.age % 10 == 0) changed = true;
+                    }
+                }
                 aura.age++;
-                if (ae.getKey() == ElementType.FROZEN && aura.age % 20 == 0) { aura.decayPerTick = frozenRate(aura.age); changed = true; }
                 aura.amount -= aura.decayPerTick;
-                if (aura.amount <= 0f) {
-                    if (ae.getKey() == ElementType.FROZEN) rememberFrozen(entity, aura);
-                    auraIt.remove(); changed = true;
+                if (aura.amount <= 1.0e-4f) {
+                    if (frozen) {
+                        rememberFrozen(entity, aura);
+                        FrozenControl.release(entity);
+                    }
+                    auraIt.remove();
+                    changed = true;
                 }
             }
             if (changed) markDirty(entity, null);
-            if (auras.containsKey(ElementType.FROZEN)) holdFrozen(entity);
+            if (auras.containsKey(ElementType.FROZEN)) FrozenControl.apply(entity);
             if (auras.isEmpty()) it.remove();
         }
         flush();
@@ -170,14 +192,19 @@ public final class ElementAuraManager {
         if (auras == null) return;
         Aura removed = auras.remove(type);
         if (removed == null) return;
-        if (type == ElementType.FROZEN) rememberFrozen(entity, removed);
+        if (type == ElementType.FROZEN) {
+            rememberFrozen(entity, removed);
+            FrozenControl.release(entity);
+        }
         if (auras.isEmpty()) AURAS.remove(entity);
         markDirty(entity, flash ? type : null);
     }
-    private static float frozenRate(int age) { return (0.4f + 0.1f * (age / 20)) / 20f; }
-    private static void rememberFrozen(LivingEntity entity, Aura aura) { FROZEN_MEMORY.put(entity, new FrozenMemory(aura.age, entity.level().getGameTime())); }
-    private static void holdFrozen(LivingEntity entity) {
-        if (entity instanceof Mob && entity.tickCount % 5 == 0) entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 10, ServerConfig.FREEZE_SLOW_AMPLIFIER.get(), false, false, false));
+    private static float frozenRate(LivingEntity entity, int age) {
+        return (float) ((0.4 + 0.1 * ((age + 0.5) / 20.0)) / (20.0 * Math.max(0.0001, 1.0 - FrozenControl.resistance(entity))));
+    }
+
+    private static void rememberFrozen(LivingEntity entity, Aura aura) {
+        FROZEN_MEMORY.put(entity, new FrozenMemory(aura.age, entity.level().getGameTime()));
     }
     private static void markDirty(LivingEntity entity, @Nullable ElementType flashed) {
         EnumSet<ElementType> set = DIRTY.computeIfAbsent(entity, k -> EnumSet.noneOf(ElementType.class));

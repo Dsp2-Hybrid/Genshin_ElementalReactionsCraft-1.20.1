@@ -1,5 +1,7 @@
 package com.dsp2.genshinerc.common.core.damage;
 
+import com.dsp2.genshinerc.common.core.combat.epicfight.EfElementalHit;
+
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.combat.shield.ElementShieldHandler;
@@ -43,7 +45,7 @@ public final class ElementalSettlement {
         }
         if (ReactionDamage.isDealing() || kind.isTrue()) return;
 
-        double damage = event.getAmount();
+        double damage = EfElementalHit.apply(victim, source, kind, event.getAmount());
         double original = damage;
 
         if (explosion) {
