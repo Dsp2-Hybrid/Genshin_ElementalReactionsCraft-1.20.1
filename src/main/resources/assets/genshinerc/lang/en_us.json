@@ -693,5 +693,8 @@
   "genshinerc.bar.config.aaa_light_max_count": "AAA Particle Max Light Count",
   "genshinerc.bar.config.aaa_light_max_count.desc": "The maximum number of dynamic lights rendered simultaneously. Higher values look brighter but cost more performance.",
   "genshinerc.bar.config.aaa_light_radius_scale": "AAA Particle Light Radius Scale",
-  "genshinerc.bar.config.aaa_light_radius_scale.desc": "Controls the radius of the dynamic light (0.1 ~ 64.0). Higher values illuminate a wider area."
+  "genshinerc.bar.config.aaa_light_radius_scale.desc": "Controls the radius of the dynamic light (0.1 ~ 64.0). Higher values illuminate a wider area.",
+
+
+  "block.genshinerc.special_ice": "CryoIce"
 }

@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "source=true": { "model": "genshinerc:block/special_ice" },
+    "source=false": { "model": "genshinerc:block/special_ice" }
+  }
+}

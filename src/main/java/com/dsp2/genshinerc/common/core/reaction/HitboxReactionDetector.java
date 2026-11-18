@@ -24,4 +24,6 @@ public final class HitboxReactionDetector {
         return s.add(seg.scale(t));
     }
     public static void clearSwing(LivingEntity a) { SWING.remove(a); }
+    public static ElementType current(LivingEntity a) { return a == null ? null : SWING.get(a); }
+
 }
