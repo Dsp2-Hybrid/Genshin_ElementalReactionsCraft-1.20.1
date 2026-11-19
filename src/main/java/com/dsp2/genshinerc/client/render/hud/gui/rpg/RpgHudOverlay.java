@@ -85,6 +85,10 @@ public final class RpgHudOverlay {
     private static float zhLast = 0f, miLast = 0f;
     private static float lastL1 = 0f, lastL2 = 0f, lastL3 = 0f;
 
+    private static float lastOutlineHp = Float.NaN;
+    private static long outlineHoldUntil;
+    private static int outlineRgb;
+
     @Nullable private static LocalPlayer lastPlayer;
     private static long deathStart = -1L;
 
@@ -114,6 +118,7 @@ public final class RpgHudOverlay {
         if (alpha <= 0.01f) return;
 
         Snap s = Snap.read(p);
+        if (!preview) updateHealthOutline(s, now);
         tick(s, now, cfg);
 
         PoseStack pose = g.pose();
@@ -130,7 +135,7 @@ public final class RpgHudOverlay {
             float shake = B_HEALTH.shakeOffset(now, cfg) * cfg.rpgShakePixels * (p.isDeadOrDying() ? DEATH_SHAKE_BOOST : 1f);
             pose.pushPose();
             pose.translate(shake, 0f, 0f);
-            drawVitals(g, s, cfg, now, alpha);
+            drawVitals(g, s, cfg, now, alpha, preview);
             drawShield(g, cfg, now, alpha, preview);
             pose.popPose();
 
@@ -148,6 +153,7 @@ public final class RpgHudOverlay {
         ZH_W.reset(); MI_W.reset(); zhLast = miLast = 0f;
         SHIELD_O1.reset(); SHIELD_O2.reset(); SHIELD_O3.reset();
         lastL1 = lastL2 = lastL3 = 0f;
+        lastOutlineHp = Float.NaN; outlineHoldUntil = 0L;
         RpgStatBars.reset();
         deathStart = -1L;
     }
@@ -215,12 +221,13 @@ public final class RpgHudOverlay {
         text(g, line2, b.cx(), b.y() + b.h() * 0.77f, scale * 0.9f * pop(T_XP, now, cfg), 0xFFFFFF, a, true);
     }
 
-    private static void drawVitals(GuiGraphics g, Snap s, BarConfig cfg, long now, float a) {
+    private static void drawVitals(GuiGraphics g, Snap s, BarConfig cfg, long now, float a, boolean preview) {
         Box hpB = RpgHudElement.HEALTH.get(cfg);
         Box staB = RpgHudElement.STAMINA.get(cfg);
         int hpRgb = C_HP.rgb();
 
         drawBar(g, BAR_HEALTH, hpB, B_HEALTH, hpRgb, true, now, cfg, a);
+        if (!preview) drawHealthOutline(g, hpB, now, a);
 
         boolean hasSta = s.maxSta() > 0f;
         if (hasSta) {
@@ -602,6 +609,26 @@ public final class RpgHudOverlay {
             float step = seconds <= 0f ? 1f : dt / seconds;
             v = Mth.clamp(v + (on ? step : -step), 0f, 1f);
         }
+    }
+
+    private static void updateHealthOutline(Snap s, long now) {
+        float hp = s.hp(), previous = Math.min(lastOutlineHp, s.maxHp());
+        if (hp < previous - 0.001f) {
+            float ratio = s.maxHp() > 0f ? hp / s.maxHp() : 0f;
+            outlineRgb = HudDraw.lerpRgb(0xFFFFFF, 0xFF0000, Mth.clamp((0.30f - ratio) / 0.25f, 0f, 1f));
+            outlineHoldUntil = now + 400L;
+        } else if (hp > lastOutlineHp + 0.001f) {
+            outlineRgb = 0x55FF55;
+            outlineHoldUntil = now + 140L;
+        }
+        lastOutlineHp = hp;
+    }
+
+    private static void drawHealthOutline(GuiGraphics g, Box box, long now, float alpha) {
+        if (outlineHoldUntil == 0L || now >= outlineHoldUntil + 200L) return;
+        float fade = 1f - Mth.clamp((now - outlineHoldUntil) / 200f, 0f, 1f);
+        Strip st = Strip.of(BAR_HEALTH, box.flipX(), box.flipY());
+        if (st.i.outlineFlash() != null) st.full(g, st.i.outlineFlash(), box.abs(), argb(alpha * fade, outlineRgb));
     }
 
     record Snap(float hp, float maxHp, float abs, float sta, float maxSta, float shield, float shieldInit, float shieldTarget,

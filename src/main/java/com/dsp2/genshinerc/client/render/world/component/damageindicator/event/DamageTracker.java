@@ -1,5 +1,6 @@
 package com.dsp2.genshinerc.client.render.world.component.damageindicator.event;
 
+import com.dsp2.genshinerc.client.render.world.component.damageindicator.ScreenDamage;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.TextParticle;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.api.CustomColor;
 import com.dsp2.genshinerc.client.render.world.component.damageindicator.api.DamageColorProvider;
@@ -48,7 +49,7 @@ public class DamageTracker {
         CustomColor color = info.hasOverrideColor()
                 ? CustomColor.fromHexString(info.overrideColor)
                 : colorProvider.getColor(info);
-        
+
         CustomColor color2 = info.overrideColor2 != null ? CustomColor.fromHexString(info.overrideColor2) : null;
 
         double sizeOffset = (scale - (float) cfg.normalSize) * cfg.sizeYFactorK;
@@ -66,7 +67,9 @@ public class DamageTracker {
                 basePos.z += Math.sin(angle) * cfg.particleMinSpacing;
             }
         }
-        LAST_SPAWN.put(info.entity.getId(), new Vector3d(basePos));
+        if (!ScreenDamage.enabled()) {
+            LAST_SPAWN.put(info.entity.getId(), new Vector3d(basePos));
+        }
 
         Vector3d toCamera = new Vector3d(
                 mc.player.getX() - basePos.x,
@@ -98,28 +101,38 @@ public class DamageTracker {
             Vector3d p1 = new Vector3d(basePos.x - offX, basePos.y, basePos.z);
             Vector3d p2 = new Vector3d(basePos.x + offX, basePos.y, basePos.z);
             String absorbText = "-" + trim(info.absorbed, cfg.numberFormat);
-            addOne(p1, velBase, absorbText, "physical".equals(info.typeKey) ? CustomColor.fromHexString(cfg.absorbColor) : color, null, scale, cfg, false, false);
+            addOne(info, p1, velBase, absorbText, "physical".equals(info.typeKey) ? CustomColor.fromHexString(cfg.absorbColor) : color, null, scale, cfg, false, false);
             if (info.amount > 0.001f) {
                 String realText = trim(info.amount, cfg.numberFormat);
-                addOne(p2, velBase, realText, color, null, scale, cfg, false, true);
+                addOne(info, p2, velBase, realText, color, null, scale, cfg, false, true);
             }
         } else if (info.absorbDelta) {
             String text = (info.amount >= 0 ? "+" : "") + trim(Math.abs(info.amount), cfg.numberFormat);
-            addOne(basePos, velBase, text, CustomColor.fromHexString(cfg.absorbColor), null, scale, cfg, false, false);
+            addOne(info, basePos, velBase, text, CustomColor.fromHexString(cfg.absorbColor), null, scale, cfg, false, false);
         } else {
             String txt = info.customText != null ? info.customText : formatDamage(info, cfg.numberFormat);
-            addOne(basePos, velBase, txt, color, color2, scale, cfg, info.kill, false);
+            addOne(info, basePos, velBase, txt, color, color2, scale, cfg, info.kill, false);
         }
     }
 
-    private static void addOne(Vector3d pos, Vector3d vel, String text, CustomColor color, CustomColor color2,
+    private static void addOne(DamageInfo info, Vector3d pos, Vector3d vel, String text, CustomColor color, CustomColor color2,
                                float scale, DamageIndicatorConfig cfg, boolean kill, boolean secondary) {
+        int life = forceLifeTime > 0 ? forceLifeTime : cfg.lifeTime;
+
+        if (ScreenDamage.enabled()) {
+            if (color2 == null && (text.contains("Overload") || text.contains("overload") || text.contains("过载"))) {
+                color2 = CustomColor.hex(0xCC66FF);
+            }
+            ScreenDamage.add(info.entity, text, color, color2, scale, life + (kill ? cfg.killExtraTicks : 0));
+            return;
+        }
+
         Vector3d velCopy = new Vector3d(vel);
         if (secondary) {
             velCopy.x += (Math.random() - 0.5) * 0.2;
             velCopy.z += (Math.random() - 0.5) * 0.2;
         }
-        int life = forceLifeTime > 0 ? forceLifeTime : cfg.lifeTime;
+
         PARTICLES.add(new TextParticle(
                 pos.x, pos.y, pos.z, velCopy.x, velCopy.y, velCopy.z,
                 Component.literal(text), color, color2, cfg.velocityMultiplier, cfg.gravityStrength,
@@ -153,5 +166,10 @@ public class DamageTracker {
 
     public static void renderAll(PoseStack ps, MultiBufferSource buf, Camera cam, float pt) {
         for (TextParticle p : PARTICLES) p.render(ps, buf, cam, pt);
+    }
+
+    public static void clearParticles() {
+        PARTICLES.clear();
+        LAST_SPAWN.clear();
     }
 }

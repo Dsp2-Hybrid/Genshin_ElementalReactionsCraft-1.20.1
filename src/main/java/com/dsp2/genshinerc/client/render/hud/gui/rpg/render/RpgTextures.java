@@ -32,7 +32,7 @@ public final class RpgTextures {
     private RpgTextures() {}
 
     public record Info(int w, int h, int ax0, int ay0, int ax1, int ay1, int ix0, int ix1,
-                       ResourceLocation white, ResourceLocation tint, ResourceLocation core, ResourceLocation outline) {
+                       ResourceLocation white, ResourceLocation tint, ResourceLocation core, ResourceLocation outline, ResourceLocation outlineFlash) {
         public float u(float f) { return Mth.lerp(Mth.clamp(f, 0f, 1f), ix0, ix1) / (float) w; }
         public float vTop() { return ay0 / (float) h; }
         public float vBottom() { return ay1 / (float) h; }
@@ -74,7 +74,7 @@ public final class RpgTextures {
         pixel = hatch = null;
     }
 
-    private static Info missing(ResourceLocation tex) { return new Info(1, 1, 0, 0, 1, 1, 0, 1, tex, tex, tex, tex); }
+    private static Info missing(ResourceLocation tex) { return new Info(1, 1, 0, 0, 1, 1, 0, 1, tex, tex, tex, tex, null); }
 
     private static NativeImage mirrored(NativeImage src, boolean fx, boolean fy) {
         int w = src.getWidth(), h = src.getHeight();
@@ -128,9 +128,13 @@ public final class RpgTextures {
 
         NativeImage white = new NativeImage(w, h, true), tint = new NativeImage(w, h, true),
                 core = new NativeImage(w, h, true), outline = new NativeImage(w, h, true);
+        NativeImage outlineFlash = new NativeImage(w, h, true);
+        
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 int p = img.getPixelRGBA(x, y), a = p >>> 24;
+                outlineFlash.setPixelRGBA(x, y, a > VISIBLE_ALPHA && Math.max(p & 255, Math.max((p >>> 8) & 255, (p >>> 16) & 255)) <= OUTLINE_MAX_CHANNEL ? (a << 24) | 0xFFFFFF : 0);
+                
                 if (inside[y * w + x]) {
                     int l = Math.min(255, lum(p) * 255 / maxLum);
                     white.setPixelRGBA(x, y, (a << 24) | 0xFFFFFF);
@@ -148,7 +152,7 @@ public final class RpgTextures {
         String key = tex.getNamespace() + "/" + tex.getPath() + (k.fx() ? "_fx" : "") + (k.fy() ? "_fy" : "");
         return new Info(w, h, ax0, ay0, ax1, ay1, ix0, ix1,
                 register("white/" + key, white), register("tint/" + key, tint),
-                register("core/" + key, core), register("outline/" + key, outline));
+                register("core/" + key, core), register("outline/" + key, outline), register("outline_flash/" + key, outlineFlash));
     }
 
     private static boolean[] interior(NativeImage img, int w, int h) {
