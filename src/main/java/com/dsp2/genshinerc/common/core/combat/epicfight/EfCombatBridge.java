@@ -16,11 +16,15 @@ public final class EfCombatBridge {
     private EfCombatBridge() {}
 
     public static void applyStun(LivingEntity entity, ClashResult result) {
-        if (entity == null || result == null) return;
+        if (result != null) applyStun(entity, result.stunType(), result.stunSeconds());
+    }
+
+    public static void applyStun(LivingEntity entity, StunType type, float seconds) {
+        if (entity == null || type == null || !(seconds > 0f)) return;
         try {
             Optional<?> opt = EpicFightCapabilities.getUnparameterizedEntityPatch(entity, LivingEntityPatch.class);
             if (opt != null && opt.isPresent()) {
-                ((LivingEntityPatch<?>) opt.get()).applyStun(result.stunType(), result.stunSeconds());
+                ((LivingEntityPatch<?>) opt.get()).applyStun(type, seconds);
             }
         } catch (NoSuchMethodError ignored) {}
     }

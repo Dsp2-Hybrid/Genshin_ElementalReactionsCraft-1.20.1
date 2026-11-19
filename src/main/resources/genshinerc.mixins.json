@@ -5,6 +5,9 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "genshinerc.refmap.json",
   "mixins": [
+    "core.combat.MixinLivingActionLock",
+    "core.combat.MixinMobActionLock",
+    "core.combat.CreeperPoweredAccessor",
     "core.damage.MixinLivingEntityArmor",
     "core.damage.DamageSourceTypeAccessor",
     "mods.core.combat.epicfight.MixinAttackAnimationImbue",

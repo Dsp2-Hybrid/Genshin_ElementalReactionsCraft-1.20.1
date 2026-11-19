@@ -30,6 +30,7 @@ public final class ReactionTextTracker {
         ReactionColors.Ends e = ReactionColors.ends(reaction, first, second);
         
         DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
+        if (!cfg.reactionTextEnabled) return;
         float scale = (float) (cfg.normalSize * cfg.reactionTextScale);
         
         DamageTracker.addCustomText(target, name, e.a(), e.b(), scale);

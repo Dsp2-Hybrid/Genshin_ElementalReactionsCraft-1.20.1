@@ -56,6 +56,7 @@ public class DamageTracker {
         double heightOffset = info.entity.getBbHeight() * cfg.heightYFactor;
         double yBase = info.entity.getY() + info.entity.getBbHeight() + cfg.offsetY + sizeOffset + heightOffset;
 
+        ScreenDamage.enabled();
         Vector3d basePos = new Vector3d(info.entity.getX(), yBase, info.entity.getZ());
 
         Vector3d last = LAST_SPAWN.get(info.entity.getId());
@@ -67,9 +68,7 @@ public class DamageTracker {
                 basePos.z += Math.sin(angle) * cfg.particleMinSpacing;
             }
         }
-        if (!ScreenDamage.enabled()) {
-            LAST_SPAWN.put(info.entity.getId(), new Vector3d(basePos));
-        }
+        LAST_SPAWN.put(info.entity.getId(), new Vector3d(basePos));
 
         Vector3d toCamera = new Vector3d(
                 mc.player.getX() - basePos.x,
@@ -119,13 +118,6 @@ public class DamageTracker {
                                float scale, DamageIndicatorConfig cfg, boolean kill, boolean secondary) {
         int life = forceLifeTime > 0 ? forceLifeTime : cfg.lifeTime;
 
-        if (ScreenDamage.enabled()) {
-            if (color2 == null && (text.contains("Overload") || text.contains("overload") || text.contains("过载"))) {
-                color2 = CustomColor.hex(0xCC66FF);
-            }
-            ScreenDamage.add(info.entity, text, color, color2, scale, life + (kill ? cfg.killExtraTicks : 0));
-            return;
-        }
 
         Vector3d velCopy = new Vector3d(vel);
         if (secondary) {
@@ -133,10 +125,12 @@ public class DamageTracker {
             velCopy.z += (Math.random() - 0.5) * 0.2;
         }
 
-        PARTICLES.add(new TextParticle(
+        TextParticle particle = new TextParticle(
                 pos.x, pos.y, pos.z, velCopy.x, velCopy.y, velCopy.z,
                 Component.literal(text), color, color2, cfg.velocityMultiplier, cfg.gravityStrength,
-                life, scale, cfg.drawShadow, kill, cfg));
+                life, scale, cfg.drawShadow, kill, cfg);
+        if (ScreenDamage.enabled()) ScreenDamage.add(particle);
+        else PARTICLES.add(particle);
     }
 
     private static String formatDamage(DamageInfo i, int digits) {

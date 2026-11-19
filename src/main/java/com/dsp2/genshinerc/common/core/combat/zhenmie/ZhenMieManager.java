@@ -30,8 +30,11 @@ public final class ZhenMieManager {
         boolean decaying;
         @Nullable ClashResult pendingClash;
         float clashPoint;
+        long staggerUntil;
+        long resistanceUntil;
+        int recentClashes;
 
-        boolean idle() { return zhen <= 0f && mie <= 0f && !zhenBuff && !mieBuff; }
+        boolean idle() { return zhen <= 0f && mie <= 0f && !zhenBuff && !mieBuff && staggerUntil == 0L && recentClashes == 0; }
     }
 
     private ZhenMieManager() {}
@@ -56,8 +59,25 @@ public final class ZhenMieManager {
         add(defender, d.zhen(), d.mie());
     }
 
+    public static boolean staggered(LivingEntity entity) {
+        State s = STATES.get(entity);
+        return !entity.level().isClientSide() && s != null && entity.isAlive()
+                && s.staggerUntil > entity.level().getGameTime();
+    }
+
+    public static float incomingMultiplier(LivingEntity entity) {
+        State s = STATES.get(entity);
+        return s != null && staggered(entity) ? 1f + ZhenMieRules.vulnerability(s.clashPoint) : 1f;
+    }
+
+    public static void fillMie(LivingEntity entity) {
+        add(entity, 0f, ZhenMieRules.maxCapacity(entity.getMaxHealth(), getLevelSafe(entity)));
+    }
+
     public static void add(LivingEntity entity, float dZhen, float dMie) {
-        if (entity.level().isClientSide() || (dZhen == 0f && dMie == 0f)) return;
+        if (entity.level().isClientSide() || !entity.isAlive() || staggered(entity)
+                || !Float.isFinite(dZhen) || !Float.isFinite(dMie)
+                || (dZhen == 0f && dMie == 0f)) return;
         State s = STATES.computeIfAbsent(entity, k -> new State());
         s.lastCombatTick = entity.level().getGameTime();
         s.decaying = false;
@@ -70,7 +90,7 @@ public final class ZhenMieManager {
         float z = Mth.clamp(oldZ + dZhen, 0f, maxCap);
         float m = Mth.clamp(oldM + dMie, 0f, maxCap);
 
-        if (z + m >= maxCap - EPS && (dZhen > 0f || dMie > 0f)) {
+        if (maxCap > EPS && z + m >= maxCap - EPS && (dZhen > 0f || dMie > 0f)) {
             float point = Mth.clamp(dZhen >= dMie ? maxCap - oldM : oldZ, 0f, maxCap);
             float normalizedPoint = point / maxCap;
             
@@ -79,7 +99,7 @@ public final class ZhenMieManager {
             s.mie = m * ZhenMieRules.MIE_KEPT_AFTER_CLASH;
             s.pendingClash = result;
             s.clashPoint = normalizedPoint;
-            onClash(entity, result);
+            onClash(entity, s, result);
         } else {
             s.zhen = z;
             s.mie = m;
@@ -87,8 +107,25 @@ public final class ZhenMieManager {
         DIRTY.add(entity);
     }
 
-    private static void onClash(LivingEntity entity, ClashResult result) {
-        EfCombatBridge.applyStun(entity, result);
+    private static void recoverResistance(State s, long now) {
+        while (s.recentClashes > 0 && now >= s.resistanceUntil) {
+            s.recentClashes--;
+            s.resistanceUntil += ZhenMieRules.STAGGER_MEMORY_STEP;
+        }
+        if (s.recentClashes == 0) s.resistanceUntil = 0L;
+    }
+
+    private static void onClash(LivingEntity entity, State s, ClashResult result) {
+        long now = entity.level().getGameTime();
+        recoverResistance(s, now);
+        int ticks = ZhenMieRules.staggerTicks(result, s.recentClashes);
+        boolean first = s.recentClashes == 0;
+        s.recentClashes = Math.min(4, s.recentClashes + 1);
+        s.staggerUntil = now + ticks;
+        s.resistanceUntil = s.staggerUntil + ZhenMieRules.STAGGER_MEMORY_STEP;
+        com.dsp2.genshinerc.common.core.element.FrozenControl.refresh(entity);
+        EfCombatBridge.applyStun(entity, first ? result.stunType() : yesman.epicfight.world.damagesource.StunType.SHORT,
+                ticks / 20f);
     }
 
     public static void setBuffs(LivingEntity entity, boolean zhenBuff, boolean mieBuff) {
@@ -111,6 +148,10 @@ public final class ZhenMieManager {
         State s = STATES.get(entity);
         if (s == null) return;
         s.zhen = s.mie = 0f;
+        s.staggerUntil = s.resistanceUntil = 0L;
+        s.recentClashes = 0;
+        s.pendingClash = null;
+        com.dsp2.genshinerc.common.core.element.FrozenControl.refresh(entity);
         s.zhenBuff = s.mieBuff = false;
         DIRTY.add(entity);
     }
@@ -126,6 +167,14 @@ public final class ZhenMieManager {
             }
             State s = entry.getValue();
             long time = e.level().getGameTime();
+            int oldResistance = s.recentClashes;
+            recoverResistance(s, time);
+            if (oldResistance != s.recentClashes) DIRTY.add(e);
+            if (s.staggerUntil != 0L && (time >= s.staggerUntil || !e.isAlive())) {
+                s.staggerUntil = 0L;
+                com.dsp2.genshinerc.common.core.element.FrozenControl.refresh(e);
+                DIRTY.add(e);
+            }
             long idle = time - s.lastCombatTick;
             boolean changed = false;
             if (idle > ZhenMieRules.ZHEN_DECAY_DELAY_TICKS && s.zhen > 0f) {
@@ -166,7 +215,9 @@ public final class ZhenMieManager {
         
                 
         return new SyncZhenMiePacket(e.getId(), normalizedZhen, normalizedMie, s.zhenBuff, s.mieBuff, s.decaying,
-                withClash ? s.pendingClash : null, s.clashPoint);
+                withClash || staggered(e) ? s.pendingClash != null ? s.pendingClash
+                        : staggered(e) ? ZhenMieRules.classify(s.clashPoint) : null : null,
+                s.clashPoint, (int) Math.max(0L, s.staggerUntil - e.level().getGameTime()));
     }
 
     public static void save(LivingEntity entity) {
@@ -181,6 +232,10 @@ public final class ZhenMieManager {
             tag.putBoolean("zhenBuff", s.zhenBuff);
             tag.putBoolean("mieBuff", s.mieBuff);
             tag.putLong("lastCombatTick", s.lastCombatTick);
+            tag.putLong("staggerUntil", s.staggerUntil);
+            tag.putLong("resistanceUntil", s.resistanceUntil);
+            tag.putInt("recentClashes", s.recentClashes);
+            tag.putFloat("clashPoint", s.clashPoint);
             nbt.put(NBT_KEY, tag);
         }
     }
@@ -195,6 +250,14 @@ public final class ZhenMieManager {
             s.zhenBuff = tag.getBoolean("zhenBuff");
             s.mieBuff = tag.getBoolean("mieBuff");
             s.lastCombatTick = tag.getLong("lastCombatTick");
+            long now = entity.level().getGameTime();
+            s.staggerUntil = Math.min(now + 60L, tag.getLong("staggerUntil"));
+            if (s.staggerUntil <= now) s.staggerUntil = 0L;
+            s.resistanceUntil = Math.min(now + 60L + ZhenMieRules.STAGGER_MEMORY_STEP, tag.getLong("resistanceUntil"));
+            s.recentClashes = Mth.clamp(tag.getInt("recentClashes"), 0, 4);
+            s.clashPoint = Mth.clamp(tag.getFloat("clashPoint"), 0f, 1f);
+            recoverResistance(s, now);
+            com.dsp2.genshinerc.common.core.element.FrozenControl.refresh(entity);
             s.decaying = true;
             DIRTY.add(entity);
         }

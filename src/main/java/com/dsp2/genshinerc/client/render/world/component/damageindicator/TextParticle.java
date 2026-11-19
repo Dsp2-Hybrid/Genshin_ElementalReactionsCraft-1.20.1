@@ -201,6 +201,60 @@ public class TextParticle {
         ps.popPose();
     }
 
+    public net.minecraft.world.phys.Vec3 position(float partial) {
+        return new net.minecraft.world.phys.Vec3(
+                Mth.lerp(partial, px, x), Mth.lerp(partial, py, y), Mth.lerp(partial, pz, z));
+    }
+
+    public void renderScreen(PoseStack pose, MultiBufferSource buffers, float partial, float x, float y) {
+        float at = Math.min(maxAge, age + partial);
+        double extra = Double.isFinite(cfg.screenTextScale) ? cfg.screenTextScale : 1.25;
+        float scale = currentScale(at) * (float) Mth.clamp(extra, 0.25, 4.0);
+        int argb = currentColor().argb();
+        int alpha = Mth.clamp(Math.round((argb >>> 24) * currentAlpha(at)), 0, 255);
+        if (!(scale > 0f) || alpha < 4) return;
+        Font font = Minecraft.getInstance().font;
+        float width = font.width(text);
+        float left = -width / 2f, top = -font.lineHeight / 2f;
+        int rgb1 = argb & 0xFFFFFF;
+        int rgb2 = color2 == null ? rgb1 : color2.argb() & 0xFFFFFF;
+        var mode = Font.DisplayMode.SEE_THROUGH;
+        pose.pushPose();
+        try {
+            pose.translate(x, y, 0);
+            pose.scale(scale, scale, 1);
+            Matrix4f matrix = pose.last().pose();
+            int sa = Math.round(alpha * shadowAlpha);
+            if (drawShadow && sa >= 4) {
+                MultiBufferSource shadow = color2 == null ? buffers : new GradientTextBuffer(
+                        buffers, matrix, left + shadowOffsetX, left + shadowOffsetX + width,
+                        top + shadowOffsetY, top + shadowOffsetY + font.lineHeight,
+                        shade(rgb1, shadowLuma), shade(rgb2, shadowLuma), sa, gradientDir);
+                font.drawInBatch(text, left + shadowOffsetX, top + shadowOffsetY,
+                        color2 == null ? (sa << 24) | shade(rgb1, shadowLuma) : 0xFFFFFFFF,
+                        false, matrix, shadow, mode, 0, 15728880);
+            }
+            double opacity = Double.isFinite(cfg.screenOutlineAlpha) ? cfg.screenOutlineAlpha : 1.0;
+            int outlineAlpha = (int) Math.round(alpha * Mth.clamp(opacity, 0.0, 1.0));
+            if (cfg.screenOutlineEnabled && outlineAlpha >= 4) {
+                int rgb;
+                try { rgb = Integer.parseInt(cfg.screenOutlineColor.replace("#", "").trim(), 16) & 0xFFFFFF; }
+                catch (RuntimeException ignored) { rgb = 0; }
+                for (int i = 0; i < 4; i++) {
+                    font.drawInBatch(text, left + (i < 2 ? i * 2 - 1 : 0),
+                            top + (i >= 2 ? (i - 2) * 2 - 1 : 0), (outlineAlpha << 24) | rgb,
+                            false, matrix, buffers, mode, 0, 15728880);
+                }
+            }
+            MultiBufferSource fill = color2 == null ? buffers : new GradientTextBuffer(
+                    buffers, matrix, left, left + width, top, top + font.lineHeight, rgb1, rgb2, alpha, gradientDir);
+            font.drawInBatch(text, left, top, color2 == null ? (alpha << 24) | rgb1 : 0xFFFFFFFF,
+                    false, matrix, fill, mode, 0, 15728880);
+        } finally {
+            pose.popPose();
+        }
+    }
+
     private static int shade(int rgb, float luma) {
         int r = (int) (((rgb >> 16) & 0xFF) * luma);
         int g = (int) (((rgb >> 8) & 0xFF) * luma);

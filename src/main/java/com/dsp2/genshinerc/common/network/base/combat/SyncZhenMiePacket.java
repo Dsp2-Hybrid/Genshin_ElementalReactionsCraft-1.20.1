@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 public record SyncZhenMiePacket(int entityId, float zhen, float mie, boolean zhenBuff, boolean mieBuff,
-                                boolean decaying, @Nullable ClashResult clash, float clashPoint) {
+                                boolean decaying, @Nullable ClashResult clash, float clashPoint, int staggerTicks) {
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeVarInt(entityId);
@@ -20,6 +20,7 @@ public record SyncZhenMiePacket(int entityId, float zhen, float mie, boolean zhe
         buf.writeByte((zhenBuff ? 1 : 0) | (mieBuff ? 2 : 0) | (decaying ? 4 : 0));
         buf.writeByte(clash == null ? -1 : clash.ordinal());
         buf.writeFloat(clashPoint);
+        buf.writeVarInt(staggerTicks);
     }
 
     public static SyncZhenMiePacket decode(FriendlyByteBuf buf) {
@@ -30,7 +31,7 @@ public record SyncZhenMiePacket(int entityId, float zhen, float mie, boolean zhe
         int c = buf.readByte();
         ClashResult[] results = ClashResult.values();
         ClashResult clash = c >= 0 && c < results.length ? results[c] : null;
-        return new SyncZhenMiePacket(id, zhen, mie, (flags & 1) != 0, (flags & 2) != 0, (flags & 4) != 0, clash, buf.readFloat());
+        return new SyncZhenMiePacket(id, zhen, mie, (flags & 1) != 0, (flags & 2) != 0, (flags & 4) != 0, clash, buf.readFloat(), buf.readVarInt());
     }
 
     public static void handle(SyncZhenMiePacket msg, Supplier<NetworkEvent.Context> ctx) {

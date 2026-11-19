@@ -14,6 +14,7 @@ public final class ClientZhenMieState {
     boolean zhenBuff, mieBuff;
     @Nullable ClashResult clash;
     long clashStartMs;
+    long staggerEndMs;
     float clashPoint;
 
     float zhenTarget, mieTarget;
@@ -29,7 +30,9 @@ public final class ClientZhenMieState {
         mie.set(msg.mie(), nowMs, cfg.subBarWhiteHoldTime, trail);
         zhenBuff = msg.zhenBuff();
         mieBuff = msg.mieBuff();
-        if (msg.clash() != null) {
+        staggerEndMs = nowMs + Math.max(0, msg.staggerTicks()) * 50L;
+        if (msg.staggerTicks() <= 0) clash = null;
+        if (msg.clash() != null && msg.staggerTicks() > 0 && clash == null) {
             clash = msg.clash();
             clashStartMs = nowMs;
             clashPoint = msg.clashPoint();
@@ -45,7 +48,7 @@ public final class ClientZhenMieState {
     void update(long nowMs, BarConfig cfg) {
         zhen.update(nowMs, cfg.subBarFillSpeed, cfg.subBarWhiteDrainSpeed);
         mie.update(nowMs, cfg.subBarFillSpeed, cfg.subBarWhiteDrainSpeed);
-        if (clash != null && nowMs - clashStartMs > clash.visualSeconds() * 1000f) clash = null;
+        if (clash != null && nowMs >= staggerEndMs) clash = null;
 
         flash.update(nowMs, Mth.clamp(mieTarget, 0f, 1f));
     }

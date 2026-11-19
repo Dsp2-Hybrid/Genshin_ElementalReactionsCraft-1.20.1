@@ -19,8 +19,7 @@ public final class EnvironmentalReactions {
         if (entity.level().isClientSide() || entity.tickCount % 10 != 0) return;
         Level level = entity.level();
         BlockPos pos = entity.blockPosition();
-        if (level.getFluidState(pos).is(Fluids.LAVA) && ElementAuraManager.hasAura(entity, ElementType.ELECTRO))
-            ElementReactions.trigger(entity, null, ElementType.PYRO, 2.0f);
+
         if (entity.isOnFire() && level.getFluidState(pos).is(Fluids.WATER) && ElementAuraManager.hasAura(entity, ElementType.PYRO))
             ElementReactions.trigger(entity, null, ElementType.HYDRO, 2.0f);
     }

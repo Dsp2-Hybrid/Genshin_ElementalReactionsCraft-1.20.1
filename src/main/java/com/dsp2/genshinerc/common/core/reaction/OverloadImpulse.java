@@ -1,9 +1,9 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
-import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
+
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;
-import com.dsp2.genshinerc.common.core.combat.epicfight.EfCombatBridge;
+
 import com.dsp2.genshinerc.common.core.damage.ElementalStats;
 import com.dsp2.genshinerc.common.level.WorldLevel;
 import net.minecraft.core.particles.ParticleTypes;
@@ -19,9 +19,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = "genshinerc")
 public final class OverloadImpulse {
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void onKnockBack(net.minecraftforge.event.entity.living.LivingKnockBackEvent event) {
+        if (!event.getEntity().level().isClientSide() && ReactionDamage.isOverloadHit()) {
+            event.setCanceled(true);
+        }
+    }
 
-    private record Pending(long launchTick) {}
+    private record Pending(long launchTick, boolean leftGround) {}
     private static final Map<LivingEntity, Pending> AIRBORNE = new WeakHashMap<>();
     private static final Map<LivingEntity, Vec3> QUEUED = new WeakHashMap<>();
     private static final Map<LivingEntity, Long> COOLDOWN = new WeakHashMap<>();
@@ -34,34 +41,40 @@ public final class OverloadImpulse {
         if (center == null) return;
         List<LivingEntity> targets = new ArrayList<>(ReactionTargets.nearbyEnemies(center, attacker, ServerConfig.OVERLOAD_RADIUS.get()));
         if (ReactionTargets.isEnemy(attacker, center)) targets.add(center);
-        if (center.level() instanceof ServerLevel level) applyAt(level, center.position(), attacker, stats, targets);
+        if (center.level() instanceof ServerLevel level) applyAt(level, center.getBoundingBox().getCenter(), attacker, stats, targets);
     }
 
     public static void applyAt(ServerLevel level, Vec3 center, @Nullable Entity attacker, ElementalStats stats,
                                List<LivingEntity> targets) {
         long now = level.getGameTime();
-        double radius = ServerConfig.OVERLOAD_RADIUS.get();
+        double radius = Math.max(0.01, ServerConfig.OVERLOAD_RADIUS.get());
         Vec3 dir = attackDirection(center, attacker);
-        double emFactor = stats.mastery() > 0.0
-                ? 1.0 + stats.mastery() / (stats.mastery() + 1200.0)
-                : 1.0 + WorldLevel.get() * 0.15;
+        double mastery = Math.max(0.0, stats.mastery());
+        double emFactor = attacker == null
+                ? 1.0 + WorldLevel.get() * 0.15
+                : 1.0 + mastery / (mastery + 1200.0);
         emFactor = Math.min(ServerConfig.OVERLOAD_EM_CAP.get(), emFactor);
 
         for (LivingEntity t : targets) {
             if (!ReactionTargets.isEnemy(attacker, t)) continue;
             Long last = COOLDOWN.get(t);
             if (last != null && now - last < COOLDOWN_TICKS) continue;
-            if (t instanceof net.minecraft.world.entity.animal.IronGolem) continue;
+            if (AIRBORNE.containsKey(t) || QUEUED.containsKey(t)) continue;
+            if (ZhenMieManager.staggered(t)) continue;
+            double resistance = Mth.clamp(t.getAttributeValue(
+                    net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE), 0.0, 1.0);
             double d = t.getBoundingBox().getCenter().distanceTo(center);
             double falloff = 1.0 - Math.pow(Mth.clamp(d / radius, 0.0, 1.0), 1.5);
             double up = (ServerConfig.OVERLOAD_UP_BASE.get() + ServerConfig.OVERLOAD_UP_SCALE.get() * falloff) * emFactor;
             double side = (ServerConfig.OVERLOAD_SIDE_BASE.get() + ServerConfig.OVERLOAD_SIDE_SCALE.get() * falloff) * emFactor;
             Vec3 push = (dir != null ? dir : randomDir(t)).multiply(side, 0.0, side).add(0.0, up, 0.0);
             COOLDOWN.put(t, now);
-            if (t.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE) >= 0.9) {
-                ZhenMieManager.add(t, 0f, 1f);
+            double movement = 1.0 - resistance;
+            if (t instanceof net.minecraft.world.entity.animal.IronGolem
+                    || resistance >= 0.9 || push.y * movement < 0.10 || t.isInWater() || t.isInLava()) {
+                ZhenMieManager.fillMie(t);
             } else {
-                QUEUED.merge(t, push, Vec3::add);
+                QUEUED.put(t, push.scale(movement));
             }
         }
     }
@@ -72,20 +85,22 @@ public final class OverloadImpulse {
             target.setDeltaMovement(target.getDeltaMovement().add(push));
             target.hurtMarked = true;
             target.hasImpulse = true;
-            AIRBORNE.put(target, new Pending(target.level().getGameTime()));
+            AIRBORNE.put(target, new Pending(target.level().getGameTime(), !target.onGround()));
         });
         QUEUED.clear();
         AIRBORNE.entrySet().removeIf(e -> {
             LivingEntity t = e.getKey();
             if (t.isRemoved() || !t.isAlive()) return true;
             long air = t.level().getGameTime() - e.getValue().launchTick();
-            boolean landed = air >= 3 && (t.onGround() || t.isInWater() || t.isInLava());
+            if (air <= 0) return false;
+            boolean landed = t.onGround() || t.isInWater() || t.isInLava();
             if (!landed) {
-                if (air > MAX_AIRBORNE_TICKS) { ZhenMieManager.add(t, 0f, 1f); return true; }
+                if (air > MAX_AIRBORNE_TICKS) return true;
+                if (!e.getValue().leftGround()) e.setValue(new Pending(e.getValue().launchTick(), true));
                 return false;
             }
-            ZhenMieManager.add(t, 0f, 1f);
-            EfCombatBridge.applyStun(t, ClashResult.CRUSH);
+            if (!e.getValue().leftGround() && air < 4) return false;
+            ZhenMieManager.fillMie(t);
             if (t.level() instanceof ServerLevel sl)
                 sl.sendParticles(ParticleTypes.EXPLOSION, t.getX(), t.getY(), t.getZ(), 1, 0, 0, 0, 0);
             return true;

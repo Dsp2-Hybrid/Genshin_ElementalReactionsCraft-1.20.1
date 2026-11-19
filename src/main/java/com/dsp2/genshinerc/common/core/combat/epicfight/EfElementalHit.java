@@ -59,10 +59,10 @@ public final class EfElementalHit {
             boolean geo = imbue != null && imbue.element() == ElementType.GEO;
             if (geo || ef.getStunType() == StunType.KNOCKDOWN
                     || ef.calculateImpact() >= 2.0f || ef.getUsedItem().getItem() instanceof AxeItem) {
-                shatter(target, attacker, Math.max(0f, ef.calculateImpact()));
+                ElementReactions.blunt(target, attacker);
             }
         } else if (kind == DamageKind.PHYSICAL && attacker.getMainHandItem().getItem() instanceof AxeItem) {
-            shatter(target, attacker, 0f);
+            ElementReactions.blunt(target, attacker);
         }
 
         if (imbue == null) return damage;
@@ -75,11 +75,5 @@ public final class EfElementalHit {
         return (damage + result.catalyzeFlat()) * Math.max(0.0, 1.0 + damageBonus) * result.amplify();
     }
 
-    private static void shatter(LivingEntity target, @Nullable Entity attacker, float impact) {
-        if (!ElementAuraManager.hasAura(target, ElementType.FROZEN)) return;
-        if (Float.isFinite(impact) && impact > 0f) {
-            ElementAuraManager.consume(target, ElementType.FROZEN, impact * 0.006f, true);
-        }
-        ElementReactions.blunt(target, attacker);
-    }
+
 }

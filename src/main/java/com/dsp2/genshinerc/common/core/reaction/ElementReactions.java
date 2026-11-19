@@ -93,19 +93,21 @@ public final class ElementReactions {
             boolean force = false;
 
             for (ElementType aura : ReactionRules.order(trigger)) {
+                if (gauge <= EPS) break;
                 if (ElementAuraManager.amount(target, aura) <= EPS) continue;
                 Reaction reaction = ReactionRules.rule(trigger, aura);
                 if (reaction == null || (!allowElectroCharged && reaction == Reaction.ELECTRO_CHARGED)) continue;
+                if (reaction == Reaction.FREEZE && FrozenControl.resistance(target) >= 1.0) continue;
 
                 float used = 0f;
                 float triggerUsed = 0f;
                 if (reaction.consumes()) {
                     if (gauge <= EPS) continue;
                     float ratio = ReactionRules.ratio(trigger, aura);
-                    used = Math.min(ElementAuraManager.amount(target, aura), gauge * ratio);
+                    used = ElementAuraManager.consume(target, aura, gauge * ratio, true);
+                    if (used <= EPS) continue;
                     triggerUsed = used / ratio;
-                    gauge -= triggerUsed;
-                    ElementAuraManager.consume(target, aura, used, true);
+                    gauge = Math.max(0f, gauge - triggerUsed);
                     consumedAny = true;
                 } else if (!before.contains(aura)) continue;
 
@@ -117,9 +119,9 @@ public final class ElementReactions {
             }
             result.setRemaining(gauge);
 
-            if (!natural && attachable(trigger) && (!consumedAny || force)) {
+            if (!natural && gauge > EPS && attachable(trigger) && (!consumedAny || force)) {
                 if (consumedAny) {
-                    ElementAuraManager.apply(target, trigger, units, ElementGauge.durationTicksFromUnits(units));
+                    ElementAuraManager.apply(target, trigger, gauge, ElementGauge.durationTicksFromUnits(gauge));
                 } else {
                     ElementAuraManager.applyUnits(target, trigger, units);
                 }
@@ -167,6 +169,7 @@ public final class ElementReactions {
                 ReactionParticles.spawnSuperconduct(t);
             }
             case FREEZE -> {
+                if (FrozenControl.resistance(t) >= 1.0) break;
                 ElementAuraManager.freeze(t, 2f * Math.min(triggerUsed, used));
                 if (FrozenControl.active(t)) {
                     ReactionSoundEvents.playFreeze(t);

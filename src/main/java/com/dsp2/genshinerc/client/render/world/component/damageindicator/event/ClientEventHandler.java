@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.Mod;
 public class ClientEventHandler {
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent e) {
-        if (e.phase == TickEvent.Phase.END) DamageTracker.tickAll();
+        if (e.phase == TickEvent.Phase.END && !Minecraft.getInstance().isPaused()) DamageTracker.tickAll();
     }
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent e) {

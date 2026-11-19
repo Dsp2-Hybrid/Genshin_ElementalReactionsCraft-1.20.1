@@ -26,12 +26,26 @@ public final class FrozenSurface {
         return entity.isAlive() && auras != null && auras.hasActive(ElementType.FROZEN);
     }
 
+    public static float gaugeRatio(LivingEntity entity) {
+        var auras = ClientAuraCache.get(entity.getId());
+        return auras == null || !entity.isAlive() ? 0f : net.minecraft.util.Mth.clamp(
+                auras.gauge(ElementType.FROZEN) / com.dsp2.genshinerc.common.core.element.FrozenControl.MAX_GAUGE, 0f, 1f);
+    }
+
+    public static float tintWeight(LivingEntity entity, float partialTick) {
+        float ratio = gaugeRatio(entity);
+        float weak = net.minecraft.util.Mth.clamp(1f - 2f * ratio, 0f, 1f);
+        float time = (entity.tickCount % 600 + partialTick) * 0.05f;
+        float wave = 0.5f + 0.5f * (float) Math.sin(time * (7f + 14f * weak));
+        return net.minecraft.util.Mth.clamp((float) Math.sqrt(ratio) - 0.16f * weak * wave, 0f, 1f);
+    }
+
     public static float alpha(LivingEntity entity) {
         Minecraft mc = Minecraft.getInstance();
         VFXConfig cfg = VFXConfig.get();
         if (!cfg.cryoTintEnabled || GuiRenderContext.isInGui() || entity.isInvisible() || entity.isSpectator()
                 || (entity == mc.getCameraEntity() && mc.options.getCameraType().isFirstPerson()) || !frozen(entity)) return 0f;
-        return (float) Math.max(0.0, Math.min(0.8, cfg.cryoTintAlpha));
+        return (float) Math.max(0.0, Math.min(0.8, cfg.cryoTintAlpha)) * (0.55f + 0.45f * gaugeRatio(entity));
     }
 
     private static final class SurfaceType extends RenderType {

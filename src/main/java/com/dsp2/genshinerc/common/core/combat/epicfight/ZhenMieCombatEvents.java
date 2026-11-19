@@ -17,7 +17,10 @@ public final class ZhenMieCombatEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onDamage(LivingDamageEvent event) {
         LivingEntity victim = event.getEntity();
-        if (victim.level().isClientSide() || event.getSource().getEntity() == null) return;
+        if (victim.level().isClientSide() || !(event.getAmount() > 0f)) return;
+        event.setAmount(event.getAmount() * ZhenMieManager.incomingMultiplier(victim));
+        if (event.getSource().getEntity() == null
+                || com.dsp2.genshinerc.common.core.reaction.ReactionDamage.isOverloadHit()) return;
         LivingEntity attacker = null;
         if (event.getSource().getEntity() instanceof LivingEntity livingAttacker) {
             attacker = livingAttacker;

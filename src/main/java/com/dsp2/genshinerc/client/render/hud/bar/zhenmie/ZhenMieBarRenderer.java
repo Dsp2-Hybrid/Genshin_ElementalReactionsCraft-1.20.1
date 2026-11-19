@@ -128,7 +128,7 @@ public final class ZhenMieBarRenderer {
         }
 
         if (s.clash != null) {
-            float fade = 1f - Mth.clamp((now - s.clashStartMs) / (s.clash.visualSeconds() * 1000f), 0f, 1f);
+            float fade = Mth.clamp((float) (s.staggerEndMs - now) / Math.max(1L, s.staggerEndMs - s.clashStartMs), 0f, 1f);
             float x = Mth.lerp(s.clashPoint, l, r);
             float half = (topY - bottomY) * MARKER_WIDTH / 2f;
             HudDraw.rect(m, buffers, x - half, bottomY, x + half, topY, z, 0xFFFFFF, alpha * fade);

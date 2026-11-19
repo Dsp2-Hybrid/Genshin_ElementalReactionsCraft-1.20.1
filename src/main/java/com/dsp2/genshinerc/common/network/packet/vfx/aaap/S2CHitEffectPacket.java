@@ -1,6 +1,6 @@
 package com.dsp2.genshinerc.common.network.packet.vfx.aaap;
 
-import com.dsp2.genshinerc.client.nwhander.sys.fight.HitEffectClientHandler;
+import com.dsp2.genshinerc.client.nwhandler.sys.fight.HitEffectClientHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;

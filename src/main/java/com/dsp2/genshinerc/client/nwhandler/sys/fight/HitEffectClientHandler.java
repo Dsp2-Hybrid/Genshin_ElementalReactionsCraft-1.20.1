@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.nwhander.sys.fight;
+package com.dsp2.genshinerc.client.nwhandler.sys.fight;
 
 import com.dsp2.genshinerc.client.render.vfx.feature.light.AaapTransientLights;
 import mod.chloeprime.aaaparticles.api.common.AAALevel;

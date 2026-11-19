@@ -32,9 +32,13 @@ public final class ReactionDamage {
 
     public static boolean isDealing() { return dealing; }
 
+    public static boolean isOverloadHit() {
+        return dealing && "overload".equals(activeIndicatorKey);
+    }
+
     public static void deal(LivingEntity target, @Nullable Entity attacker, DamageKind kind, Reaction reaction,
                             ElementalStats stats) {
-        if (ElementReactions.isNatural()) return;
+        if (ElementReactions.isNatural() && reaction != Reaction.OVERLOAD) return;
         if (!(target.level() instanceof ServerLevel level) || !target.isAlive()) return;
         if (!allow(target, reaction, level.getGameTime())) return;
 
@@ -50,6 +54,10 @@ public final class ReactionDamage {
             double multiplier = 1.0 + 16.0 * mastery / (mastery + 2000.0)
                     + ServerConfig.SHATTER_REACTION_BONUS.get();
             amount = coefficient * ElementalMath.levelMultiplier(stats.level()) * multiplier * ServerConfig.SCALE.get();
+        } else if (reaction == Reaction.OVERLOAD) {
+            amount = attacker == null
+                    ? ElementalMath.transformativeNoEM(coefficient, 1)
+                    : ElementalMath.transformative(coefficient, stats);
         } else if (stats.mastery() > 0.0) {
             amount = ElementalMath.transformative(coefficient, stats);
         } else {

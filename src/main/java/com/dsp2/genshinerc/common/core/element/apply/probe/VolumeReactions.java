@@ -15,7 +15,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import com.dsp2.genshinerc.mixin.core.combat.CreeperPoweredAccessor;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -57,7 +59,7 @@ public final class VolumeReactions {
     public static void onTick(LivingEvent.LivingTickEvent event) {
         LivingEntity attacker = event.getEntity();
         if (attacker.level().isClientSide() || !attacker.isAlive()) return;
-        if (FrozenControl.active(attacker)) {
+        if (FrozenControl.locked(attacker)) {
             SWEEPS.remove(attacker);
             return;
         }
@@ -86,7 +88,24 @@ public final class VolumeReactions {
         }
         state.elapsed = sample.elapsed();
         state.tick = now;
+        if (imbue.element() == ElementType.ELECTRO) chargeCreepers(level, attacker, sample);
         affectBlocks(level, attacker, imbue, sample, state, canGrief(attacker));
+    }
+
+    private static void chargeCreepers(ServerLevel level, LivingEntity attacker, SwingVolumeSampler.SwingSample sample) {
+        var bounds = sample.volumes().get(0).bounds();
+        for (int i = 1; i < sample.volumes().size(); i++) {
+            bounds = bounds.minmax(sample.volumes().get(i).bounds());
+        }
+        for (Creeper creeper : level.getEntitiesOfClass(Creeper.class, bounds,
+                target -> target != attacker && target.isAlive() && !target.isPowered())) {
+            var hitbox = creeper.getBoundingBox();
+            for (SwingVolume volume : sample.volumes()) {
+                if (!volume.bounds().intersects(hitbox) || !volume.intersects(hitbox)) continue;
+                creeper.getEntityData().set(CreeperPoweredAccessor.genshinerc$poweredData(), true);
+                break;
+            }
+        }
     }
 
     private static void affectBlocks(ServerLevel level, LivingEntity attacker, ElementImbue.State imbue,
@@ -101,6 +120,7 @@ public final class VolumeReactions {
                 positions.add(cursor.immutable());
             }
         }
+        java.util.List<BlockPos> instantTnt = new java.util.ArrayList<>();
         Vec3 blast = null;
         Vec3 lava = null;
         for (BlockPos pos : positions) {
@@ -117,7 +137,9 @@ public final class VolumeReactions {
                 }
                 case PYRO -> {
                     if (!grief) break;
-                    if (state.getBlock() instanceof EleIceBlock) {
+                    if (state.is(Blocks.TNT)) {
+                        if (level.removeBlock(pos, false)) instantTnt.add(pos);
+                    } else if (state.getBlock() instanceof EleIceBlock) {
                         EleIceBlock.melt(level, pos);
                     } else if (sweep.ignited < MAX_IGNITE && ignite(level, pos, state, imbue.units())) {
                         sweep.ignited++;
@@ -136,6 +158,14 @@ public final class VolumeReactions {
                 }
                 default -> { }
             }
+        }
+        for (BlockPos pos : instantTnt) {
+            double x = pos.getX() + 0.5;
+            double y = pos.getY();
+            double z = pos.getZ() + 0.5;
+            var tnt = new net.minecraft.world.entity.item.PrimedTnt(level, x, y, z, attacker);
+            level.explode(tnt, x, y + tnt.getBbHeight() * 0.0625, z, 4.0f,
+                    net.minecraft.world.level.Level.ExplosionInteraction.TNT);
         }
         Vec3 at = blast == null ? lava : blast;
         if (at != null && !sweep.overloaded) {

@@ -23,7 +23,8 @@ public abstract class MixinVanillaFrozenSurface {
         model.renderToBuffer(pose, vertices, light, overlay, red, green, blue, alpha);
         float ice = FrozenSurface.alpha(entity);
         if (ice <= 0f) return;
+        float tint = FrozenSurface.tintWeight(entity, partialTick);
         model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), light, OverlayTexture.NO_OVERLAY,
-                0.66f, 0.86f, 1.0f, ice);
+                0.89f - 0.35f * tint, 0.96f - 0.20f * tint, 1.0f, ice);
     }
 }

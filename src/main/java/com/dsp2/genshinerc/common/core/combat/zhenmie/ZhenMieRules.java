@@ -13,6 +13,18 @@ public final class ZhenMieRules {
     public static final int MIE_DECAY_DELAY_TICKS = 140;
     public static final float MIE_DECAY_PER_TICK = 0.4f;
     public static final int DECAY_SYNC_INTERVAL = 4;
+    public static final int STAGGER_MEMORY_STEP = 120;
+    public static final float STAGGER_VULNERABILITY_MIN = 0.10f;
+    public static final float STAGGER_VULNERABILITY_MAX = 0.30f;
+
+    public static float vulnerability(float point) {
+        return Mth.lerp(1f - Mth.clamp(point, 0f, 1f), STAGGER_VULNERABILITY_MIN, STAGGER_VULNERABILITY_MAX);
+    }
+
+    public static int staggerTicks(ClashResult result, int recentClashes) {
+        int base = Math.round(result.stunSeconds() * 20f);
+        return Math.max(7, Math.round(base * (float) Math.pow(0.60, recentClashes)));
+    }
 
     public static final float SUPPRESSION_MIN = 0.02f;
     public static final float SUPPRESSION_MAX = 8.0f;

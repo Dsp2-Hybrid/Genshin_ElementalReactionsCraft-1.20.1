@@ -725,7 +725,15 @@
   "genshinerc.bar.config.aaa_light_radius_scale.desc": "控制动态光源能照亮周围多大范围（0.1 ~ 64.0）。数值越大，光晕覆盖面积越广。",
 
 
-  "block.genshinerc.special_ice": "霜华"
-
-
+  "block.genshinerc.special_ice": "霜华",
+  "genshinerc.damageindicator.config.screen_damage_enabled": "屏幕映射伤害数字",
+  "genshinerc.damageindicator.config.screen_damage_enabled.desc": "在屏幕上绘制投影后的伤害数字和反应文本。关闭后使用世界空间粒子。",
+  "genshinerc.damageindicator.config.screen_text_scale": "屏幕文本额外大小倍率",
+  "genshinerc.damageindicator.config.screen_text_scale.desc": "在已配置的文本大小和缩放动画基础上，再乘以此倍率。",
+  "genshinerc.damageindicator.config.screen_outline_enabled": "屏幕文本描边",
+  "genshinerc.damageindicator.config.screen_outline_enabled.desc": "控制屏幕模式下的文字描边。",
+  "genshinerc.damageindicator.config.screen_outline_alpha": "屏幕文本描边不透明度",
+  "genshinerc.damageindicator.config.screen_outline_alpha.desc": "设置描边的不透明度。描边会随文字一起淡出。",
+  "genshinerc.damageindicator.config.screen_outline_color": "屏幕文本描边颜色",
+  "genshinerc.damageindicator.config.screen_outline_color.desc": "设置描边颜色，默认为黑色。"
 }

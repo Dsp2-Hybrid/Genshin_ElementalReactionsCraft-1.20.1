@@ -47,7 +47,7 @@ public final class ElementAuraManager {
             }
         }
         raise(entity, ElementType.FROZEN, Math.min(FrozenControl.MAX_GAUGE, amount), frozenRate(entity, age), age);
-        FrozenControl.apply(entity);
+        FrozenControl.refresh(entity);
     }
     public static void quicken(LivingEntity entity, float amount) {
         if (entity.level().isClientSide() || amount <= 0f) return;
@@ -75,6 +75,7 @@ public final class ElementAuraManager {
         a.holdActive = true;
         a.holdCap = cap;
         a.holdUntil = now + 2L * step + 1L;
+        if (type == ElementType.CRYO) FrozenControl.refresh(entity);
     }
     public static float consume(LivingEntity entity, ElementType type, float amount, boolean flash) {
         if (entity.level().isClientSide()) return 0f;
@@ -93,10 +94,8 @@ public final class ElementAuraManager {
         LinkedHashMap<ElementType, Aura> auras = AURAS.remove(entity);
         if (auras == null) return;
         Aura frozen = auras.get(ElementType.FROZEN);
-        if (frozen != null) {
-            rememberFrozen(entity, frozen);
-            FrozenControl.release(entity);
-        }
+        if (frozen != null) rememberFrozen(entity, frozen);
+        FrozenControl.refresh(entity);
         markDirty(entity, null);
     }
     public static boolean hasAura(LivingEntity entity, ElementType type) {
@@ -120,11 +119,9 @@ public final class ElementAuraManager {
             LinkedHashMap<ElementType, Aura> auras = entry.getValue();
             if (entity.isRemoved() || !entity.isAlive()) {
                 Aura frozen = auras.get(ElementType.FROZEN);
-                if (frozen != null) {
-                    rememberFrozen(entity, frozen);
-                    FrozenControl.release(entity);
-                }
+                if (frozen != null) rememberFrozen(entity, frozen);
                 it.remove();
+                FrozenControl.refresh(entity);
                 if (!entity.isRemoved()) markDirty(entity, null);
                 continue;
             }
@@ -158,14 +155,14 @@ public final class ElementAuraManager {
                 if (aura.amount <= 1.0e-4f) {
                     if (frozen) {
                         rememberFrozen(entity, aura);
-                        FrozenControl.release(entity);
+
                     }
                     auraIt.remove();
                     changed = true;
                 }
             }
             if (changed) markDirty(entity, null);
-            if (auras.containsKey(ElementType.FROZEN)) FrozenControl.apply(entity);
+            if (changed) FrozenControl.refresh(entity);
             if (auras.isEmpty()) it.remove();
         }
         flush();
@@ -185,6 +182,7 @@ public final class ElementAuraManager {
         } else if (amount > existing.amount) {
             existing.amount = amount;
         } else return;
+        if (type == ElementType.CRYO || type == ElementType.FROZEN) FrozenControl.refresh(entity);
         markDirty(entity, null);
     }
     private static void drop(LivingEntity entity, ElementType type, boolean flash) {
@@ -192,10 +190,8 @@ public final class ElementAuraManager {
         if (auras == null) return;
         Aura removed = auras.remove(type);
         if (removed == null) return;
-        if (type == ElementType.FROZEN) {
-            rememberFrozen(entity, removed);
-            FrozenControl.release(entity);
-        }
+        if (type == ElementType.FROZEN) rememberFrozen(entity, removed);
+        if (type == ElementType.FROZEN || type == ElementType.CRYO) FrozenControl.refresh(entity);
         if (auras.isEmpty()) AURAS.remove(entity);
         markDirty(entity, flash ? type : null);
     }
@@ -253,6 +249,7 @@ public final class ElementAuraManager {
             a.age = t.getInt("age");
             auras.put(type, a);
         }
+        FrozenControl.refresh(entity);
         markDirty(entity, null);
     }
     private static SyncAuraPacket snapshot(LivingEntity entity, EnumSet<ElementType> flashed) {

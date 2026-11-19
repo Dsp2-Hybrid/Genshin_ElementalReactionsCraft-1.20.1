@@ -59,6 +59,10 @@ public final class ReactionAmplifyHandler {
                     ReactionSoundEvents.playMelt(entity);
                     ReactionParticles.spawnMelt(entity);
                 }
+                if (r == Reaction.VAPORIZE) {
+                    ReactionSoundEvents.playVaporize(entity);
+                    ReactionParticles.spawnVaporize(entity);
+                }
                 ReactionText.send(entity, r, trigger, aura);
             }
         }

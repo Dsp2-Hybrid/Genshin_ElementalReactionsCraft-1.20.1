@@ -45,8 +45,8 @@ public final class ElementCryoVisuals {
     public static void onGui(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         VFXConfig config = VFXConfig.get();
-        if (mc.player == null || mc.getCameraEntity() != mc.player || !mc.options.getCameraType().isFirstPerson()
-                || !config.frostOverlayEnabled || mc.options.hideGui || mc.player.getTicksFrozen() > 0) {
+        if (mc.player == null || mc.getCameraEntity() != mc.player
+                || !config.frostOverlayEnabled || mc.options.hideGui) {
             alpha = 0f;
             lastFrame = 0L;
             return;
@@ -55,7 +55,10 @@ public final class ElementCryoVisuals {
         float dt = lastFrame == 0L ? 0.05f : Math.min(0.1f, (now - lastFrame) * 1.0e-9f);
         lastFrame = now;
         boolean frozen = FrozenSurface.frozen(mc.player);
-        float target = frozen ? (float) Math.max(0.0, Math.min(0.65, config.frostMaxAlpha)) : 0f;
+        float gauge = FrozenSurface.gaugeRatio(mc.player);
+        float target = frozen ? (float) (Math.max(0.0, Math.min(0.65, config.frostMaxAlpha)) * Math.sqrt(gauge)) : 0f;
+        float vanilla = mc.options.getCameraType().isFirstPerson() ? mc.player.getPercentFrozen() : 0f;
+        target *= 1f - vanilla;
         double speed = frozen ? config.frostEaseInSpeed : config.frostEaseOutSpeed;
         alpha += (target - alpha) * (float) (1.0 - Math.exp(-dt * Math.max(0.1, speed)));
         if (alpha < 0.003f) return;
@@ -66,7 +69,7 @@ public final class ElementCryoVisuals {
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
         try {
-            graphics.blit(FROST, 0, 0, 0, 0, width, height, width, height);
+            graphics.blit(FROST, 0, 0, width, height, 0f, 0f, 256, 256, 256, 256);
         } finally {
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
             RenderSystem.disableBlend();
