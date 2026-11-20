@@ -109,6 +109,12 @@ public final class ShieldManager {
         HIT.clear();
     }
 
+    public static void syncAll(ServerPlayer player) {
+        for (LivingEntity entity : SHIELDS.keySet()) {
+            if (!entity.isRemoved() && entity.level() == player.level()) sendTo(player, entity);
+        }
+    }
+
     public static void sendTo(ServerPlayer player, LivingEntity entity) {
         if (SHIELDS.containsKey(entity)) GenshinercNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), snapshot(entity, false));
     }

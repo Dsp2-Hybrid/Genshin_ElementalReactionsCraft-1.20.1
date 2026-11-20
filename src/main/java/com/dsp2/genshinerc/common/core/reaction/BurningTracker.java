@@ -29,11 +29,10 @@ final class BurningTracker {
     private BurningTracker() {}
 
     static void start(LivingEntity target, @Nullable Entity attacker) {
-        if (ACTIVE.containsKey(target) || !ElementAuraManager.hasAura(target, ElementType.PYRO) || fuel(target) <= EPS) return;
+        if (!ElementAuraManager.hasAura(target, ElementType.PYRO) || fuel(target) <= EPS) return;
         ElementAuraManager.startBurning(target);
-        State state = new State();
-        state.owner = attacker == null ? null : attacker.getUUID();
-        ACTIVE.put(target, state);
+        State state = ACTIVE.computeIfAbsent(target, ignored -> new State());
+        if (attacker != null) state.owner = attacker.getUUID();
     }
 
     static void tick() {

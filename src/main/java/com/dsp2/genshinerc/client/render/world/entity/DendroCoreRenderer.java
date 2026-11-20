@@ -1,6 +1,9 @@
 package com.dsp2.genshinerc.client.render.world.entity;
 
 import com.dsp2.genshinerc.GenshinERC;
+import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.AaapLightRegistry;
+import com.dsp2.genshinerc.client.render.vfx.feature.light.AaapLightRenderer;
 import com.dsp2.genshinerc.common.core.reaction.DendroCoreEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -44,7 +47,20 @@ public class DendroCoreRenderer extends EntityRenderer<DendroCoreEntity> {
 
         stack.pushPose();
         stack.translate(0.0, 0.2 + 0.05 * Mth.sin((entity.tickCount + partialTick) * 0.2f), 0.0);
+        VFXConfig config = VFXConfig.get();
+        if (config.aaaLightEnabled && AaapLightRenderer.isActive()) {
+            AaapLightRegistry.put(entity, new AaapLightRegistry.Light(
+                    entity.getX(), entity.getY() + 0.35, entity.getZ(),
+                    1.8f, 0.25f, 0.34f, 1.0f, 0.20f, config.aaaLightIntensity));
+        } else {
+            AaapLightRegistry.remove(entity);
+        }
+
+
+
         stack.mulPose(this.entityRenderDispatcher.cameraOrientation());
+
+        if (entity.isHoming()) stack.mulPose(Axis.ZP.rotation((entity.tickCount + partialTick) * 0.28f));
         stack.mulPose(Axis.YP.rotationDegrees(180f));
         stack.scale(0.5f, 0.5f, 0.5f);
         VertexConsumer vc = buffers.getBuffer(RenderType.entityCutoutNoCull(getTextureLocation(entity)));

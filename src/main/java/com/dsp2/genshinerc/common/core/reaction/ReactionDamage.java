@@ -83,6 +83,10 @@ public final class ReactionDamage {
         float coefficient = switch (reaction) {
             case OVERLOAD -> ServerConfig.OVERLOAD_COEFFICIENT.get().floatValue();
             case SHATTER -> ServerConfig.SHATTER_COEFFICIENT.get().floatValue();
+            case SUPERCONDUCT -> ServerConfig.SUPERCONDUCT_COEFFICIENT.get().floatValue();
+            case ELECTRO_CHARGED -> ServerConfig.ELECTRO_CHARGED_COEFFICIENT.get().floatValue();
+            case SWIRL -> ServerConfig.SWIRL_COEFFICIENT.get().floatValue();
+            case BLOOM -> ServerConfig.BLOOM_COEFFICIENT.get().floatValue();
             default -> reaction.coefficient();
         };
 
@@ -114,10 +118,14 @@ public final class ReactionDamage {
             var instance = attribute == null ? null : target.getAttribute(attribute);
             if (instance != null) amount *= ElementalMath.resistanceMultiplier(instance.getValue());
         }
+        if ((reaction == Reaction.BLOOM || reaction == Reaction.HYPERBLOOM || reaction == Reaction.BURGEON)
+                && target == attacker && target instanceof net.minecraft.world.entity.player.Player) {
+            amount *= 0.05;
+        }
         amount = ElementalMath.capReaction(amount, target);
         if (!Double.isFinite(amount) || amount <= 0.0) return;
 
-        Entity cause = (reaction == Reaction.BURNING || reaction == Reaction.ELECTRO_CHARGED) ? null : attacker;
+        Entity cause = attacker;
         DamageSource source = ElementalDamage.source(level, kind, attacker, cause);
 
         float hp = target.getHealth();

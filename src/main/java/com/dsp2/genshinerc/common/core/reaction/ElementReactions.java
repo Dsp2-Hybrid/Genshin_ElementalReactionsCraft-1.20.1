@@ -27,6 +27,7 @@ import java.util.UUID;
 public final class ElementReactions {
     private static final float EPS = 1.0e-4f;
     private static final java.util.Map<LivingEntity, Long> EMBER_REFILL_AT = new java.util.WeakHashMap<>();
+    private static final java.util.Map<LivingEntity, Long> CRYSTALLIZE_AT = new java.util.WeakHashMap<>();
 
     private static void consumeEmbers(LivingEntity entity, float amount) {
         int remaining = entity.getRemainingFireTicks();
@@ -56,8 +57,24 @@ public final class ElementReactions {
 
     public static boolean isNatural() { return naturalMode; }
 
-    public static void tick() { ElectroChargedTracker.tick(); BurningTracker.tick(); ResistanceShred.tick(); OverloadImpulse.tick(); ReactionText.tick(); }
-    public static void reset() { ElectroChargedTracker.reset(); BurningTracker.reset(); ResistanceShred.reset(); ReactionDamage.reset(); ReactionText.reset(); OverloadImpulse.reset(); }
+    public static void tick() {
+        ElectroChargedTracker.tick();
+        WorldElementFields.tick();
+        BurningTracker.tick();
+        ResistanceShred.tick();
+        OverloadImpulse.tick();
+        ReactionText.tick();
+    }
+    public static void reset() {
+        ElectroChargedTracker.reset();
+        BurningTracker.reset();
+        ResistanceShred.reset();
+        ReactionDamage.reset();
+        ReactionText.reset();
+        OverloadImpulse.reset();
+        EMBER_REFILL_AT.clear();
+        CRYSTALLIZE_AT.clear();
+    }
 
     public static float tntGauge(double distance, double radius) {
         if (radius <= 1.0e-4) return TNT_GAUGE_CENTER;
@@ -116,6 +133,11 @@ public final class ElementReactions {
                 Reaction reaction = ReactionRules.rule(trigger, aura);
                 if (reaction == null || (!allowElectroCharged && reaction == Reaction.ELECTRO_CHARGED)) continue;
                 if (reaction == Reaction.FREEZE && FrozenControl.resistance(target) >= 1.0) continue;
+                if (target.isUnderWater() && (reaction == Reaction.SWIRL || reaction == Reaction.CRYSTALLIZE)) continue;
+                if (reaction == Reaction.CRYSTALLIZE
+                        && target.level().getGameTime() < CRYSTALLIZE_AT.getOrDefault(target, Long.MIN_VALUE)) continue;
+                if (reaction == Reaction.CRYSTALLIZE
+                        && target.level().getGameTime() < CRYSTALLIZE_AT.getOrDefault(target, Long.MIN_VALUE)) continue;
                 ElementType swirlElement = aura == ElementType.FROZEN ? ElementType.CRYO : aura;
                 if (reaction == Reaction.SWIRL && swirled.contains(swirlElement)) continue;
 
@@ -129,6 +151,9 @@ public final class ElementReactions {
                     triggerUsed = used / ratio;
                     gauge = Math.max(0f, gauge - triggerUsed);
                     consumedAny = true;
+                    if (reaction == Reaction.CRYSTALLIZE) {
+                        CRYSTALLIZE_AT.put(target, target.level().getGameTime() + 20L);
+                    }
                     if (reaction == Reaction.OVERLOAD && aura == ElementType.PYRO) consumeEmbers(target, used);
                 } else if (!before.contains(aura)) continue;
 
@@ -185,10 +210,7 @@ public final class ElementReactions {
                 OverloadVFX.play(t);
             }
             case SUPERCONDUCT -> {
-                ReactionDamage.deal(t, atk, DamageKind.CRYO, r, s);
-                ResistanceShred.apply(t, ModAttributes.PHYSICAL_RESISTANCE, SUPERCONDUCT_SHRED, ServerConfig.SUPERCONDUCT_RES_SHRED.get(), Math.round(ServerConfig.SUPERCONDUCT_RES_SECONDS.get().floatValue() * 20f));
-                ReactionSoundEvents.playSuperconduct(t);
-                ReactionParticles.spawnSuperconduct(t);
+                superconduct(t, atk, s);
             }
             case FREEZE -> {
                 if (FrozenControl.resistance(t) >= 1.0) break;
@@ -231,6 +253,23 @@ public final class ElementReactions {
         return false;
     }
 
+    private static void superconduct(LivingEntity target, @Nullable Entity attacker, ElementalStats stats) {
+        double radius = 5.0;
+        int ticks = Math.round(ServerConfig.SUPERCONDUCT_RES_SECONDS.get().floatValue() * 20f);
+        ReactionDamage.deal(target, attacker, DamageKind.CRYO, Reaction.SUPERCONDUCT, stats);
+        ResistanceShred.apply(target, ModAttributes.PHYSICAL_RESISTANCE, SUPERCONDUCT_SHRED,
+                ServerConfig.SUPERCONDUCT_RES_SHRED.get(), ticks);
+        ReactionSoundEvents.playSuperconduct(target);
+        ReactionParticles.spawnSuperconduct(target);
+
+        for (LivingEntity near : ReactionTargets.nearbyEnemies(target, attacker, radius)) {
+            ReactionDamage.deal(near, attacker, DamageKind.CRYO, Reaction.SUPERCONDUCT, stats);
+            ResistanceShred.apply(near, ModAttributes.PHYSICAL_RESISTANCE, SUPERCONDUCT_SHRED,
+                    ServerConfig.SUPERCONDUCT_RES_SHRED.get(), ticks);
+            ReactionParticles.spawnSuperconduct(near);
+        }
+    }
+
     private static void overload(LivingEntity t, @Nullable Entity atk, ElementalStats s) {
         double radius = ServerConfig.OVERLOAD_RADIUS.get();
         Vec3 center = t.getBoundingBox().getCenter();
@@ -255,6 +294,7 @@ public final class ElementReactions {
 
         ReactionSoundEvents.playSwirl(t, swirled);
         ReactionParticles.spawnSwirl(t, swirled, radius);
+        WorldElementFields.applySwirlToWorld(t, atk, swirled, spread, radius);
         ReactionDamage.deal(t, atk, kind, Reaction.SWIRL, s);
         shred(t, kind);
 

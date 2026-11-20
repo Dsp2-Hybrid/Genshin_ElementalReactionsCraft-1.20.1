@@ -71,7 +71,7 @@ public class ServerConfig {
         SUPERCONDUCT_RES_SECONDS = BUILDER.defineInRange("superconductResSeconds", 12.0, 0.5, 600.0);
         REACTION_TEXT_COOLDOWN = BUILDER.defineInRange("reactionTextCooldownTicks", 10, 0, 200);
         REACTION_MAX_HP_FRACTION = BUILDER.defineInRange("reactionMaxHpFraction", 0.5, 0.05, 1.0);
-        CRYSTALLIZE_SHIELD_COEF = BUILDER.defineInRange("crystallizeShieldCoef", 1.14, 0.0, 100.0);
+        CRYSTALLIZE_SHIELD_COEF = BUILDER.defineInRange("crystallizeShieldCoef", 5.52, 0.0, 100.0);
         FROZEN_CRIT_RATE_BONUS = BUILDER.defineInRange("frozenCritRateBonus", 0.4, 0.0, 1.0);
         EXPLOSION_REACTION_ENABLED = BUILDER.define("explosionReactionEnabled", true);
         EXPLOSION_USES_PYRO_RESISTANCE = BUILDER.define("explosionUsesPyroResistance", false);
@@ -89,10 +89,10 @@ public class ServerConfig {
         USE_BASE_BONUS_ATK = BUILDER.define("useBaseBonusAtk", true);
         USE_CRIT_SYSTEM = BUILDER.define("useCritSystem", true);
         OVERLOAD_COEFFICIENT = BUILDER.defineInRange("overloadCoefficient", 4.0, 0.0, 100.0);
-        SUPERCONDUCT_COEFFICIENT = BUILDER.defineInRange("superconductCoefficient", 1.0, 0.0, 100.0);
-        ELECTRO_CHARGED_COEFFICIENT = BUILDER.defineInRange("electroChargedCoefficient", 2.4, 0.0, 100.0);
-        SWIRL_COEFFICIENT = BUILDER.defineInRange("swirlCoefficient", 1.2, 0.0, 100.0);
-        BLOOM_COEFFICIENT = BUILDER.defineInRange("bloomCoefficient", 4.0, 0.0, 100.0);
+        SUPERCONDUCT_COEFFICIENT = BUILDER.defineInRange("superconductCoefficient", 1.5, 0.0, 100.0);
+        ELECTRO_CHARGED_COEFFICIENT = BUILDER.defineInRange("electroChargedCoefficient", 2.0, 0.0, 100.0);
+        SWIRL_COEFFICIENT = BUILDER.defineInRange("swirlCoefficient", 0.6, 0.0, 100.0);
+        BLOOM_COEFFICIENT = BUILDER.defineInRange("bloomCoefficient", 2.0, 0.0, 100.0);
         SHATTER_COEFFICIENT = BUILDER.defineInRange("shatterCoefficient", 3.0, 0.0, 100.0);
         SHATTER_REACTION_BONUS = BUILDER.defineInRange("shatterReactionBonus", 0.0, 0.0, 100.0);
         BUILDER.pop();

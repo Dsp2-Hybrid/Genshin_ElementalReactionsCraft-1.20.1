@@ -6,6 +6,7 @@ import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import com.dsp2.genshinerc.common.core.reaction.ElementReactions;
+import com.dsp2.genshinerc.common.core.reaction.WorldElementFields;
 import com.dsp2.genshinerc.common.world.block.EleIceBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,6 +52,8 @@ public final class VolumeReactions {
         long tick = Long.MIN_VALUE;
         boolean overloaded;
         int ignited;
+        boolean steamPlayed;
+        boolean geoPlayed;
     }
 
     private VolumeReactions() {}
@@ -66,7 +69,9 @@ public final class VolumeReactions {
         ElementImbue.State imbue = ElementImbue.get(attacker);
         if (imbue == null || !Float.isFinite(imbue.units()) || imbue.units() <= 0f
                 || (imbue.element() != ElementType.CRYO && imbue.element() != ElementType.PYRO
-                && imbue.element() != ElementType.ELECTRO && imbue.element() != ElementType.HYDRO)) {
+                && imbue.element() != ElementType.ELECTRO && imbue.element() != ElementType.HYDRO
+                && imbue.element() != ElementType.ANEMO && imbue.element() != ElementType.GEO
+                && imbue.element() != ElementType.DENDRO)) {
             SWEEPS.remove(attacker);
             return;
         }
@@ -85,6 +90,8 @@ public final class VolumeReactions {
             state.phase = sample.phaseStart();
             state.overloaded = false;
             state.ignited = 0;
+            state.steamPlayed = false;
+            state.geoPlayed = false;
         }
         state.elapsed = sample.elapsed();
         state.tick = now;
@@ -157,6 +164,16 @@ public final class VolumeReactions {
                     }
                 }
                 case PYRO -> {
+                    if (attacker.isUnderWater() && state.getFluidState().is(Fluids.WATER)) {
+                        if (!sweep.steamPlayed) {
+                            sweep.steamPlayed = true;
+                            Vec3 steam = Vec3.atCenterOf(pos);
+                            level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.8f, 1.35f);
+                            level.sendParticles(ParticleTypes.CLOUD, steam.x, steam.y, steam.z, 18, 0.32, 0.28, 0.32, 0.025);
+                            level.sendParticles(ParticleTypes.WHITE_ASH, steam.x, steam.y, steam.z, 10, 0.24, 0.2, 0.24, 0.02);
+                        }
+                        break;
+                    }
                     if (!grief) break;
                     if (state.is(Blocks.TNT)) {
                         if (level.removeBlock(pos, false)) instantTnt.add(pos);
@@ -169,7 +186,40 @@ public final class VolumeReactions {
                 case HYDRO -> {
                     if (grief && fire && level.removeBlock(pos, false)) extinguish(level, pos, false);
                 }
+                case GEO -> {
+                    if (fire && grief && level.removeBlock(pos, false)) {
+                        extinguish(level, pos, false);
+                        if (!sweep.geoPlayed) {
+                            sweep.geoPlayed = true;
+                            level.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 0.5,
+                                    pos.getZ() + 0.5, 8, 0.25, 0.25, 0.25, 0.03);
+                        }
+                    }
+                }
+                case ANEMO -> {
+                    if (fire) {
+                        WorldElementFields.applyProbeToBlock(level, pos, attacker, ElementType.ANEMO, imbue.units());
+                        Vec3 at = Vec3.atCenterOf(pos);
+                        level.sendParticles(ParticleTypes.CLOUD, at.x, at.y, at.z, 5, 0.22, 0.18, 0.22, 0.04);
+                        level.sendParticles(ParticleTypes.SWEEP_ATTACK, at.x, at.y, at.z, 2, 0.15, 0.1, 0.15, 0);
+                    }
+                }
+                case DENDRO -> {
+                    if (state.getBlock() instanceof net.minecraft.world.level.block.CropBlock crop && grief) {
+                        crop.randomTick(state, level, pos, level.random);
+                        level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 0.6,
+                                pos.getZ() + 0.5, 2, 0.2, 0.2, 0.2, 0.01);
+                    }
+                }
                 case ELECTRO -> {
+                    if (state.getFluidState().is(Fluids.WATER)) {
+                        WorldElementFields.startElectroWaterZone(level, pos, attacker);
+                        Vec3 at = Vec3.atCenterOf(pos);
+                        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 10,
+                                0.35, 0.3, 0.35, 0.08);
+                        level.playSound(null, pos, SoundEvents.LIGHTNING_BOLT_IMPACT,
+                                SoundSource.PLAYERS, 0.25f, 1.7f);
+                    }
                     if (fire) {
                         if (grief) level.removeBlock(pos, false);
                         if (blast == null) blast = Vec3.atCenterOf(pos);

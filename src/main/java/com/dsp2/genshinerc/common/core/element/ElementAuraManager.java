@@ -1,4 +1,5 @@
 package com.dsp2.genshinerc.common.core.element;
+
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import com.dsp2.genshinerc.common.network.base.element.SyncAuraPacket;
@@ -10,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
+
 public final class ElementAuraManager {
     private static final float QUICKEN_DECAY = 0.08f / 20f;
     public static final class Aura {

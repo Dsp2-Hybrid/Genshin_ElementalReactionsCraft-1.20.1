@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.mixin.client.render;
 
 import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.FrozenSurface;
+import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.ShieldSurface;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.EntityModel;
@@ -21,11 +22,23 @@ public abstract class MixinVanillaFrozenSurface {
                                         float yaw, float partialTick, PoseStack renderPose, MultiBufferSource buffers,
                                         int packedLight) {
         model.renderToBuffer(pose, vertices, light, overlay, red, green, blue, alpha);
+
         float ice = FrozenSurface.alpha(entity, partialTick);
-        if (ice <= 0f) return;
-        float tint = FrozenSurface.tintWeight(entity, partialTick);
-        int iceLight = FrozenSurface.whiteFlash(entity, partialTick) ? 0x00F000F0 : light;
-        model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), iceLight, OverlayTexture.NO_OVERLAY,
-                0.98f - 0.63f * tint, 0.99f - 0.35f * tint, 1.0f, ice);
+        if (ice > 0f) {
+            float tint = FrozenSurface.tintWeight(entity, partialTick);
+            float flash = FrozenSurface.whiteFlashStrength(entity, partialTick);
+            float iceRed = 0.91f - 0.06f * tint;
+            float iceGreen = 0.965f - 0.035f * tint;
+            iceRed += (1.0f - iceRed) * flash;
+            iceGreen += (1.0f - iceGreen) * flash;
+            model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), light, OverlayTexture.NO_OVERLAY,
+                    iceRed, iceGreen, 1.0f, ice);
+        }
+
+        ShieldSurface.Overlay shield = ShieldSurface.sample(entity);
+        if (shield.alpha() > 0.001f) {
+            model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), light, OverlayTexture.NO_OVERLAY,
+                    shield.red(), shield.green(), shield.blue(), shield.alpha());
+        }
     }
 }

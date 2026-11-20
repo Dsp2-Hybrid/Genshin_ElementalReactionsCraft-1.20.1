@@ -21,6 +21,7 @@ public final class ReactionColors {
         if (r == Reaction.OVERLOAD) return new Ends("#FD375A", null);
         if (r == Reaction.ELECTRO_CHARGED) return new Ends(key("hydro"), key("electro"));
         if (r == Reaction.SHATTER) return new Ends(key("physical"), key("cryo"));
+        if (r == Reaction.FREEZE) return new Ends(key("hydro"), key("cryo"));
         if (r == Reaction.SWIRL || r == Reaction.CRYSTALLIZE) {
             ElementType base = r == Reaction.SWIRL ? ElementType.ANEMO : ElementType.GEO;
             ElementType partner = first != null && first != base ? first : second;

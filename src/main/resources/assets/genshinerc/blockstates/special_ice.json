@@ -1,6 +1,14 @@
 {
   "variants": {
-    "source=true": { "model": "genshinerc:block/special_ice" },
-    "source=false": { "model": "genshinerc:block/special_ice" }
+    "source=false,age=0": { "model": "genshinerc:block/special_ice" },
+    "source=false,age=1": { "model": "genshinerc:block/special_ice" },
+    "source=false,age=2": { "model": "genshinerc:block/special_ice" },
+    "source=false,age=3": { "model": "genshinerc:block/special_ice" },
+    "source=false,age=4": { "model": "genshinerc:block/special_ice" },
+    "source=true,age=0": { "model": "genshinerc:block/special_ice" },
+    "source=true,age=1": { "model": "genshinerc:block/special_ice" },
+    "source=true,age=2": { "model": "genshinerc:block/special_ice" },
+    "source=true,age=3": { "model": "genshinerc:block/special_ice" },
+    "source=true,age=4": { "model": "genshinerc:block/special_ice" }
   }
 }

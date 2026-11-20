@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.mixin.mods.gui.epicfight.fixguimodelbyef;
 
 import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.FrozenSurface;
+import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.ShieldSurface;
 
 import com.dsp2.genshinerc.patch.core.gui.render.GuiRenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -101,14 +102,28 @@ public abstract class MixinPatchedLivingEntityRenderer {
     private void genshinerc$iceSurface(LivingEntityRenderer<?, ?> renderer, LivingEntityPatch<?> patch,
                                       LivingEntity entity, OpenMatrix4f[] poses, MultiBufferSource buffer,
                                       PoseStack pose, int light, float partial, CallbackInfo ci) {
-        float alpha = FrozenSurface.alpha(entity);
-        if (alpha <= 0f) return;
+        float alpha = FrozenSurface.alpha(entity, partial);
+        ShieldSurface.Overlay shield = ShieldSurface.sample(entity);
+        if (alpha <= 0f && shield.alpha() <= 0.001f) return;
         PatchedEntityRenderer base = (PatchedEntityRenderer) (Object) this;
         SkinnedMesh mesh = (SkinnedMesh) base.getMeshProvider(patch).get();
         Armature armature = patch.getArmature();
-        float tint = FrozenSurface.tintWeight(entity, partial);
-        mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light,
-                0.98f - 0.63f * tint, 0.99f - 0.35f * tint, 1.0f, alpha,
-                OverlayTexture.NO_OVERLAY, armature, poses);
+
+        if (alpha > 0f) {
+            float tint = FrozenSurface.tintWeight(entity, partial);
+            float flash = FrozenSurface.whiteFlashStrength(entity, partial);
+            float red = 0.91f - 0.06f * tint;
+            float green = 0.965f - 0.035f * tint;
+            red += (1.0f - red) * flash;
+            green += (1.0f - green) * flash;
+            mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light,
+                    red, green, 1.0f, alpha, OverlayTexture.NO_OVERLAY, armature, poses);
+        }
+
+        if (shield.alpha() > 0.001f) {
+            mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light,
+                    shield.red(), shield.green(), shield.blue(), shield.alpha(),
+                    OverlayTexture.NO_OVERLAY, armature, poses);
+        }
     }
 }

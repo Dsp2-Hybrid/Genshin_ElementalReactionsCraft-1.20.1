@@ -6,6 +6,10 @@ import com.dsp2.genshinerc.common.core.combat.epicfight.EfCombatBridge;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -116,6 +120,14 @@ public final class ZhenMieManager {
     }
 
     private static void onClash(LivingEntity entity, State s, ClashResult result) {
+        if (entity.level() instanceof ServerLevel level) {
+            var center = entity.getBoundingBox().getCenter();
+            level.sendParticles(ParticleTypes.CRIT, center.x, center.y, center.z, 18, 0.35, 0.45, 0.35, 0.12);
+            level.sendParticles(ParticleTypes.ELECTRIC_SPARK, center.x, center.y, center.z, 14, 0.42, 0.48, 0.42, 0.10);
+            level.sendParticles(ParticleTypes.FLASH, center.x, center.y, center.z, 1, 0.15, 0.15, 0.15, 0);
+            level.playSound(null, entity.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.85f, 0.75f);
+            level.playSound(null, entity.blockPosition(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.45f, 1.2f);
+        }
         long now = entity.level().getGameTime();
         recoverResistance(s, now);
         int ticks = ZhenMieRules.staggerTicks(result, s.recentClashes);

@@ -57,7 +57,9 @@ public final class NaturalExposure {
         boolean aquatic = e instanceof WaterAnimal || e instanceof Drowned || e instanceof Guardian;
 
         if (e.isInWater()) {
-            if (!aquatic) {
+            if (aquatic) {
+                apply(e, ElementType.HYDRO, strong, ServerConfig.WATER_SECONDS.get(), STEP);
+            } else {
                 if (isSwamp(level, feet)) apply(e, ElementType.DENDRO, weak, ServerConfig.SWAMP_WATER_SECONDS.get(), STEP);
                 else apply(e, ElementType.HYDRO, strong, ServerConfig.WATER_SECONDS.get(), STEP);
             }

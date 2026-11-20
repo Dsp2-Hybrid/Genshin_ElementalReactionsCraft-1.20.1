@@ -13,9 +13,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public final class ReactionTextTracker {
+    private static final Map<Integer, Long> LAST_FREEZE_TEXT = new HashMap<>();
     private ReactionTextTracker() {}
 
     public static void add(int entityId, Reaction reaction, @Nullable ElementType first, @Nullable ElementType second) {
@@ -25,9 +28,21 @@ public final class ReactionTextTracker {
 
         ElementReactionDim.mark(entityId);
 
+        if (reaction == Reaction.FREEZE) {
+            long now = System.nanoTime();
+            LAST_FREEZE_TEXT.entrySet().removeIf(entry -> now - entry.getValue() > 2_000_000_000L);
+            Long previous = LAST_FREEZE_TEXT.get(entityId);
+            if (previous != null && now - previous < 750_000_000L) return;
+            LAST_FREEZE_TEXT.put(entityId, now);
+        }
+
         String name = Component.translatable("genshinerc.reaction." + reaction.name().toLowerCase(Locale.ROOT)).getString();
         
-        ReactionColors.Ends e = ReactionColors.ends(reaction, first, second);
+        ReactionColors.Ends e = reaction == Reaction.FREEZE
+                ? new ReactionColors.Ends(
+                        com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig.get().colorHydro,
+                        com.dsp2.genshinerc.client.render.world.component.damageindicator.config.DamageIndicatorConfig.get().colorCryo)
+                : ReactionColors.ends(reaction, first, second);
         
         DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
         if (!cfg.reactionTextEnabled) return;
