@@ -240,10 +240,18 @@ public class TextParticle {
                 int rgb;
                 try { rgb = Integer.parseInt(cfg.screenOutlineColor.replace("#", "").trim(), 16) & 0xFFFFFF; }
                 catch (RuntimeException ignored) { rgb = 0; }
+                float luma = (0.2126f * ((rgb >>> 16) & 255) + 0.7152f * ((rgb >>> 8) & 255)
+                        + 0.0722f * (rgb & 255)) / 255f;
+                int first = cfg.screenOutlineMultiply ? shade(rgb1, luma) : rgb;
+                int second = cfg.screenOutlineMultiply ? shade(rgb2, luma) : rgb;
                 for (int i = 0; i < 4; i++) {
-                    font.drawInBatch(text, left + (i < 2 ? i * 2 - 1 : 0),
-                            top + (i >= 2 ? (i - 2) * 2 - 1 : 0), (outlineAlpha << 24) | rgb,
-                            false, matrix, buffers, mode, 0, 15728880);
+                    float ox = left + (i < 2 ? i * 2 - 1 : 0);
+                    float oy = top + (i >= 2 ? (i - 2) * 2 - 1 : 0);
+                    MultiBufferSource outline = first == second ? buffers : new GradientTextBuffer(
+                            buffers, matrix, ox, ox + width, oy, oy + font.lineHeight,
+                            first, second, outlineAlpha, gradientDir);
+                    font.drawInBatch(text, ox, oy, first == second ? (outlineAlpha << 24) | first : 0xFFFFFFFF,
+                            false, matrix, outline, mode, 0, 15728880);
                 }
             }
             MultiBufferSource fill = color2 == null ? buffers : new GradientTextBuffer(

@@ -35,7 +35,38 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = "genshinerc", value = net.minecraftforge.api.distmarker.Dist.CLIENT)
 public class CustomHealthBar extends EntityUI {
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void drawCreeperBars(net.minecraftforge.client.event.RenderLevelStageEvent event) {
+        if (event.getStage() != net.minecraftforge.client.event.RenderLevelStageEvent.Stage.AFTER_ENTITIES) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null || mc.options.hideGui || !BarConfig.get().enabled) return;
+        CustomHealthBar bar = null;
+        for (Object ui : EntityUI.ENTITY_UI_LIST) {
+            if (ui instanceof CustomHealthBar custom) {
+                bar = custom;
+                break;
+            }
+        }
+        if (bar == null) return;
+        var camera = event.getCamera().getPosition();
+        float partial = event.getPartialTick();
+        PoseStack pose = event.getPoseStack();
+        for (var entity : mc.level.entitiesForRendering()) {
+            if (!(entity instanceof net.minecraft.world.entity.monster.Creeper creeper)
+                    || !event.getFrustum().isVisible(creeper.getBoundingBox().inflate(1.0))
+                    || !bar.shouldDraw(creeper, null, null, partial)) continue;
+            var at = creeper.getPosition(partial).subtract(camera);
+            pose.pushPose();
+            try {
+                pose.translate(at.x, at.y, at.z);
+                    bar.submitDraw(creeper, pose, mc.renderBuffers().bufferSource(), partial);
+            } finally {
+                pose.popPose();
+            }
+        }
+    }
 
     private static final ResourceLocation BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar.png");
     private static final ResourceLocation FRAME_TEXTURE = ResourceLocation.fromNamespaceAndPath("genshinerc", "textures/gui/hp_bar2.png");
@@ -189,10 +220,16 @@ public class CustomHealthBar extends EntityUI {
 
     @Override
     public void draw(LivingEntity entity, LivingEntityPatch<?> entitypatch, LocalPlayerPatch playerpatch, PoseStack poseStack, MultiBufferSource buffers, float partialTicks) {
+        if (entity instanceof net.minecraft.world.entity.monster.Creeper
+                && Minecraft.getInstance().screen == null) return;
+        submitDraw(entity, poseStack, buffers, partialTicks);
+    }
+
+    private void submitDraw(LivingEntity entity, PoseStack poseStack, MultiBufferSource buffers, float partialTicks) {
 
         if (com.dsp2.genshinerc.client.render.hud.gui.rpg.render.DiamondModelView.isRendering()) return;
 
-        if (Minecraft.getInstance().screen != null) {
+        if (Minecraft.getInstance().screen != null && !(entity instanceof net.minecraft.world.entity.monster.Creeper)) {
             drawNow(entity, poseStack, buffers, partialTicks);
             return;
         }

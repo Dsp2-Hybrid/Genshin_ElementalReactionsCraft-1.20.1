@@ -64,17 +64,18 @@ public final class OverloadImpulse {
             double resistance = Mth.clamp(t.getAttributeValue(
                     net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE), 0.0, 1.0);
             double d = t.getBoundingBox().getCenter().distanceTo(center);
-            double falloff = 1.0 - Math.pow(Mth.clamp(d / radius, 0.0, 1.0), 1.5);
+            double falloff = 1.0 - 0.45 * Math.pow(Mth.clamp(d / radius, 0.0, 1.0), 1.6);
             double up = (ServerConfig.OVERLOAD_UP_BASE.get() + ServerConfig.OVERLOAD_UP_SCALE.get() * falloff) * emFactor;
             double side = (ServerConfig.OVERLOAD_SIDE_BASE.get() + ServerConfig.OVERLOAD_SIDE_SCALE.get() * falloff) * emFactor;
-            Vec3 push = (dir != null ? dir : randomDir(t)).multiply(side, 0.0, side).add(0.0, up, 0.0);
-            COOLDOWN.put(t, now);
             double movement = 1.0 - resistance;
+            double launchY = up > 0.0 ? Math.max(up * movement * 1.12, 0.22 + 0.16 * movement) : 0.0;
+            Vec3 push = (dir != null ? dir : randomDir(t)).scale(side * movement * 1.12).add(0.0, launchY, 0.0);
+            COOLDOWN.put(t, now);
             if (t instanceof net.minecraft.world.entity.animal.IronGolem
-                    || resistance >= 0.9 || push.y * movement < 0.10 || t.isInWater() || t.isInLava()) {
+                    || resistance >= 0.9 || launchY <= 0.0 || t.isInWater() || t.isInLava()) {
                 ZhenMieManager.fillMie(t);
             } else {
-                QUEUED.put(t, push.scale(movement));
+                QUEUED.put(t, push);
             }
         }
     }
@@ -82,7 +83,8 @@ public final class OverloadImpulse {
     public static void tick() {
         QUEUED.forEach((target, push) -> {
             if (!target.isAlive() || target.isRemoved()) return;
-            target.setDeltaMovement(target.getDeltaMovement().add(push));
+            Vec3 velocity = target.getDeltaMovement();
+            target.setDeltaMovement(velocity.x + push.x, Math.max(0.0, velocity.y) + push.y, velocity.z + push.z);
             target.hurtMarked = true;
             target.hasImpulse = true;
             AIRBORNE.put(target, new Pending(target.level().getGameTime(), !target.onGround()));
@@ -99,7 +101,7 @@ public final class OverloadImpulse {
                 if (!e.getValue().leftGround()) e.setValue(new Pending(e.getValue().launchTick(), true));
                 return false;
             }
-            if (!e.getValue().leftGround() && air < 4) return false;
+            if (!e.getValue().leftGround()) return air >= 6;
             ZhenMieManager.fillMie(t);
             if (t.level() instanceof ServerLevel sl)
                 sl.sendParticles(ParticleTypes.EXPLOSION, t.getX(), t.getY(), t.getZ(), 1, 0, 0, 0, 0);
@@ -114,7 +116,11 @@ public final class OverloadImpulse {
         if (attacker == null) return null;
         Vec3 v = center.subtract(attacker.position());
         v = new Vec3(v.x, 0.0, v.z);
-        return v.lengthSqr() < 1.0e-4 ? null : v.normalize();
+        if (v.lengthSqr() < 1.0e-4) {
+            Vec3 look = attacker.getLookAngle();
+            v = new Vec3(look.x, 0.0, look.z);
+        }
+        return v.lengthSqr() < 1.0e-4 ? null : v.normalize().scale(-1.0);
     }
 
     private static Vec3 randomDir(LivingEntity t) {

@@ -56,7 +56,8 @@ public final class ScreenDamage {
     @SubscribeEvent public static void capture(RenderLevelStageEvent e) {
         if (e.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES || !enabled()) return;
         syncLevel();
-        frame = POPUPS.isEmpty() ? null : new Frame(new Matrix4f(e.getProjectionMatrix()).mul(e.getPoseStack().last().pose()), Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), e.getPartialTick());
+        frame = POPUPS.isEmpty() ? null : new Frame(new Matrix4f(e.getProjectionMatrix()).mul(e.getPoseStack().last().pose()),
+                Minecraft.getInstance().gameRenderer.getMainCamera().getPosition(), e.getPartialTick());
     }
     @SubscribeEvent public static void draw(RenderGuiEvent.Post e) {
         Frame f = frame; frame = null;

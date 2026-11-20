@@ -9,11 +9,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+@SuppressWarnings({"deprecation", "removal"})
 @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT)
 public final class ElementCryoVisuals {
     private static final ResourceLocation FROST = new ResourceLocation("minecraft", "textures/misc/powder_snow_outline.png");
@@ -29,6 +31,15 @@ public final class ElementCryoVisuals {
                 || mc.level.getGameTime() % 3L != 0L) return;
         var random = mc.level.random;
         for (Entity entity : mc.level.entitiesForRendering()) {
+            if (entity instanceof net.minecraft.world.entity.monster.Creeper creeper
+                    && creeper.isAlive() && creeper.isPowered() && !creeper.isInvisible()
+                    && mc.player != null && mc.player.distanceToSqr(creeper) <= 576.0) {
+                double angle = random.nextDouble() * Math.PI * 2.0;
+                double radius = creeper.getBbWidth() * 0.63;
+                mc.level.addParticle(ParticleTypes.ELECTRIC_SPARK, creeper.getX() + Math.cos(angle) * radius,
+                        creeper.getY() + (0.12 + random.nextDouble() * 0.78) * creeper.getBbHeight(),
+                        creeper.getZ() + Math.sin(angle) * radius, 0.0, 0.025, 0.0);
+            }
             if (!(entity instanceof LivingEntity living) || !FrozenSurface.frozen(living) || living.isInvisible()
                     || (living == mc.getCameraEntity() && mc.options.getCameraType().isFirstPerson())) continue;
             if (mc.player == null || mc.player.distanceToSqr(living) > 1024.0) continue;
@@ -42,7 +53,8 @@ public final class ElementCryoVisuals {
     }
 
     @SubscribeEvent
-    public static void onGui(RenderGuiEvent.Post event) {
+    public static void onGui(RenderGuiOverlayEvent.Pre event) {
+        if (!event.getOverlay().id().equals(VanillaGuiOverlay.FROSTBITE.id())) return;
         Minecraft mc = Minecraft.getInstance();
         VFXConfig config = VFXConfig.get();
         if (mc.player == null || mc.getCameraEntity() != mc.player
@@ -56,18 +68,18 @@ public final class ElementCryoVisuals {
         lastFrame = now;
         boolean frozen = FrozenSurface.frozen(mc.player);
         float gauge = FrozenSurface.gaugeRatio(mc.player);
-        float target = frozen ? (float) (Math.max(0.0, Math.min(0.65, config.frostMaxAlpha)) * Math.sqrt(gauge)) : 0f;
-        float vanilla = mc.options.getCameraType().isFirstPerson() ? mc.player.getPercentFrozen() : 0f;
-        target *= 1f - vanilla;
-        double speed = frozen ? config.frostEaseInSpeed : config.frostEaseOutSpeed;
+        float target = frozen ? (float) (Math.max(0.0, Math.min(1.0, config.frostMaxAlpha)) * Math.pow(gauge, 0.17)) : 0f;
+        double speed = target > alpha ? config.frostEaseInSpeed * 1.7 : config.frostEaseOutSpeed * 0.8;
         alpha += (target - alpha) * (float) (1.0 - Math.exp(-dt * Math.max(0.1, speed)));
         if (alpha < 0.003f) return;
+        float combined = Math.min(1f, alpha + mc.player.getPercentFrozen());
+        event.setCanceled(true);
         var graphics = event.getGuiGraphics();
         int width = graphics.guiWidth();
         int height = graphics.guiHeight();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
+        RenderSystem.setShaderColor(1f, 1f, 1f, combined);
         try {
             graphics.blit(FROST, 0, 0, width, height, 0f, 0f, 256, 256, 256, 256);
         } finally {

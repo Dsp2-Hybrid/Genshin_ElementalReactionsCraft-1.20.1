@@ -1,6 +1,5 @@
 package com.dsp2.genshinerc.common.core.element;
 
-import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.reaction.ReactionDamage;
 import com.dsp2.genshinerc.common.registry.ModAttributes;
 import net.minecraft.core.registries.Registries;
@@ -19,6 +18,7 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.UUID;
 
+@SuppressWarnings({"deprecation", "removal"})
 @Mod.EventBusSubscriber(modid = "genshinerc")
 public final class FrozenControl {
     public static final float MAX_GAUGE = 8f;

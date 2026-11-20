@@ -51,6 +51,17 @@ public final class ElementShellRenderer {
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent event) {
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
+            Minecraft client = Minecraft.getInstance();
+            if (client.player != null) {
+                Shell own = SHELLS.get(client.player.getId());
+                if (own != null && (client.options.getCameraType().isFirstPerson()
+                        || selfOccluded(client.player, event.getCamera().getPosition(), event.getPartialTick()))) {
+                    own.setVisible(false);
+                }
+            }
+            return;
+        }
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
         VFXConfig cfg = VFXConfig.get();
         if (!cfg.elementShellEnabled) return;
@@ -74,7 +85,8 @@ public final class ElementShellRenderer {
             if (entity.distanceToSqr(cam) > MAX_DISTANCE_SQR) continue;
             if (entity == mc.player && mc.options.getCameraType().isFirstPerson()) continue;
             
-            if (!EffekVisibilityManager.isVisible(entity)) {
+            if ((entity == mc.player && selfOccluded(living, cam, partialTick))
+                    || !EffekVisibilityManager.isVisible(entity)) {
                 Shell shell = SHELLS.get(entity.getId());
                 if (shell != null) {
                     shell.setVisible(false);
@@ -126,7 +138,42 @@ public final class ElementShellRenderer {
         AaapLightRegistry.clear();
     }
 
+    private static boolean selfOccluded(LivingEntity player, Vec3 camera, float partial) {
+        if (Minecraft.getInstance().getCameraEntity() != player || player.isSpectator()) return false;
+        Vec3 now = player.getPosition(partial);
+        var ownBox = player.getBoundingBox().move(now.subtract(player.position()));
+        var bounds = new net.minecraft.world.phys.AABB(camera, ownBox.getCenter()).minmax(ownBox).inflate(0.5);
+        var blockers = player.level().getEntitiesOfClass(LivingEntity.class, bounds,
+                e -> e != player && e.isAlive() && !e.isSpectator() && !e.isInvisibleTo((net.minecraft.world.entity.player.Player) player)
+                        && !player.isPassengerOfSameVehicle(e));
+        double offset = player.getBbWidth() * 0.31;
+        Vec3 horizontal = ownBox.getCenter().subtract(camera);
+        Vec3 side = new Vec3(-horizontal.z, 0.0, horizontal.x).normalize().scale(offset);
+        for (double height : new double[]{0.27, 0.52, 0.76}) {
+            for (int column = -1; column <= 1; column++) {
+                Vec3 point = now.add(0.0, player.getBbHeight() * height, 0.0).add(side.scale(column));
+                boolean blocked = player.level().clip(new net.minecraft.world.level.ClipContext(camera, point,
+                        net.minecraft.world.level.ClipContext.Block.VISUAL,
+                        net.minecraft.world.level.ClipContext.Fluid.NONE, player)).getType()
+                        == net.minecraft.world.phys.HitResult.Type.BLOCK;
+                if (!blocked) {
+                    for (LivingEntity blocker : blockers) {
+                        var box = blocker.getBoundingBox().move(blocker.getPosition(partial).subtract(blocker.position()));
+                        if (box.contains(camera) || box.clip(camera, point).isPresent()) {
+                            blocked = true;
+                            break;
+                        }
+                    }
+                }
+                if (!blocked) return false;
+            }
+        }
+        return true;
+    }
+
     private static final class Shell {
+        private boolean visible = true;
+        private boolean stopped;
         private final ResourceLocation effectId;
         private ParticleEmitter emitter;
         private boolean requested;
@@ -142,6 +189,7 @@ public final class ElementShellRenderer {
         Shell(ResourceLocation effectId) { this.effectId = effectId; }
 
         void setVisible(boolean visible) {
+            this.visible = visible;
             if (emitter != null && emitter.isVisible() != visible) {
                 if (!visible) AaapLightRegistry.remove(emitter);
                 emitter.setVisibility(visible);
@@ -197,15 +245,18 @@ public final class ElementShellRenderer {
         }
 
         private void attach(EffectDefinition effek, LivingEntity entity, VFXConfig cfg) {
+            if (stopped || entity.isRemoved()) return;
             ParticleEmitter em = effek.play();
             if (em == ParticleEmitter.dummy(em.type)) return;
             float s = targetSize(entity, cfg);
             em.setScale(s, s, s);
             ElementEmitterAlpha.put(em, 0f);
+            em.setVisibility(visible);
             this.emitter = em;
         }
 
         void stop() {
+            stopped = true;
             if (emitter != null) {
                 AaapLightRegistry.remove(emitter);
                 if (emitter.exists()) emitter.stop();

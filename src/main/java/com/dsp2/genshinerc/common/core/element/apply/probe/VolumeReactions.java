@@ -92,6 +92,27 @@ public final class VolumeReactions {
         affectBlocks(level, attacker, imbue, sample, state, canGrief(attacker));
     }
 
+    @SubscribeEvent
+    public static void onEpicFightContact(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (!(event.getEntity() instanceof Creeper creeper) || !(creeper.level() instanceof ServerLevel level)
+                || !(event.getSource() instanceof yesman.epicfight.world.damagesource.EpicFightDamageSource source)
+                || !(source.getEntity() instanceof LivingEntity attacker) || attacker == creeper
+                || source.getDirectEntity() != attacker || FrozenControl.locked(attacker)
+                || source.getAnimation() == null
+                || !(source.getAnimation().get() instanceof yesman.epicfight.api.animation.types.AttackAnimation)) return;
+        ElementImbue.State imbue = ElementImbue.get(attacker);
+        if (imbue != null && imbue.element() == ElementType.ELECTRO
+                && Float.isFinite(imbue.units()) && imbue.units() > 0f) powerCreeper(level, creeper);
+    }
+
+    private static void powerCreeper(ServerLevel level, Creeper creeper) {
+        if (!creeper.isAlive() || creeper.isPowered()) return;
+        creeper.getEntityData().set(CreeperPoweredAccessor.genshinerc$poweredData(), true);
+        var center = creeper.getBoundingBox().getCenter();
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, center.x, center.y, center.z,
+                20, 0.35, 0.45, 0.35, 0.11);
+    }
+
     private static void chargeCreepers(ServerLevel level, LivingEntity attacker, SwingVolumeSampler.SwingSample sample) {
         var bounds = sample.volumes().get(0).bounds();
         for (int i = 1; i < sample.volumes().size(); i++) {
@@ -102,7 +123,7 @@ public final class VolumeReactions {
             var hitbox = creeper.getBoundingBox();
             for (SwingVolume volume : sample.volumes()) {
                 if (!volume.bounds().intersects(hitbox) || !volume.intersects(hitbox)) continue;
-                creeper.getEntityData().set(CreeperPoweredAccessor.genshinerc$poweredData(), true);
+                powerCreeper(level, creeper);
                 break;
             }
         }

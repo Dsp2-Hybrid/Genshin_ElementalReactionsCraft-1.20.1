@@ -21,10 +21,11 @@ public class DamageIndicatorConfig {
 
     public transient boolean serverEnabled = true;
     public transient int serverMaxDistance = 35;
-    @SerialEntry public boolean screenDamageEnabled = false;
+    @SerialEntry public boolean screenDamageEnabled = true;
     @SerialEntry public double screenTextScale = 1.25;
     @SerialEntry public boolean screenOutlineEnabled = true;
-    @SerialEntry public double screenOutlineAlpha = 1.0;
+    @SerialEntry public boolean screenOutlineMultiply = false;
+    @SerialEntry public double screenOutlineAlpha = 0.75;
     @SerialEntry public String screenOutlineColor = "#000000";
     @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
@@ -213,10 +214,11 @@ public class DamageIndicatorConfig {
         return OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.indicator"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
-                .option(boolOpt(false, "screen_damage_enabled", false, () -> c.screenDamageEnabled, v -> c.screenDamageEnabled = v))
+                .option(boolOpt(false, "screen_damage_enabled", true, () -> c.screenDamageEnabled, v -> c.screenDamageEnabled = v))
                 .option(dblOpt(false, "screen_text_scale", 1.25, () -> c.screenTextScale, v -> c.screenTextScale = v, 0.25, 4.00))
                 .option(boolOpt(false, "screen_outline_enabled", true, () -> c.screenOutlineEnabled, v -> c.screenOutlineEnabled = v))
-                .option(dblOpt(false, "screen_outline_alpha", 1.00, () -> c.screenOutlineAlpha, v -> c.screenOutlineAlpha = v, 0.00, 1.00))
+                .option(boolOpt(false, "screen_outline_multiply", false, () -> c.screenOutlineMultiply, v -> c.screenOutlineMultiply = v))
+                .option(dblOpt(false, "screen_outline_alpha", 0.75, () -> c.screenOutlineAlpha, v -> c.screenOutlineAlpha = v, 0.00, 1.00))
                 .option(colorOpt(false, "screen_outline_color", Color.BLACK, () -> toAwt(c.screenOutlineColor), v -> c.screenOutlineColor = fromAwt(v)))
                 .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))

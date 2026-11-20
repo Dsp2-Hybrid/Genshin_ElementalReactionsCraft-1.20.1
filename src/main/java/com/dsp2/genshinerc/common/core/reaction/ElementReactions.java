@@ -26,6 +26,16 @@ import java.util.UUID;
 
 public final class ElementReactions {
     private static final float EPS = 1.0e-4f;
+    private static final java.util.Map<LivingEntity, Long> EMBER_REFILL_AT = new java.util.WeakHashMap<>();
+
+    private static void consumeEmbers(LivingEntity entity, float amount) {
+        int remaining = entity.getRemainingFireTicks();
+        if (remaining <= 0) return;
+        int loss = Math.min(Math.max(0, remaining / 3), Math.round(18f * amount));
+        if (loss > 0) entity.setRemainingFireTicks(remaining - loss);
+        long now = entity.level().getGameTime();
+        EMBER_REFILL_AT.put(entity, now + Math.min(40, 16 + Math.round(12f * amount)));
+    }
     public static float calcAmplify(ElementType trigger, ElementType aura) {
         if (trigger == ElementType.PYRO && aura == ElementType.HYDRO) return 1.5f;
         if (trigger == ElementType.HYDRO && aura == ElementType.PYRO) return 2.0f;
@@ -67,6 +77,13 @@ public final class ElementReactions {
     }
 
     public static float natural(LivingEntity target, ElementType type, float units) {
+        if (type == ElementType.PYRO && target.isOnFire() && !target.isInLava()
+                && !target.level().getBlockState(target.blockPosition()).is(net.minecraft.tags.BlockTags.FIRE)) {
+            long now = target.level().getGameTime();
+            long resume = EMBER_REFILL_AT.getOrDefault(target, Long.MIN_VALUE);
+            if (now < resume) return 0f;
+            EMBER_REFILL_AT.remove(target);
+        }
         return run(target, null, type, units, true, false).remaining();
     }
 
@@ -109,6 +126,7 @@ public final class ElementReactions {
                     triggerUsed = used / ratio;
                     gauge = Math.max(0f, gauge - triggerUsed);
                     consumedAny = true;
+                    if (reaction == Reaction.OVERLOAD && aura == ElementType.PYRO) consumeEmbers(target, used);
                 } else if (!before.contains(aura)) continue;
 
                 boolean first = result.add(reaction);
