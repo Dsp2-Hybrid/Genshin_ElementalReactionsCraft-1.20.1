@@ -106,7 +106,9 @@ public abstract class MixinPatchedLivingEntityRenderer {
         PatchedEntityRenderer base = (PatchedEntityRenderer) (Object) this;
         SkinnedMesh mesh = (SkinnedMesh) base.getMeshProvider(patch).get();
         Armature armature = patch.getArmature();
-        mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light, 0.66f, 0.86f, 1.0f, alpha,
+        float tint = FrozenSurface.tintWeight(entity, partial);
+        mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light,
+                0.98f - 0.63f * tint, 0.99f - 0.35f * tint, 1.0f, alpha,
                 OverlayTexture.NO_OVERLAY, armature, poses);
     }
 }

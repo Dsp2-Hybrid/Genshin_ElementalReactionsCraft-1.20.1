@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.mixin.mods.shaders.guhao;
 
 import com.dsp2.genshinerc.client.render.vfx.aaapshader.ShaderPackAaaPostProcess;
+import com.dsp2.genshinerc.client.render.vfx.manager.AaaEntityOcclusion;
 import com.guhao.vix.client.aaaeffect.AAAEffectPostProcessDispatcher;
 import com.mojang.logging.LogUtils;
 import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
@@ -29,7 +30,19 @@ public abstract class MixinAAAEffectPostProcessDispatcher {
 
     @Inject(method = "end", at = @At("HEAD"))
     private static void genshinerc$end(CallbackInfo ci) {
-        ShaderPackAaaPostProcess.end();
+        try {
+            AaaEntityOcclusion.afterDraw();
+        } finally {
+            ShaderPackAaaPostProcess.end();
+        }
+    }
+
+    @Inject(
+            method = "draw(Lmod/chloeprime/aaaparticles/api/client/effekseer/EffekseerManager;Ljava/util/List;Lcom/guhao/vix/client/aaaeffect/AAAEffectPostProcessDispatcher$DrawOperation;)V",
+            at = @At("RETURN")
+    )
+    private static void genshinerc$restoreVisibility(EffekseerManager manager, List active, @Coerce Object original, CallbackInfo ci) {
+        AaaEntityOcclusion.afterDraw();
     }
 
     @Inject(
@@ -39,10 +52,13 @@ public abstract class MixinAAAEffectPostProcessDispatcher {
     )
     private static void genshinerc$draw(EffekseerManager manager, List active, @Coerce Object original, CallbackInfo ci) {
         try {
+            AaaEntityOcclusion.beforeDraw(active);
             if (ShaderPackAaaPostProcess.tryDraw(manager, (List<ParticleEmitter>) active)) {
+                AaaEntityOcclusion.afterDraw();
                 ci.cancel();
             }
         } catch (Throwable t) {
+            AaaEntityOcclusion.afterDraw();
             LogUtils.getLogger().error("shader-pack AAA post-process crashed; falling back to VIX default", t);
         }
     }

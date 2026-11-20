@@ -35,19 +35,25 @@ public final class ShieldManager {
     }
 
     public static AbsorbResult absorbElemental(LivingEntity entity, float damage, DamageKind kind) {
+        return absorbElemental(entity, damage, kind, 1f);
+    }
+
+    public static AbsorbResult absorbElemental(LivingEntity entity, float damage, DamageKind kind, float rockCost) {
         List<ShieldInstance> list = SHIELDS.get(entity);
         if (list == null || list.isEmpty() || damage <= 0f) return AbsorbResult.NONE;
         
         ShieldInstance best = null;
         for (ShieldInstance s : list) {
-            if (best == null || s.amount() > best.amount()) {
+            boolean rock = rockCost > 1f && s.element() == ElementType.GEO;
+            boolean bestRock = best != null && rockCost > 1f && best.element() == ElementType.GEO;
+            if (best == null || (rock != bestRock ? rock : s.amount() > best.amount())) {
                 best = s;
             }
         }
         if (best == null) return AbsorbResult.NONE;
         
         boolean sameElement = best.kind() == ShieldKind.ELEMENTAL && best.element() != null && DamageKind.fromElement(best.element()) == kind;
-        float costPerDamage = sameElement ? 0.4f : 1.0f;
+        float costPerDamage = (sameElement ? 0.4f : 1f) * (best.element() == ElementType.GEO ? rockCost : 1f);
         float available = best.amount();
         float needed = damage * costPerDamage;
         float blocked;

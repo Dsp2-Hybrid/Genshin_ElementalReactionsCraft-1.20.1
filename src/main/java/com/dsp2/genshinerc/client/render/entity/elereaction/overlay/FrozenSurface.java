@@ -34,13 +34,13 @@ public final class FrozenSurface {
 
     public static float tintWeight(LivingEntity entity, float partialTick) {
         float ratio = gaugeRatio(entity);
-        return net.minecraft.util.Mth.clamp((float) Math.pow(ratio, 0.32) - 0.29f * pulse(ratio), 0f, 1f);
-    }
-
-    private static float pulse(float ratio) {
-        if (ratio >= 0.5f || ratio <= 0f) return 0f;
-        double progress = 1.0 - Math.sqrt(2.0 * ratio);
-        return (1f - 2f * ratio) * (0.5f + 0.5f * (float) Math.sin(progress * Math.PI * 6.0));
+        float low = 1f - net.minecraft.util.Mth.clamp(2f * ratio, 0f, 1f);
+        double seconds = (entity.tickCount + (double) partialTick) / 20.0;
+        double slow = 0.5 + 0.5 * Math.sin(seconds * Math.PI * 4.0);
+        double fast = 0.5 + 0.5 * Math.sin(seconds * Math.PI * 6.6);
+        double wave = slow + (fast - slow) * low;
+        return net.minecraft.util.Mth.clamp(
+                (float) (0.65 + 0.35 * Math.pow(ratio, 0.22) - 0.66 * Math.sqrt(low) * wave), 0f, 1f);
     }
 
     public static float alpha(LivingEntity entity) {
@@ -49,10 +49,8 @@ public final class FrozenSurface {
         if (!cfg.cryoTintEnabled || GuiRenderContext.isInGui() || entity.isInvisible() || entity.isSpectator()
                 || (entity == mc.getCameraEntity() && mc.options.getCameraType().isFirstPerson()) || !frozen(entity)) return 0f;
         float ratio = gaugeRatio(entity);
-        double base = Math.max(0.0, Math.min(0.85, cfg.cryoTintAlpha * 1.32));
-        double strength = 0.68 + 0.32 * Math.pow(ratio, 0.28);
-        return (float) (base * strength * (1.0 - 0.27 * pulse(ratio))
-                * Math.min(1.0, Math.sqrt(ratio / 0.0125)));
+        float base = net.minecraft.util.Mth.clamp(cfg.cryoTintAlpha, 0f, 1f);
+        return (float) Math.min(0.92, base * (1.0 + 0.95 * Math.pow(ratio, 0.24)));
     }
 
     private static final class SurfaceType extends RenderType {

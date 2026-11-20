@@ -17,6 +17,8 @@
   ],
   "client": [
     "client.render.MixinVanillaFrozenSurface",
+    "client.render.FrozenCameraAccessor",
+    "client.render.vfx.MixinAaaEmitterPosition",
     "mods.gui.epicfight.EntityRenderDispatcherMixin",
     "mods.gui.libs.yacl.YACLScreenActionMixin",
     "mods.gui.epicfight.fixguimodelbyef.MixinScreen",

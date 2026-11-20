@@ -64,11 +64,11 @@ public final class OverloadImpulse {
             double resistance = Mth.clamp(t.getAttributeValue(
                     net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE), 0.0, 1.0);
             double d = t.getBoundingBox().getCenter().distanceTo(center);
-            double falloff = 1.0 - 0.45 * Math.pow(Mth.clamp(d / radius, 0.0, 1.0), 1.6);
-            double up = (ServerConfig.OVERLOAD_UP_BASE.get() + ServerConfig.OVERLOAD_UP_SCALE.get() * falloff) * emFactor;
-            double side = (ServerConfig.OVERLOAD_SIDE_BASE.get() + ServerConfig.OVERLOAD_SIDE_SCALE.get() * falloff) * emFactor;
+            double falloff = 1.0 - 0.26 * Math.pow(Mth.clamp(d / radius, 0.0, 1.0), 1.6);
+            double up = (ServerConfig.OVERLOAD_UP_BASE.get() * 1.25 + ServerConfig.OVERLOAD_UP_SCALE.get() * falloff) * emFactor;
+            double side = (ServerConfig.OVERLOAD_SIDE_BASE.get() * 1.35 + ServerConfig.OVERLOAD_SIDE_SCALE.get() * falloff) * emFactor;
             double movement = 1.0 - resistance;
-            double launchY = up > 0.0 ? Math.max(up * movement * 1.12, 0.22 + 0.16 * movement) : 0.0;
+            double launchY = up > 0.0 ? Math.max(up * movement * 1.12, 0.25 + 0.17 * movement) : 0.0;
             Vec3 push = (dir != null ? dir : randomDir(t)).scale(side * movement * 1.12).add(0.0, launchY, 0.0);
             COOLDOWN.put(t, now);
             if (t instanceof net.minecraft.world.entity.animal.IronGolem

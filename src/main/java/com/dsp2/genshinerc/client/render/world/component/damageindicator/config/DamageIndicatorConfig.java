@@ -24,9 +24,9 @@ public class DamageIndicatorConfig {
     @SerialEntry public boolean screenDamageEnabled = true;
     @SerialEntry public double screenTextScale = 1.25;
     @SerialEntry public boolean screenOutlineEnabled = true;
-    @SerialEntry public boolean screenOutlineMultiply = false;
+    @SerialEntry public boolean screenOutlineMultiply = true;
     @SerialEntry public double screenOutlineAlpha = 0.75;
-    @SerialEntry public String screenOutlineColor = "#000000";
+    @SerialEntry public String screenOutlineColor = "#676767";
     @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
     @SerialEntry public double shadowAlpha = 0.55;
@@ -217,9 +217,9 @@ public class DamageIndicatorConfig {
                 .option(boolOpt(false, "screen_damage_enabled", true, () -> c.screenDamageEnabled, v -> c.screenDamageEnabled = v))
                 .option(dblOpt(false, "screen_text_scale", 1.25, () -> c.screenTextScale, v -> c.screenTextScale = v, 0.25, 4.00))
                 .option(boolOpt(false, "screen_outline_enabled", true, () -> c.screenOutlineEnabled, v -> c.screenOutlineEnabled = v))
-                .option(boolOpt(false, "screen_outline_multiply", false, () -> c.screenOutlineMultiply, v -> c.screenOutlineMultiply = v))
+                .option(boolOpt(false, "screen_outline_multiply", true, () -> c.screenOutlineMultiply, v -> c.screenOutlineMultiply = v))
                 .option(dblOpt(false, "screen_outline_alpha", 0.75, () -> c.screenOutlineAlpha, v -> c.screenOutlineAlpha = v, 0.00, 1.00))
-                .option(colorOpt(false, "screen_outline_color", Color.BLACK, () -> toAwt(c.screenOutlineColor), v -> c.screenOutlineColor = fromAwt(v)))
+                .option(colorOpt(false, "screen_outline_color",new Color(0x676767) , () -> toAwt(c.screenOutlineColor), v -> c.screenOutlineColor = fromAwt(v)))
                 .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))

@@ -232,9 +232,10 @@ public final class ElementReactions {
 
     private static void overload(LivingEntity t, @Nullable Entity atk, ElementalStats s) {
         double radius = ServerConfig.OVERLOAD_RADIUS.get();
-        ReactionDamage.deal(t, atk, DamageKind.PYRO, Reaction.OVERLOAD, s);
+        Vec3 center = t.getBoundingBox().getCenter();
+        ReactionDamage.dealOverload(t, atk, s, center);
         for (LivingEntity near : ReactionTargets.nearbyEnemies(t, atk, radius)) {
-            ReactionDamage.deal(near, atk, DamageKind.PYRO, Reaction.OVERLOAD, s);
+            ReactionDamage.dealOverload(near, atk, s, center);
         }
         OverloadImpulse.apply(t, atk, s);
     }
@@ -282,7 +283,7 @@ public final class ElementReactions {
         OverloadVFX.play(level, at);
         for (LivingEntity target : targets) {
             ReactionText.send(target, Reaction.OVERLOAD, ElementType.ELECTRO, ElementType.PYRO);
-            ReactionDamage.deal(target, attacker, DamageKind.PYRO, Reaction.OVERLOAD, stats);
+            ReactionDamage.dealOverload(target, attacker, stats, at);
         }
         OverloadImpulse.applyAt(level, at, attacker, stats, targets);
     }

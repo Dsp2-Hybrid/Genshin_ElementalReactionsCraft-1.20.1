@@ -23,7 +23,8 @@ public final class ElementShieldHandler {
         DamageKind kind = DamageMapper.classify(event.getSource());
         if (kind.isTrue()) return;
 
-        ShieldManager.AbsorbResult res = ShieldManager.absorbElemental(entity, amount, kind);
+        float rockCost = com.dsp2.genshinerc.common.core.reaction.ReactionDamage.overloadShieldCost(entity, event.getSource());
+        ShieldManager.AbsorbResult res = ShieldManager.absorbElemental(entity, amount, kind, rockCost);
         if (res.blocked() <= 0f) return;
 
         if (res.shieldSpent() > 0f) {

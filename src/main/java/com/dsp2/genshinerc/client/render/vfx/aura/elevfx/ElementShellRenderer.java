@@ -51,17 +51,7 @@ public final class ElementShellRenderer {
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent event) {
-        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
-            Minecraft client = Minecraft.getInstance();
-            if (client.player != null) {
-                Shell own = SHELLS.get(client.player.getId());
-                if (own != null && (client.options.getCameraType().isFirstPerson()
-                        || selfOccluded(client.player, event.getCamera().getPosition(), event.getPartialTick()))) {
-                    own.setVisible(false);
-                }
-            }
-            return;
-        }
+
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
         VFXConfig cfg = VFXConfig.get();
         if (!cfg.elementShellEnabled) return;
@@ -85,15 +75,7 @@ public final class ElementShellRenderer {
             if (entity.distanceToSqr(cam) > MAX_DISTANCE_SQR) continue;
             if (entity == mc.player && mc.options.getCameraType().isFirstPerson()) continue;
             
-            if ((entity == mc.player && selfOccluded(living, cam, partialTick))
-                    || !EffekVisibilityManager.isVisible(entity)) {
-                Shell shell = SHELLS.get(entity.getId());
-                if (shell != null) {
-                    shell.setVisible(false);
-                    shell.lastSeenFrame = frame;
-                }
-                continue;
-            }
+
 
             EntityAuras auras = ClientAuraCache.get(entity.getId());
             float hydro = auras == null ? 0f : auras.gauge(ElementType.HYDRO);
@@ -112,7 +94,7 @@ public final class ElementShellRenderer {
                 shell = new Shell(HYDRO_EFFECT); 
                 SHELLS.put(entity.getId(), shell); 
             }
-            shell.setVisible(true);
+            shell.setVisible(EffekVisibilityManager.isVisible(entity));
             shell.lastSeenFrame = frame;
             maxAlphaThisFrame = Math.max(maxAlphaThisFrame, shell.tick(living, hydro, cfg, partialTick, dt));
         }
@@ -191,7 +173,7 @@ public final class ElementShellRenderer {
         void setVisible(boolean visible) {
             this.visible = visible;
             if (emitter != null && emitter.isVisible() != visible) {
-                if (!visible) AaapLightRegistry.remove(emitter);
+
                 emitter.setVisibility(visible);
             }
         }
