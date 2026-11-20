@@ -9,10 +9,10 @@ public enum Reaction {
     VAPORIZE(0f, true, null, ElementType.PYRO, ElementType.HYDRO),
     OVERLOAD(4.0f, true, "overload", ElementType.PYRO, ElementType.ELECTRO),
     SUPERCONDUCT(1.0f, true, "superconduct", ElementType.CRYO, ElementType.ELECTRO),
-    ELECTRO_CHARGED(2.4f, false, "electro_charged", ElementType.ELECTRO, ElementType.HYDRO),
+    ELECTRO_CHARGED(2.0f, false, "electro_charged", ElementType.ELECTRO, ElementType.HYDRO),
     FREEZE(0f, true, null, ElementType.HYDRO, ElementType.CRYO),
     SHATTER(3.0f, false, "shatter", ElementType.FROZEN, null),
-    SWIRL(1.2f, true, null, ElementType.ANEMO, null),
+    SWIRL(0.6f, true, null, ElementType.ANEMO, null),
     CRYSTALLIZE(0f, true, null, ElementType.GEO, null),
     BLOOM(4.0f, true, "bloom", ElementType.DENDRO, ElementType.HYDRO),
     HYPERBLOOM(6.0f, false, "hyperbloom", ElementType.DENDRO, ElementType.ELECTRO),
@@ -43,6 +43,21 @@ public enum Reaction {
 
     @Nullable public ElementType first() { return first; }
     @Nullable public ElementType second() { return second; }
+
+    public static String palette(String first, String second) {
+        return "@reaction:" + first + "," + second;
+    }
+
+    @Nullable
+    public String damagePalette(DamageKind kind) {
+        return switch (this) {
+            case OVERLOAD -> "#FD375A";
+            case SWIRL -> palette("anemo", kind.indicatorKey());
+            case SHATTER -> palette("physical", "cryo");
+            case CATALYZE, AGGRAVATE, SPREAD -> palette("electro", "dendro");
+            default -> first != null && second != null ? palette(first.colorKey(), second.colorKey()) : null;
+        };
+    }
 
     public String indicatorKey(DamageKind kind) {
         return colorKey != null ? colorKey : kind.indicatorKey();

@@ -38,7 +38,7 @@ public class DamageTracker {
 
     public static void addParticle(DamageInfo info) {
         DamageIndicatorConfig cfg = DamageIndicatorConfig.get();
-        if (!cfg.serverEnabled || info.entity == null) return;
+        if (!cfg.indicatorEnabled || !cfg.serverEnabled || info.entity == null) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
@@ -100,10 +100,10 @@ public class DamageTracker {
             Vector3d p1 = new Vector3d(basePos.x - offX, basePos.y, basePos.z);
             Vector3d p2 = new Vector3d(basePos.x + offX, basePos.y, basePos.z);
             String absorbText = "-" + trim(info.absorbed, cfg.numberFormat);
-            addOne(info, p1, velBase, absorbText, "physical".equals(info.typeKey) ? CustomColor.fromHexString(cfg.absorbColor) : color, null, scale, cfg, false, false);
+            addOne(info, p1, velBase, absorbText, "physical".equals(info.typeKey) ? CustomColor.fromHexString(cfg.absorbColor) : color, color2, scale, cfg, false, false);
             if (info.amount > 0.001f) {
                 String realText = trim(info.amount, cfg.numberFormat);
-                addOne(info, p2, velBase, realText, color, null, scale, cfg, false, true);
+                addOne(info, p2, velBase, realText, color, color2, scale, cfg, info.kill, true);
             }
         } else if (info.absorbDelta) {
             String text = (info.amount >= 0 ? "+" : "") + trim(Math.abs(info.amount), cfg.numberFormat);
@@ -158,10 +158,15 @@ public class DamageTracker {
     }
 
     public static void tickAll() {
+        if (!DamageIndicatorConfig.get().indicatorEnabled) {
+            clearParticles();
+            return;
+        }
         PARTICLES.removeIf(TextParticle::tick);
     }
 
     public static void renderAll(PoseStack ps, MultiBufferSource buf, Camera cam, float pt) {
+        if (!DamageIndicatorConfig.get().indicatorEnabled) return;
         for (TextParticle p : PARTICLES) p.render(ps, buf, cam, pt);
     }
 

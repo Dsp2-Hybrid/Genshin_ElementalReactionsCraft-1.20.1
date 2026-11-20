@@ -47,20 +47,19 @@ public final class ElementalCombatAPI {
             if (bonus != null) dmg *= 1.0 + bonus.getValue();
         }
 
+        ReactionResult reactions = ReactionResult.none();
         if (attach) {
-            ReactionResult rr = attach(target, attacker, type, tier, attackKey);
-            
-            if (baseDamage > 0 && rr != null && !rr.reactions().isEmpty()) {
-                ElementReactions.forceSendText(target, rr);
-            }
-            
-            if (rr.amplify() != 1f) dmg *= rr.amplify();
-            dmg += rr.catalyzeFlat();
+            reactions = attach(target, attacker, type, tier, attackKey);
+            if (reactions.amplify() != 1f) dmg *= reactions.amplify();
+            dmg += reactions.catalyzeFlat();
         }
 
         if (!(target.level() instanceof ServerLevel level)) return 0f;
         float before = target.getHealth();
-        target.hurt(ElementalDamage.source(level, kind, attacker, attacker), (float) dmg);
+        var source = ElementalDamage.source(level, kind, attacker, attacker);
+        float settledDamage = (float) dmg;
+        com.dsp2.genshinerc.server.render.damageindicator.DamageServerEventHandler.withPalette(
+                source, reactions.damagePalette(kind), () -> target.hurt(source, settledDamage));
         return Math.max(0f, before - target.getHealth());
     }
 

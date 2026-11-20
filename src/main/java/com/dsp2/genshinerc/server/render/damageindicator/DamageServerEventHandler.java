@@ -27,12 +27,31 @@ public class DamageServerEventHandler {
     private static final Map<UUID, Float> LAST_ABSORPTION = new HashMap<>();
     private static final ThreadLocal<ArrayDeque<Hit>> HITS = ThreadLocal.withInitial(ArrayDeque::new);
 
+    private record PendingPalette(DamageSource source, String palette) {}
+    private static final ThreadLocal<PendingPalette> PENDING_PALETTE = new ThreadLocal<>();
+
+    public static void withPalette(DamageSource source, String palette, Runnable action) {
+        if (palette == null) {
+            action.run();
+            return;
+        }
+        PendingPalette previous = PENDING_PALETTE.get();
+        PENDING_PALETTE.set(new PendingPalette(source, palette));
+        try {
+            action.run();
+        } finally {
+            if (previous == null) PENDING_PALETTE.remove();
+            else PENDING_PALETTE.set(previous);
+        }
+    }
+
     private static final class Hit {
         final LivingEntity entity;
         final DamageSource source;
         final float health;
         final float absorption;
         String key;
+        String palette;
         float nestedHealth;
         float nestedAbsorption;
         float shield;
@@ -56,7 +75,10 @@ public class DamageServerEventHandler {
 
     public static void begin(LivingEntity entity, DamageSource source) {
         if (entity.level().isClientSide() || ReactionDamage.isDealing() || !ServerConfig.ENABLED.get()) return;
-        HITS.get().push(new Hit(entity, source));
+        Hit hit = new Hit(entity, source);
+        PendingPalette pending = PENDING_PALETTE.get();
+        if (pending != null && pending.source() == source) hit.palette = pending.palette();
+        HITS.get().push(hit);
     }
 
     public static void end(LivingEntity entity, DamageSource source, boolean accepted) {
@@ -73,7 +95,7 @@ public class DamageServerEventHandler {
         float absorbed = hit.shield + (accepted ? Math.max(0f, rawAbsorption - hit.nestedAbsorption) : 0f);
         if (damage < 0.001f && absorbed < 0.001f) return;
         DamageIndicatorNetworkHandler.sendDamage(entity, hit.key, damage, hit.critical,
-                damage > 0f && !entity.isAlive(), false, absorbed, null, null, false, false);
+                damage > 0f && !entity.isAlive(), false, absorbed, hit.palette, null, false, false);
     }
 
     public static void discount(LivingEntity entity, float health, float absorb) {
@@ -91,13 +113,18 @@ public class DamageServerEventHandler {
             hit.shield += blocked;
         } else {
             DamageIndicatorNetworkHandler.sendDamage(entity, ReactionDamage.indicatorKey(key), 0f,
-                    false, false, false, blocked, null, null, false, false);
+                    false, false, false, blocked, ReactionDamage.indicatorPalette(), null, false, false);
         }
     }
 
     public static void tag(LivingEntity entity, String key) {
         Hit hit = find(entity);
         if (hit != null) hit.key = key;
+    }
+
+    public static void tagPalette(LivingEntity entity, String palette) {
+        Hit hit = find(entity);
+        if (hit != null && palette != null) hit.palette = palette;
     }
 
     public static void markCrit(LivingEntity entity) {

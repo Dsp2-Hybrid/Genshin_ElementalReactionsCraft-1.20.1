@@ -56,6 +56,8 @@ public final class ElementalSettlement {
                 float gauge = ElementReactions.tntGauge(victim.position().distanceTo(center), radius);
                 ReactionResult rr = ElementReactions.trigger(victim, source.getEntity(), ElementType.PYRO, gauge);
                 if (rr.amplify() != 1f) damage *= rr.amplify();
+                com.dsp2.genshinerc.server.render.damageindicator.DamageServerEventHandler.tagPalette(
+                        victim, rr.damagePalette(DamageKind.PYRO));
             }
             if (!ServerConfig.EXPLOSION_USES_PYRO_RESISTANCE.get()) {
                 event.setAmount((float) damage);

@@ -108,6 +108,7 @@ public final class ElementReactions {
             float gauge = units;
             boolean consumedAny = false;
             boolean force = false;
+            EnumSet<ElementType> swirled = EnumSet.noneOf(ElementType.class);
 
             for (ElementType aura : ReactionRules.order(trigger)) {
                 if (gauge <= EPS) break;
@@ -115,6 +116,8 @@ public final class ElementReactions {
                 Reaction reaction = ReactionRules.rule(trigger, aura);
                 if (reaction == null || (!allowElectroCharged && reaction == Reaction.ELECTRO_CHARGED)) continue;
                 if (reaction == Reaction.FREEZE && FrozenControl.resistance(target) >= 1.0) continue;
+                ElementType swirlElement = aura == ElementType.FROZEN ? ElementType.CRYO : aura;
+                if (reaction == Reaction.SWIRL && swirled.contains(swirlElement)) continue;
 
                 float used = 0f;
                 float triggerUsed = 0f;
@@ -129,6 +132,7 @@ public final class ElementReactions {
                     if (reaction == Reaction.OVERLOAD && aura == ElementType.PYRO) consumeEmbers(target, used);
                 } else if (!before.contains(aura)) continue;
 
+                if (reaction == Reaction.SWIRL) swirled.add(swirlElement);
                 boolean first = result.add(reaction);
                 if (!first && reaction.once()) continue;
                 force |= effect(reaction, target, attacker, stats, trigger, aura, used, triggerUsed, result);
@@ -146,7 +150,7 @@ public final class ElementReactions {
             }
 
             if (result.has(Reaction.BURNING)) BurningTracker.start(target, attacker);
-            if (result.has(Reaction.ELECTRO_CHARGED)) ElectroChargedTracker.start(target, attacker);
+            if (result.has(Reaction.ELECTRO_CHARGED)) ElectroChargedTracker.start(target, attacker, natural);
         } finally {
             naturalMode = previous;
         }
@@ -198,11 +202,10 @@ public final class ElementReactions {
                 shatter(t, atk, s);
             }
             case SWIRL -> {
-                swirl(t, atk, s, aura);
-                ReactionSoundEvents.playSwirl(t);
-                ReactionParticles.spawnSwirl(t);
+                swirl(t, atk, s, aura, used);
             }
             case CRYSTALLIZE -> {
+                res.noteCrystallized(aura);
                 crystallize(atk, aura, s);
                 ReactionSoundEvents.playCrystallize(t);
                 ReactionParticles.spawnCrystallize(t);
@@ -216,8 +219,6 @@ public final class ElementReactions {
             case AGGRAVATE -> res.raiseFlat(ElementalMath.catalyze(1.15f, s));
             case SPREAD -> res.raiseFlat(ElementalMath.catalyze(1.25f, s));
             case ELECTRO_CHARGED -> {
-                ReactionSoundEvents.playElectroCharged(t);
-                ReactionParticles.spawnElectroCharged(t);
                 return true;
             }
             case BURNING -> {
@@ -246,16 +247,22 @@ public final class ElementReactions {
         ReactionDamage.deal(t, atk, DamageKind.PHYSICAL, Reaction.SHATTER, s);
     }
 
-    private static void swirl(LivingEntity t, @Nullable Entity atk, ElementalStats s, ElementType aura) {
+    private static void swirl(LivingEntity t, @Nullable Entity atk, ElementalStats s, ElementType aura, float consumed) {
         ElementType swirled = aura == ElementType.FROZEN ? ElementType.CRYO : aura;
         DamageKind kind = DamageKind.fromElement(swirled);
+        double radius = ServerConfig.SWIRL_RADIUS.get();
+        float spread = Math.min(ServerConfig.SWIRL_SPREAD_UNITS.get().floatValue(), consumed * 2f);
+
+        ReactionSoundEvents.playSwirl(t, swirled);
+        ReactionParticles.spawnSwirl(t, swirled, radius);
         ReactionDamage.deal(t, atk, kind, Reaction.SWIRL, s);
         shred(t, kind);
-        float spread = ServerConfig.SWIRL_SPREAD_UNITS.get().floatValue();
-        for (LivingEntity near : ReactionTargets.nearbyEnemies(t, atk, ServerConfig.SWIRL_RADIUS.get())) {
+
+        for (LivingEntity near : ReactionTargets.nearbyEnemies(t, atk, radius)) {
             ReactionDamage.deal(near, atk, kind, Reaction.SWIRL, s);
+            if (!near.isAlive()) continue;
             shred(near, kind);
-            trigger(near, atk, swirled, spread);
+            if (spread > EPS) trigger(near, atk, swirled, spread);
         }
     }
 

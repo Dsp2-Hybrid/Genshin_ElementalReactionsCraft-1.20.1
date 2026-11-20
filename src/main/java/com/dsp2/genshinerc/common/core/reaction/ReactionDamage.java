@@ -22,6 +22,11 @@ public final class ReactionDamage {
     private static final int WINDOW_TICKS = 10;
     private static boolean dealing;
     private static String activeIndicatorKey;
+    private static String activePalette;
+
+    public static String indicatorPalette() {
+        return activePalette;
+    }
     private record ShieldImpact(LivingEntity target, DamageSource source, float cost) {}
     private static ShieldImpact shieldImpact;
 
@@ -43,7 +48,7 @@ public final class ReactionDamage {
         double factor = (attacker == null ? 0.78 : 1.0)
                 * (1.0 + 0.035 * world) * (1.0 + levels) * (1.0 + 0.25 * mastery / (mastery + 700.0));
         float cost = (float) (1.0 + Math.min(1.5, proximity * factor));
-        deal(target, attacker, DamageKind.PYRO, Reaction.OVERLOAD, stats, cost);
+        deal(target, attacker, DamageKind.PYRO, Reaction.OVERLOAD, stats, cost, false);
     }
 
     public static String indicatorKey(String fallback) {
@@ -61,11 +66,16 @@ public final class ReactionDamage {
 
     public static void deal(LivingEntity target, @Nullable Entity attacker, DamageKind kind, Reaction reaction,
                             ElementalStats stats) {
-        deal(target, attacker, kind, reaction, stats, 1f);
+        deal(target, attacker, kind, reaction, stats, 1f, false);
+    }
+
+    static void dealElectroCharged(LivingEntity target, @Nullable Entity attacker,
+                                   ElementalStats stats, boolean natural) {
+        deal(target, attacker, DamageKind.ELECTRO, Reaction.ELECTRO_CHARGED, stats, 1f, natural);
     }
 
     private static void deal(LivingEntity target, @Nullable Entity attacker, DamageKind kind, Reaction reaction,
-                             ElementalStats stats, float shieldCost) {
+                             ElementalStats stats, float shieldCost, boolean naturalElectroCharged) {
         if (ElementReactions.isNatural() && reaction != Reaction.OVERLOAD) return;
         if (!(target.level() instanceof ServerLevel level) || !target.isAlive()) return;
         if (!allow(target, reaction, level.getGameTime())) return;
@@ -86,12 +96,20 @@ public final class ReactionDamage {
             amount = attacker == null
                     ? ElementalMath.transformativeNoEM(coefficient, 1)
                     : ElementalMath.transformative(coefficient, stats);
+        } else if (reaction == Reaction.SWIRL || reaction == Reaction.ELECTRO_CHARGED) {
+            if (naturalElectroCharged) {
+                amount = ElementalMath.transformativeNoEM(coefficient, 1);
+            } else {
+                double mastery = Double.isFinite(stats.mastery()) ? Math.max(0.0, stats.mastery()) : 0.0;
+                amount = ElementalMath.transformative(coefficient, new ElementalStats(stats.level(), mastery));
+            }
         } else if (stats.mastery() > 0.0) {
             amount = ElementalMath.transformative(coefficient, stats);
         } else {
             amount = ElementalMath.transformativeNoEM(coefficient, stats.level());
         }
-        if (reaction == Reaction.SHATTER || reaction == Reaction.OVERLOAD) {
+        if (reaction == Reaction.SHATTER || reaction == Reaction.OVERLOAD
+                || reaction == Reaction.SWIRL || reaction == Reaction.ELECTRO_CHARGED) {
             var attribute = kind.resistanceAttribute();
             var instance = attribute == null ? null : target.getAttribute(attribute);
             if (instance != null) amount *= ElementalMath.resistanceMultiplier(instance.getValue());
@@ -109,6 +127,9 @@ public final class ReactionDamage {
         ShieldImpact previousImpact = shieldImpact;
         shieldImpact = shieldCost > 1f ? new ShieldImpact(target, source, shieldCost) : null;
         String previousKey = activeIndicatorKey;
+        String previousPalette = activePalette;
+        String palette = reaction.damagePalette(kind);
+        activePalette = palette;
         activeIndicatorKey = reaction.indicatorKey(kind);
         dealing = true;
         try {
@@ -118,6 +139,7 @@ public final class ReactionDamage {
             target.invulnerableTime = invulnerable;
             dealing = previous;
             activeIndicatorKey = previousKey;
+            activePalette = previousPalette;
             shieldImpact = previousImpact;
         }
 
@@ -127,15 +149,16 @@ public final class ReactionDamage {
         DamageServerEventHandler.discount(target, lostHp, lostAbsorb);
         if (ServerConfig.ENABLED.get()) {
             DamageIndicatorNetworkHandler.sendDamage(target, reaction.indicatorKey(kind), lostHp, false,
-                    target.getHealth() <= 0.001f, false, lostAbsorb, null, null, false, false);
+                    target.getHealth() <= 0.001f, false, lostAbsorb, palette, null, false, false);
         }
     }
 
     private static boolean allow(LivingEntity target, Reaction reaction, long now) {
         ArrayDeque<Long> hits = HITS.computeIfAbsent(target, k -> new EnumMap<>(Reaction.class))
                 .computeIfAbsent(reaction, k -> new ArrayDeque<>());
-        while (!hits.isEmpty() && now - hits.peekFirst() >= WINDOW_TICKS) hits.pollFirst();
-        int max = reaction == Reaction.OVERLOAD ? 1 : 2;
+        int window = reaction == Reaction.ELECTRO_CHARGED ? 20 : WINDOW_TICKS;
+        while (!hits.isEmpty() && now - hits.peekFirst() >= window) hits.pollFirst();
+        int max = reaction == Reaction.OVERLOAD || reaction == Reaction.ELECTRO_CHARGED ? 1 : 2;
         if (hits.size() >= max) return false;
         hits.addLast(now);
         return true;

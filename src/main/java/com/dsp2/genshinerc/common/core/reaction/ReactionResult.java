@@ -11,6 +11,18 @@ public final class ReactionResult {
     private float amplify = 1f;
     private float catalyzeFlat = 0f;
     private float remaining;
+    private com.dsp2.genshinerc.common.core.element.ElementType crystallized;
+
+    void noteCrystallized(com.dsp2.genshinerc.common.core.element.ElementType element) {
+        if (crystallized == null) crystallized = element;
+    }
+
+    public String damagePalette(com.dsp2.genshinerc.common.core.damage.DamageKind kind) {
+        if (has(Reaction.MELT)) return Reaction.MELT.damagePalette(kind);
+        if (has(Reaction.VAPORIZE)) return Reaction.VAPORIZE.damagePalette(kind);
+        if (has(Reaction.AGGRAVATE) || has(Reaction.SPREAD)) return Reaction.palette("electro", "dendro");
+        return crystallized == null ? null : Reaction.palette("geo", crystallized.colorKey());
+    }
 
     public static ReactionResult none() { return new ReactionResult(); }
 

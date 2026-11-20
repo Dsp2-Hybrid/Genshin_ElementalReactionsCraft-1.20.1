@@ -21,10 +21,11 @@ public abstract class MixinVanillaFrozenSurface {
                                         float yaw, float partialTick, PoseStack renderPose, MultiBufferSource buffers,
                                         int packedLight) {
         model.renderToBuffer(pose, vertices, light, overlay, red, green, blue, alpha);
-        float ice = FrozenSurface.alpha(entity);
+        float ice = FrozenSurface.alpha(entity, partialTick);
         if (ice <= 0f) return;
         float tint = FrozenSurface.tintWeight(entity, partialTick);
-        model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), light, OverlayTexture.NO_OVERLAY,
+        int iceLight = FrozenSurface.whiteFlash(entity, partialTick) ? 0x00F000F0 : light;
+        model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), iceLight, OverlayTexture.NO_OVERLAY,
                 0.98f - 0.63f * tint, 0.99f - 0.35f * tint, 1.0f, ice);
     }
 }

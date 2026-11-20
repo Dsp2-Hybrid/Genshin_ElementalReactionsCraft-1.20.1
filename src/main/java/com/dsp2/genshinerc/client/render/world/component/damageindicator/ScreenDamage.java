@@ -30,7 +30,8 @@ public final class ScreenDamage {
     private static boolean mode;
     public static boolean enabled() {
         syncLevel();
-        boolean next = DamageIndicatorConfig.get().screenDamageEnabled;
+        var config = DamageIndicatorConfig.get();
+        boolean next = config.indicatorEnabled && config.screenDamageEnabled;
         if (mode != next) {
             mode = next;
             POPUPS.clear();

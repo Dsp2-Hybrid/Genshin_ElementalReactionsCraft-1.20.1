@@ -48,6 +48,14 @@ public final class ElementAttachment {
         return ElementReactions.run(target, attacker, element, units, false, false, allowElectroCharged);
     }
 
+    public static void refreshWindow(LivingEntity target, @Nullable Entity attacker, String attackKey) {
+        if (target.level().isClientSide()) return;
+        Map<Key, Window> windows = WINDOWS.get(target);
+        if (windows != null) {
+            windows.remove(new Key(attacker == null ? NO_ATTACKER : attacker.getUUID(), attackKey));
+        }
+    }
+
     public static boolean isTrigger(ElementType element) {
         return switch (element) {
             case PYRO, HYDRO, ELECTRO, CRYO, DENDRO, ANEMO, GEO -> true;

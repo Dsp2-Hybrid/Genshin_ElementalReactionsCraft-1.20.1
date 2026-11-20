@@ -15,7 +15,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 final class ReactionText {
-    private static final Map<LivingEntity, Map<Reaction, Long>> ACTIVE = new WeakHashMap<>();
+    private record TextKey(Reaction reaction, @Nullable ElementType partner) {}
+    private static final Map<LivingEntity, Map<TextKey, Long>> ACTIVE = new WeakHashMap<>();
     private static final long RESET_TICKS = 20;
 
     private ReactionText() {}
@@ -31,10 +32,13 @@ final class ReactionText {
         ElementType first = a != null ? a : reaction.first();
         ElementType second = b != null ? b : reaction.second();
 
-        Map<Reaction, Long> active = ACTIVE.computeIfAbsent(target, k -> new HashMap<>());
-        
-        if (force || !active.containsKey(reaction)) {
-            active.put(reaction, level.getGameTime());
+        ElementType partner = reaction == Reaction.SWIRL || reaction == Reaction.CRYSTALLIZE
+                ? (second == ElementType.FROZEN ? ElementType.CRYO : second) : null;
+        TextKey key = new TextKey(reaction, partner);
+        Map<TextKey, Long> active = ACTIVE.computeIfAbsent(target, ignored -> new HashMap<>());
+
+        if (force || !active.containsKey(key)) {
+            active.put(key, level.getGameTime());
             GenshinercNetwork.CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> target),
                     new ReactionTextPacket(target.getId(), reaction, first, second));
         }
@@ -47,10 +51,10 @@ final class ReactionText {
             if (!(entity.level() instanceof ServerLevel level)) return true;
 
             long now = level.getGameTime();
-            Map<Reaction, Long> active = entry.getValue();
+            Map<TextKey, Long> active = entry.getValue();
 
             active.entrySet().removeIf(e -> {
-                Reaction r = e.getKey();
+                Reaction r = e.getKey().reaction();
                 ElementType first = r.first();
                 ElementType second = r.second();
 

@@ -8,7 +8,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public class DamageIndicatorNetworkHandler {
-    private static final String P = "1";
+    private static final String P = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             ResourceLocation.fromNamespaceAndPath("genshinerc", "damage_indicator"),
             () -> P, P::equals, P::equals);

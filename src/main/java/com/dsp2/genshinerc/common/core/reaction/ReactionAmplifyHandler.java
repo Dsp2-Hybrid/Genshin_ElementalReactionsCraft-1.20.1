@@ -63,6 +63,8 @@ public final class ReactionAmplifyHandler {
                     ReactionSoundEvents.playVaporize(entity);
                     ReactionParticles.spawnVaporize(entity);
                 }
+                com.dsp2.genshinerc.server.render.damageindicator.DamageServerEventHandler.tagPalette(
+                        entity, Reaction.palette(trigger.colorKey(), aura.colorKey()));
                 ReactionText.send(entity, r, trigger, aura);
             }
         }

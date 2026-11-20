@@ -21,6 +21,7 @@ public class DamageIndicatorConfig {
 
     public transient boolean serverEnabled = true;
     public transient int serverMaxDistance = 35;
+    @SerialEntry public boolean indicatorEnabled = true;
     @SerialEntry public boolean screenDamageEnabled = true;
     @SerialEntry public double screenTextScale = 1.25;
     @SerialEntry public boolean screenOutlineEnabled = true;
@@ -214,12 +215,11 @@ public class DamageIndicatorConfig {
         return OptionGroup.createBuilder()
                 .name(t("genshinerc.damageindicator.group.indicator"))
                 .description(OptionDescription.of(td("genshinerc.damageindicator.group.indicator")))
-                .option(boolOpt(false, "screen_damage_enabled", true, () -> c.screenDamageEnabled, v -> c.screenDamageEnabled = v))
-                .option(dblOpt(false, "screen_text_scale", 1.25, () -> c.screenTextScale, v -> c.screenTextScale = v, 0.25, 4.00))
-                .option(boolOpt(false, "screen_outline_enabled", true, () -> c.screenOutlineEnabled, v -> c.screenOutlineEnabled = v))
-                .option(boolOpt(false, "screen_outline_multiply", true, () -> c.screenOutlineMultiply, v -> c.screenOutlineMultiply = v))
-                .option(dblOpt(false, "screen_outline_alpha", 0.75, () -> c.screenOutlineAlpha, v -> c.screenOutlineAlpha = v, 0.00, 1.00))
-                .option(colorOpt(false, "screen_outline_color",new Color(0x676767) , () -> toAwt(c.screenOutlineColor), v -> c.screenOutlineColor = fromAwt(v)))
+                .option(Option.<Boolean>createBuilder()
+                        .name(t("genshinerc.damageindicator.config.enabled"))
+                        .binding(true, () -> c.indicatorEnabled, v -> c.indicatorEnabled = v)
+                        .controller(TickBoxControllerBuilder::create)
+                        .build())
                 .option(boolOpt(false, "draw_shadow", false, () -> c.drawShadow, v -> c.drawShadow = v))
                 .option(colorOpt(false, "shadow_color", new Color(0x929292), () -> toAwt(c.shadowColor), v -> c.shadowColor = fromAwt(v)))
                 .option(dblOpt(false, "shadow_alpha", 0.55, () -> c.shadowAlpha, v -> c.shadowAlpha = v, 0.00, 1.00))
@@ -279,6 +279,12 @@ public class DamageIndicatorConfig {
                 .option(intOpt(false, "kill_flash_interval", 2, () -> c.killFlashInterval, v -> c.killFlashInterval = v, 1, 10))
                 .option(intOpt(false, "kill_flash_ticks", 11, () -> c.killFlashTicks, v -> c.killFlashTicks = v, 5, 30))
                 .option(intOpt(false, "kill_extra_ticks", 4, () -> c.killExtraTicks, v -> c.killExtraTicks = v, 0, 20))
+                .option(boolOpt(false, "screen_damage_enabled", true, () -> c.screenDamageEnabled, v -> c.screenDamageEnabled = v))
+                .option(dblOpt(false, "screen_text_scale", 1.25, () -> c.screenTextScale, v -> c.screenTextScale = v, 0.25, 4.00))
+                .option(boolOpt(false, "screen_outline_enabled", true, () -> c.screenOutlineEnabled, v -> c.screenOutlineEnabled = v))
+                .option(boolOpt(false, "screen_outline_multiply", true, () -> c.screenOutlineMultiply, v -> c.screenOutlineMultiply = v))
+                .option(dblOpt(false, "screen_outline_alpha", 0.75, () -> c.screenOutlineAlpha, v -> c.screenOutlineAlpha = v, 0.00, 1.00))
+                .option(colorOpt(false, "screen_outline_color",new Color(0x676767) , () -> toAwt(c.screenOutlineColor), v -> c.screenOutlineColor = fromAwt(v)))
                 .option(boolOpt(false, "debug", false, () -> c.debug, v -> c.debug = v))
                 .option(dblOpt(false, "z_random_min", 0.00, () -> c.zRandomMin, v -> c.zRandomMin = v, -1.00, 2.00))
                 .option(dblOpt(false, "z_random_max", 0.50, () -> c.zRandomMax, v -> c.zRandomMax = v, -1.00, 2.00))
