@@ -707,7 +707,7 @@
   "genshinerc.damageindicator.config.screen_outline_alpha": "Screen Text Outline Opacity",
   "genshinerc.damageindicator.config.screen_outline_alpha.desc": "Sets the outline opacity. The outline fades with the text.",
   "genshinerc.damageindicator.config.screen_outline_color": "Screen Text Outline Color",
-  "genshinerc.damageindicator.config.screen_outline_color.desc": "Sets the outline color. The default is black.",
+  "genshinerc.damageindicator.config.screen_outline_color.desc": "Sets the outline color. The default is #676767.",
   "genshinerc.damageindicator.config.screen_outline_multiply": "Multiply Outline by Text Color",
   "genshinerc.damageindicator.config.screen_outline_multiply.desc": "Uses the brightness of the outline swatch to darken the text color. Outline opacity is unchanged."
 }

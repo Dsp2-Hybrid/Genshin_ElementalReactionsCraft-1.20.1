@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.events;
+package com.dsp2.genshinerc.client.events.reaction;
 
 import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.FrozenSurface;
 import com.dsp2.genshinerc.mixin.client.render.FrozenCameraAccessor;

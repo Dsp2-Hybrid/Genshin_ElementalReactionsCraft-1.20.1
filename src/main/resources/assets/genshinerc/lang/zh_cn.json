@@ -735,7 +735,7 @@
   "genshinerc.damageindicator.config.screen_outline_alpha": "屏幕文本描边不透明度",
   "genshinerc.damageindicator.config.screen_outline_alpha.desc": "设置描边的不透明度。描边会随文字一起淡出。",
   "genshinerc.damageindicator.config.screen_outline_color": "屏幕文本描边颜色",
-  "genshinerc.damageindicator.config.screen_outline_color.desc": "设置描边颜色，默认为黑色。",
+  "genshinerc.damageindicator.config.screen_outline_color.desc": "设置描边颜色，默认为灰色。",
   "genshinerc.damageindicator.config.screen_outline_multiply": "描边与文字颜色相乘",
   "genshinerc.damageindicator.config.screen_outline_multiply.desc": "用描边色的亮度乘以文字颜色，不改变描边不透明度。"
 }

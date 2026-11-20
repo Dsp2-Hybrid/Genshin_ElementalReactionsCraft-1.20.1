@@ -116,6 +116,9 @@ public class DamageTracker {
 
     private static void addOne(DamageInfo info, Vector3d pos, Vector3d vel, String text, CustomColor color, CustomColor color2,
                                float scale, DamageIndicatorConfig cfg, boolean kill, boolean secondary) {
+        boolean singleColorFreeze = (color2 == null || (color.argb() & 0xFFFFFF) == (color2.argb() & 0xFFFFFF))
+                && text.equals(Component.translatable("genshinerc.reaction.freeze").getString());
+        if (singleColorFreeze) return;
         int life = forceLifeTime > 0 ? forceLifeTime : cfg.lifeTime;
 
 
