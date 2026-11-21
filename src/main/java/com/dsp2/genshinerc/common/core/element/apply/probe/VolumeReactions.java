@@ -5,7 +5,9 @@ import com.dsp2.genshinerc.common.core.element.FrozenControl;
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.element.ElementType;
+import com.dsp2.genshinerc.common.core.reaction.DendroCoreEntity;
 import com.dsp2.genshinerc.common.core.reaction.ElementReactions;
+import com.dsp2.genshinerc.common.core.reaction.Reaction;
 import com.dsp2.genshinerc.common.core.reaction.WorldElementFields;
 import com.dsp2.genshinerc.common.world.block.EleIceBlock;
 import net.minecraft.core.BlockPos;
@@ -97,6 +99,7 @@ public final class VolumeReactions {
         state.tick = now;
         if (imbue.element() == ElementType.ELECTRO) chargeCreepers(level, attacker, sample);
         affectBlocks(level, attacker, imbue, sample, state, canGrief(attacker));
+        affectDendroCores(level, attacker, imbue, sample);
     }
 
     @SubscribeEvent
@@ -132,6 +135,33 @@ public final class VolumeReactions {
                 if (!volume.bounds().intersects(hitbox) || !volume.intersects(hitbox)) continue;
                 powerCreeper(level, creeper);
                 break;
+            }
+        }
+    }
+
+    private static void affectDendroCores(ServerLevel level, LivingEntity attacker, ElementImbue.State imbue,
+                                          SwingVolumeSampler.SwingSample sample) {
+        Reaction reaction;
+        if (imbue.element() == ElementType.ELECTRO) reaction = Reaction.HYPERBLOOM;
+        else if (imbue.element() == ElementType.PYRO) reaction = Reaction.BURGEON;
+        else return;
+
+        var volumes = sample.volumes();
+        if (volumes.isEmpty()) return;
+
+        net.minecraft.world.phys.AABB bounds = volumes.get(0).bounds();
+        for (int i = 1; i < volumes.size(); i++) {
+            bounds = bounds.minmax(volumes.get(i).bounds());
+        }
+
+        for (DendroCoreEntity core : level.getEntitiesOfClass(DendroCoreEntity.class, bounds,
+                entity -> !entity.isRemoved())) {
+            for (SwingVolume volume : volumes) {
+                if (volume.bounds().intersects(core.getBoundingBox())
+                        && volume.intersects(core.getBoundingBox())) {
+                    core.detonate(reaction, attacker);
+                    break;
+                }
             }
         }
     }

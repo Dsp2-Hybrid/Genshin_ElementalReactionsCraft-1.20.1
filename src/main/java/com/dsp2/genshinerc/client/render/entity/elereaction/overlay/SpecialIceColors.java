@@ -22,16 +22,11 @@ public final class SpecialIceColors {
 
     private static int color(BlockState state, BlockAndTintGetter level, BlockPos pos, int tintIndex) {
         if (tintIndex != 0) return -1;
-        int age = state.getValue(EleIceBlock.AGE);
-        int alpha = switch (age) {
-            case 0 -> 220;
-            case 1 -> 185;
-            case 2 -> 145;
-            case 3 -> 105;
-            default -> 70;
-        };
-        int red = Math.min(255, 220 + age * 7);
-        int green = Math.min(255, 244 + age * 2);
+        float progress = state.getValue(EleIceBlock.AGE) / 4f;
+        float fade = progress * progress * (3f - 2f * progress);
+        int alpha = Math.round(220f - 150f * fade);
+        int red = Math.round(190f + 58f * progress);
+        int green = Math.round(224f + 29f * progress);
         return (alpha << 24) | (red << 16) | (green << 8) | 255;
     }
 }

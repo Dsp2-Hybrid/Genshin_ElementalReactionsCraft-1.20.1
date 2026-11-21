@@ -51,7 +51,7 @@ public class DendroCoreRenderer extends EntityRenderer<DendroCoreEntity> {
         if (config.aaaLightEnabled && AaapLightRenderer.isActive()) {
             AaapLightRegistry.put(entity, new AaapLightRegistry.Light(
                     entity.getX(), entity.getY() + 0.35, entity.getZ(),
-                    1.8f, 0.25f, 0.34f, 1.0f, 0.20f, config.aaaLightIntensity));
+                    2.3f, 0.30f, 0.34f, 1.0f, 0.42f, config.aaaLightIntensity));
         } else {
             AaapLightRegistry.remove(entity);
         }

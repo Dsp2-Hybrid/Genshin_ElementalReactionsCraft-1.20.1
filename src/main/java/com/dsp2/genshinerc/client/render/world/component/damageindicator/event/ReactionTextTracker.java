@@ -19,12 +19,22 @@ import java.util.Map;
 
 public final class ReactionTextTracker {
     private static final Map<Integer, Long> LAST_FREEZE_TEXT = new HashMap<>();
+    private static final Map<String, Long> LAST_REACTION_TEXT = new HashMap<>();
     private ReactionTextTracker() {}
 
     public static void add(int entityId, Reaction reaction, @Nullable ElementType first, @Nullable ElementType second) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
         if (!(mc.level.getEntity(entityId) instanceof LivingEntity target)) return;
+
+        if (reaction != Reaction.FREEZE) {
+            long now = System.nanoTime();
+            LAST_REACTION_TEXT.entrySet().removeIf(entry -> now - entry.getValue() > 2_000_000_000L);
+            String key = entityId + ":" + reaction.name();
+            Long previous = LAST_REACTION_TEXT.get(key);
+            if (previous != null && now - previous < 250_000_000L) return;
+            LAST_REACTION_TEXT.put(key, now);
+        }
 
         ElementReactionDim.mark(entityId);
 

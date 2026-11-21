@@ -2,6 +2,8 @@ package com.dsp2.genshinerc.client.render.hud.gui.rpg.layer;
 
 import com.dsp2.genshinerc.client.render.hud.bar.shield.AdaptiveColor;
 import com.dsp2.genshinerc.client.render.hud.bar.shield.ShieldNumberFormatter;
+
+import com.dsp2.genshinerc.client.render.hud.bar.ClientCombatBars;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
@@ -30,6 +32,11 @@ public final class ShieldOverlay {
     private float easeOut(float t) { return 1f - (1f - t) * (1f - t); }
 
     public void render(GuiGraphics g, int x, int y, int w, int h, int fillColor, float alpha) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) {
+            var shield = ClientCombatBars.shield(mc.player.getId());
+            if (shield != null) alpha *= shield.warningAlpha(net.minecraft.Util.getMillis());
+        }
         float val = current();
         float frac = maxCapacity > 0f ? Mth.clamp(val / maxCapacity, 0f, 1f) : 0f;
         g.fill(x, y, x + w, y + h, 0x80000000);

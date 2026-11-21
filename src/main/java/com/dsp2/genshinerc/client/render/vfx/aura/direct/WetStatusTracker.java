@@ -8,6 +8,9 @@ import com.dsp2.genshinerc.client.render.world.component.damageindicator.event.D
 import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
@@ -53,9 +56,8 @@ public final class WetStatusTracker {
             boolean wasWet = WAS_WET.getOrDefault(living.getId(), false);
             boolean wasFrozen = WAS_FROZEN.getOrDefault(living.getId(), false);
 
-            if (isFrozen && !wasFrozen) {
-                spawnText(living, "genshinerc.status.frozen", ElementType.FROZEN);
-            } else if (isWet && !wasWet && !isFrozen) {
+            boolean aquatic = (living instanceof WaterAnimal || living instanceof Drowned || living instanceof Guardian);
+            if (isWet && !wasWet && !isFrozen && !aquatic) {
                 spawnText(living, "genshinerc.status.wet", ElementType.HYDRO);
             }
 

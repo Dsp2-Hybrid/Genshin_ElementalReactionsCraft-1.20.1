@@ -16,6 +16,9 @@ import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -72,6 +75,11 @@ public final class ElementShellRenderer {
 
         for (Entity entity : level.entitiesForRendering()) {
             if (!(entity instanceof LivingEntity living) || !living.isAlive()) continue;
+            if ((living instanceof WaterAnimal || living instanceof Drowned || living instanceof Guardian)) {
+                Shell aquaticShell = SHELLS.remove(entity.getId());
+                if (aquaticShell != null) aquaticShell.stop();
+                continue;
+            }
             if (entity.distanceToSqr(cam) > MAX_DISTANCE_SQR) continue;
             if (entity == mc.player && mc.options.getCameraType().isFirstPerson()) continue;
             

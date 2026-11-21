@@ -35,6 +35,7 @@ public final class ShieldBarRenderer {
         if (s == null) return;
         long now = Util.getMillis();
         s.bar.update(now, cfg.subBarFillSpeed, cfg.subBarWhiteDrainSpeed);
+        final float renderAlpha = alpha * s.warningAlpha(now);
 
         float hpMax = entity.getMaxHealth();
         if (hpMax <= 0f) return;
@@ -64,7 +65,7 @@ public final class ShieldBarRenderer {
         int bgColor = (s.kind() == ShieldKind.ELEMENTAL)
                 ? HudDraw.scaleRgb(s.color(cfg, hpMax, 0), 0.3f)
                 : 0xFF404040;
-        SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx2, z, bgColor, alpha);
+        SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx2, z, bgColor, renderAlpha);
 
         float l1 = Mth.clamp(main3, 0f, 1f);
         float l2 = Mth.clamp(main3 - 1f, 0f, 1f);
@@ -96,22 +97,22 @@ public final class ShieldBarRenderer {
         o3.update(now, l3, cfg);
 
         if (l1 > 0.001f) {
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l1, z, s.color(cfg, hpMax, 0), alpha);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l1, z, s.color(cfg, hpMax, 0), renderAlpha);
         }
         if (l2 > 0.001f) {
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l2, z, s.color(cfg, hpMax, 1), alpha);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l2, z, s.color(cfg, hpMax, 1), renderAlpha);
         }
         if (l3 > 0.001f) {
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l3, z, s.color(cfg, hpMax, 2), alpha);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l3, z, s.color(cfg, hpMax, 2), renderAlpha);
         }
 
         float sa = s.bar.whiteness(now, cfg.subBarFlashTime);
         if (sa > 0.01f) {
-            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l1, z, 0xFFFFFF, alpha * sa);
+            SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l1, z, 0xFFFFFF, renderAlpha * sa);
         }
 
-        o1.emit((lo, hi, wa) -> SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, alpha * wa));
-        o2.emit((lo, hi, wa) -> SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, alpha * wa));
-        o3.emit((lo, hi, wa) -> SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, alpha * wa));
+        o1.emit((lo, hi, wa) -> SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, renderAlpha * wa));
+        o2.emit((lo, hi, wa) -> SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, renderAlpha * wa));
+        o3.emit((lo, hi, wa) -> SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1 + w * lo, vx1 + w * hi, z, 0xFFFFFF, renderAlpha * wa));
     }
 }

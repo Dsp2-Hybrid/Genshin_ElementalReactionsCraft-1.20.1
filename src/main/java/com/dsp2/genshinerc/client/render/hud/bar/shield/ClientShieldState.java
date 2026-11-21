@@ -17,6 +17,8 @@ public final class ClientShieldState {
     ShieldKind kind = ShieldKind.SPECIAL;
     @Nullable ElementType element;
     List<SyncShieldPacket.Entry> entries = List.of();
+    private long warningEndMs = Long.MAX_VALUE;
+    
 
     public void apply(SyncShieldPacket msg, long nowMs, BarConfig cfg) {
         entries = msg.shields();
@@ -28,6 +30,11 @@ public final class ClientShieldState {
             max = top.max();
             kind = top.kind();
             element = top.element();
+            warningEndMs = top.ticksLeft() < 0
+                    ? Long.MAX_VALUE
+                    : nowMs + top.ticksLeft() * 50L;
+        } else {
+            warningEndMs = Long.MAX_VALUE;
         }
         bar.set(top == null ? 0f : top.amount(), nowMs, cfg.subBarWhiteHoldTime, true);
         if (msg.hit()) bar.flash(nowMs);
@@ -65,6 +72,16 @@ public final class ClientShieldState {
                 default -> 210 << 16 | 210 << 8 | 210;
             };
         }
+    }
+
+    public float warningAlpha(long nowMs) {
+        if (warningEndMs == Long.MAX_VALUE) return 1f;
+        long remainingMs = warningEndMs - nowMs;
+        if (remainingMs >= 4000L) return 1f;
+        float progress = Mth.clamp(1f - remainingMs / 4000f, 0f, 1f);
+        double frequency = 0.8 + progress * 4.2;
+        double wave = (Math.sin(nowMs / 1000.0 * frequency * Math.PI * 2.0) + 1.0) * 0.5;
+        return (float) (0.05 + 0.95 * wave);
     }
 
     public float amount() { return bar.main(); }

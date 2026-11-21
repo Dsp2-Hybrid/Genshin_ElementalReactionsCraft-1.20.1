@@ -14,7 +14,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 
 @SuppressWarnings({"deprecation", "removal"})
 public final class GenshinercNetwork {
-    private static final String VERSION = "5";
+    private static final String VERSION = "6";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation("genshinerc", "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 

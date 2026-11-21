@@ -7,7 +7,12 @@ import com.dsp2.genshinerc.common.core.element.ElementType;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -57,11 +62,15 @@ public class DendroCoreEntity extends Entity {
             if (homing || getDeltaMovement().lengthSqr() > 0.01) {
                 Vec3 velocity = getDeltaMovement();
                 DustParticleOptions trail = new DustParticleOptions(new Vector3f(0.34f, 0.95f, 0.22f), 1.0f);
-                for (int i = 0; i < 3; i++) {
-                    level().addParticle(trail, getX(), getY(), getZ(),
-                            -velocity.x * 0.22 + (random.nextDouble() - 0.5) * 0.08,
-                            -velocity.y * 0.22 + (random.nextDouble() - 0.5) * 0.08,
-                            -velocity.z * 0.22 + (random.nextDouble() - 0.5) * 0.08);
+                for (int i = 0; i < 5; i++) {
+                    double spread = 0.045 + i * 0.012;
+                    level().addParticle(trail,
+                            getX() + (random.nextDouble() - 0.5) * 0.12,
+                            getY() + (random.nextDouble() - 0.5) * 0.12,
+                            getZ() + (random.nextDouble() - 0.5) * 0.12,
+                            -velocity.x * 0.24 + (random.nextDouble() - 0.5) * spread,
+                            -velocity.y * 0.24 + (random.nextDouble() - 0.5) * spread,
+                            -velocity.z * 0.24 + (random.nextDouble() - 0.5) * spread);
                 }
             }
             return;
@@ -71,6 +80,17 @@ public class DendroCoreEntity extends Entity {
             tickHoming();
             return;
         }
+
+        var currentState = level().getBlockState(blockPosition());
+        var belowState = level().getBlockState(blockPosition().below());
+        if (currentState.is(BlockTags.FIRE) || belowState.is(BlockTags.FIRE)
+                || currentState.is(Blocks.LAVA) || belowState.is(Blocks.LAVA)
+                || currentState.getFluidState().is(Fluids.LAVA)
+                || belowState.getFluidState().is(Fluids.LAVA)) {
+            detonate(Reaction.BURGEON, null);
+            return;
+        }
+
         if (tickCount >= ServerConfig.CORE_FUSE_TICKS.get()) detonate(Reaction.BLOOM, null);
     }
 
@@ -106,8 +126,14 @@ public class DendroCoreEntity extends Entity {
         Vec3 direction = offset.normalize();
         Vec3 side = direction.cross(new Vec3(0.0, 1.0, 0.0));
         if (side.lengthSqr() < 0.001) side = direction.cross(new Vec3(1.0, 0.0, 0.0));
-        side = side.normalize().scale(Math.sin(tickCount * 0.36) * 0.10);
-        Vec3 velocity = direction.scale(0.50).add(side);
+        side = side.normalize();
+        Vec3 secondary = direction.cross(side);
+        if (secondary.lengthSqr() > 0.001) secondary = secondary.normalize();
+        double phase = tickCount * 0.36;
+        Vec3 sway = side.scale(Math.sin(phase) * 0.11)
+                .add(secondary.scale(Math.cos(phase * 0.73) * 0.045))
+                .add(0.0, Math.sin(phase * 0.51) * 0.035, 0.0);
+        Vec3 velocity = direction.scale(0.50).add(sway);
         setDeltaMovement(velocity);
         setPos(getX() + velocity.x, getY() + velocity.y, getZ() + velocity.z);
         hasImpulse = true;
@@ -124,7 +150,10 @@ public class DendroCoreEntity extends Entity {
             ReactionDamage.deal(hit, attacker, DamageKind.DENDRO, Reaction.HYPERBLOOM, stats);
             ReactionText.send(hit, Reaction.HYPERBLOOM, ElementType.ELECTRO, ElementType.DENDRO);
         }
-        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 12, 0.3, 0.3, 0.3, 0.03);
+        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 18, 0.34, 0.34, 0.34, 0.045);
+        server.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY(), getZ(), 10, 0.28, 0.28, 0.28, 0.08);
+        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundSource.HOSTILE, 0.48f, 1.35f + server.getRandom().nextFloat() * 0.35f);
         discard();
     }
 
@@ -180,8 +209,10 @@ public class DendroCoreEntity extends Entity {
             }
         }
 
-        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 18, 0.35, 0.3, 0.35, 0.03);
-        server.sendParticles(ParticleTypes.COMPOSTER, getX(), getY(), getZ(), 12, 0.3, 0.24, 0.3, 0.05);
+        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 24, 0.38, 0.34, 0.38, 0.045);
+        server.sendParticles(ParticleTypes.COMPOSTER, getX(), getY(), getZ(), 18, 0.34, 0.28, 0.34, 0.06);
+        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundSource.HOSTILE, 0.52f, 1.05f + server.getRandom().nextFloat() * 0.30f);
         discard();
     }
 }

@@ -17,9 +17,9 @@ public final class OverloadVFX {
 
     public static void play(ServerLevel level, Vec3 at) {
         BlockPos pos = BlockPos.containing(at);
-        level.playSound(null, pos, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS,
-                0.9f, 0.9f + level.random.nextFloat() * 0.3f);
-        level.playSound(null, pos, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.BLOCKS, 0.35f, 1.45f);
+        level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS,
+                0.55f, 0.72f + level.random.nextFloat() * 0.18f);
+        level.playSound(null, pos, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.BLOCKS, 0.22f, 1.65f);
         level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y, at.z, 2, 0.25, 0.18, 0.25, 0);
         level.sendParticles(ParticleTypes.FLAME, at.x, at.y, at.z, 20, 0.4, 0.25, 0.4, 0.075);
         level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 22, 0.45, 0.30, 0.45, 0.12);

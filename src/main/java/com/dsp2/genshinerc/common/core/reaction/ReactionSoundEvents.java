@@ -14,12 +14,23 @@ public final class ReactionSoundEvents {
         sl.playSound(null,e.blockPosition(),SoundEvents.LIGHTNING_BOLT_THUNDER,SoundSource.HOSTILE,0.6f,1.2f); }
     public static void playSuperconduct(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.playSound(null,e.blockPosition(),SoundEvents.GLASS_BREAK,SoundSource.HOSTILE,0.8f,0.7f);
         sl.playSound(null,e.blockPosition(),SoundEvents.LIGHTNING_BOLT_THUNDER,SoundSource.HOSTILE,0.4f,1.5f); }
+    public static void playElectroChargedStart(LivingEntity e) {
+        ServerLevel level = L(e);
+        if (level == null) return;
+        level.playSound(null, e.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundSource.HOSTILE, 0.42f, 1.55f + level.getRandom().nextFloat() * 0.18f);
+        level.playSound(null, e.blockPosition(), SoundEvents.GENERIC_SPLASH,
+                SoundSource.HOSTILE, 0.20f, 1.75f);
+    }
+
     public static void playElectroCharged(LivingEntity e) {
         ServerLevel level = L(e);
         if (level == null) return;
-        float pitch = 1.4f + level.getRandom().nextFloat() * 0.28f;
-        level.playSound(null, e.blockPosition(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.HOSTILE, 0.38f, pitch);
-        level.playSound(null, e.blockPosition(), SoundEvents.GENERIC_SPLASH, SoundSource.HOSTILE, 0.24f, 1.65f);
+        float pitch = 1.65f + level.getRandom().nextFloat() * 0.30f;
+        level.playSound(null, e.blockPosition(), SoundEvents.LIGHTNING_BOLT_IMPACT,
+                SoundSource.HOSTILE, 0.20f, pitch);
+        level.playSound(null, e.blockPosition(), SoundEvents.GENERIC_SPLASH,
+                SoundSource.HOSTILE, 0.13f, 1.85f);
     }
     public static void playFreeze(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.playSound(null,e.blockPosition(),SoundEvents.GLASS_PLACE,SoundSource.HOSTILE,0.7f,0.8f); }
     public static void playShatter(LivingEntity e) {

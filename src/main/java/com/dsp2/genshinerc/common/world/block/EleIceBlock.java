@@ -9,15 +9,17 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HalfTransparentBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class EleIceBlock extends HalfTransparentBlock {
     public static final BooleanProperty SOURCE = BooleanProperty.create("source");
@@ -32,15 +34,6 @@ public class EleIceBlock extends HalfTransparentBlock {
         BlockPos at = pos.immutable();
         if (!level.getBlockState(at).is(Blocks.WATER)) return;
 
-        AABB frozenBox = new AABB(at);
-        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, frozenBox,
-                e -> e.isAlive() && !e.isSpectator() && e.blockPosition().equals(at))) {
-            AABB lifted = entity.getBoundingBox().move(0.0, 1.0, 0.0);
-            if (!level.noCollision(entity, lifted)) return;
-            entity.setPos(entity.getX(), entity.getY() + 1.0, entity.getZ());
-            entity.fallDistance = 0.0f;
-            entity.hurtMarked = true;
-        }
 
         var ice = ModBlocks.SPECIAL_ICE.get();
         int lifetime = Math.max(12, ElementGauge.durationTicksFromUnits(units) + level.random.nextInt(10));
@@ -93,6 +86,11 @@ public class EleIceBlock extends HalfTransparentBlock {
                     pos.getX() + random.nextDouble(), pos.getY() + 0.8, pos.getZ() + random.nextDouble(),
                     0, 0.01, 0);
         }
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return Block.box(0.0, 14.0, 0.0, 16.0, 16.0, 16.0);
     }
 
     @Override

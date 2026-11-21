@@ -33,7 +33,9 @@ final class ElectroChargedTracker {
 
     static void start(LivingEntity target, @Nullable Entity attacker, boolean natural) {
         if (!natural && !coexist(target)) return;
+        boolean created = !ACTIVE.containsKey(target);
         State state = ACTIVE.computeIfAbsent(target, ignored -> new State());
+        if (created) ReactionSoundEvents.playElectroChargedStart(target);
         if (!natural && attacker != null) {
             state.source = attacker.getUUID();
             state.stats = ElementalStats.of(attacker);

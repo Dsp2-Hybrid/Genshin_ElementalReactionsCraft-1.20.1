@@ -79,6 +79,15 @@ final class GradientTextBuffer implements MultiBufferSource {
                 }
             }
 
+            if (t <= 0.67f) {
+                t = 0f;
+            } else if (t >= 0.83f) {
+                t = 1f;
+            } else {
+                float blend = (t - 0.67f) / 0.16f;
+                t = blend * blend * (3f - 2f * blend);
+            }
+
             out.color(
                     mix((rgbFrom >> 16) & 0xFF, (rgbTo >> 16) & 0xFF, t),
                     mix((rgbFrom >> 8) & 0xFF, (rgbTo >> 8) & 0xFF, t),

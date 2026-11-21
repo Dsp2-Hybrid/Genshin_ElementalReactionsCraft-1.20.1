@@ -23,8 +23,18 @@ public final class ShieldManager {
     public static void add(LivingEntity entity, ShieldKind kind, @Nullable ElementType element, float amount, int durationTicks) {
         if (entity.level().isClientSide() || amount <= 0f) return;
         List<ShieldInstance> list = SHIELDS.computeIfAbsent(entity, k -> new ArrayList<>());
-        for (ShieldInstance s : list) {
-            if (s.sameAttribute(kind, element)) { s.stack(amount, durationTicks); DIRTY.add(entity); return; }
+        if (kind == ShieldKind.ELEMENTAL) {
+            list.removeIf(shield -> shield.kind() == ShieldKind.ELEMENTAL);
+            list.add(new ShieldInstance(kind, element, amount, durationTicks));
+            DIRTY.add(entity);
+            return;
+        }
+        for (ShieldInstance shield : list) {
+            if (shield.sameAttribute(kind, element)) {
+                shield.stack(amount, durationTicks);
+                DIRTY.add(entity);
+                return;
+            }
         }
         list.add(new ShieldInstance(kind, element, amount, durationTicks));
         DIRTY.add(entity);
@@ -41,38 +51,39 @@ public final class ShieldManager {
     public static AbsorbResult absorbElemental(LivingEntity entity, float damage, DamageKind kind, float rockCost) {
         List<ShieldInstance> list = SHIELDS.get(entity);
         if (list == null || list.isEmpty() || damage <= 0f) return AbsorbResult.NONE;
-        
-        ShieldInstance best = null;
-        for (ShieldInstance s : list) {
-            boolean rock = rockCost > 1f && s.element() == ElementType.GEO;
-            boolean bestRock = best != null && rockCost > 1f && best.element() == ElementType.GEO;
-            if (best == null || (rock != bestRock ? rock : s.amount() > best.amount())) {
-                best = s;
+
+        float blocked = 0f;
+        float spent = 0f;
+        boolean broke = false;
+        ElementType displayElement = null;
+        float displayAmount = -1f;
+
+        for (ShieldInstance shield : list) {
+            boolean sameElement = shield.kind() == ShieldKind.ELEMENTAL
+                    && shield.element() != null
+                    && DamageKind.fromElement(shield.element()) == kind;
+            float costPerDamage = (sameElement ? 0.4f : 1f)
+                    * (shield.element() == ElementType.GEO ? rockCost : 1f);
+            costPerDamage = Math.max(0.0001f, costPerDamage);
+
+            float available = shield.amount();
+            float needed = damage * costPerDamage;
+            float consumed = Math.min(available, needed);
+            shield.damage(consumed);
+            spent += consumed;
+            blocked = Math.max(blocked, Math.min(damage, available / costPerDamage));
+            if (available < needed) broke = true;
+
+            if (available > displayAmount) {
+                displayAmount = available;
+                displayElement = shield.element();
             }
         }
-        if (best == null) return AbsorbResult.NONE;
-        
-        boolean sameElement = best.kind() == ShieldKind.ELEMENTAL && best.element() != null && DamageKind.fromElement(best.element()) == kind;
-        float costPerDamage = (sameElement ? 0.4f : 1f) * (best.element() == ElementType.GEO ? rockCost : 1f);
-        float available = best.amount();
-        float needed = damage * costPerDamage;
-        float blocked;
-        boolean broke;
-        
-        if (available >= needed) { 
-            best.damage(needed); 
-            blocked = damage; 
-            broke = false; 
-        } else { 
-            blocked = available / costPerDamage; 
-            best.damage(available); 
-            broke = true; 
-        }
-        
-        list.removeIf(s -> s.amount() <= 0f);
+
+        list.removeIf(shield -> shield.amount() <= 0f);
         HIT.add(entity);
         DIRTY.add(entity);
-        return new AbsorbResult(blocked, Math.min(available, needed), broke, best.element());
+        return new AbsorbResult(blocked, spent, broke, displayElement);
     }
 
     public static float absorb(LivingEntity entity, float damage) { return absorbElemental(entity, damage, DamageKind.PHYSICAL).blocked(); }
@@ -96,7 +107,12 @@ public final class ShieldManager {
             Map.Entry<LivingEntity, List<ShieldInstance>> entry = it.next();
             LivingEntity e = entry.getKey();
             if (e.isRemoved()) { it.remove(); continue; }
-            if (entry.getValue().removeIf(ShieldInstance::tickExpired)) DIRTY.add(e);
+            boolean expired = entry.getValue().removeIf(ShieldInstance::tickExpired);
+            boolean warningSync = !expired && entry.getValue().stream()
+                    .anyMatch(shield -> shield.ticksLeft() > 0
+                            && shield.ticksLeft() <= 80
+                            && shield.ticksLeft() % 5 == 0);
+            if (expired || warningSync) DIRTY.add(e);
         }
         for (LivingEntity e : DIRTY) {
             if (e.isRemoved()) continue;
@@ -158,7 +174,9 @@ public final class ShieldManager {
         List<ShieldInstance> list = new ArrayList<>(get(e));
         list.sort((a, b) -> Float.compare(b.amount(), a.amount()));
         List<SyncShieldPacket.Entry> entries = new ArrayList<>();
-        for (ShieldInstance s : list) entries.add(new SyncShieldPacket.Entry(s.kind(), s.element(), s.amount(), s.max()));
+        for (ShieldInstance s : list) {
+            entries.add(new SyncShieldPacket.Entry(s.kind(), s.element(), s.amount(), s.max(), s.ticksLeft()));
+        }
         return new SyncShieldPacket(e.getId(), hit, entries);
     }
 

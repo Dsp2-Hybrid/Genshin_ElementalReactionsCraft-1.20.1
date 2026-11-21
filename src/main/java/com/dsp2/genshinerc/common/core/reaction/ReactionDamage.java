@@ -130,6 +130,7 @@ public final class ReactionDamage {
 
         float hp = target.getHealth();
         float absorb = target.getAbsorptionAmount();
+        net.minecraft.world.phys.Vec3 priorVelocity = target.getDeltaMovement();
         int invulnerable = target.invulnerableTime;
         boolean previous = dealing;
         ShieldImpact previousImpact = shieldImpact;
@@ -143,6 +144,10 @@ public final class ReactionDamage {
         try {
             target.invulnerableTime = 0;
             target.hurt(source, (float) amount);
+            if (reaction == Reaction.ELECTRO_CHARGED) {
+                target.setDeltaMovement(priorVelocity);
+                target.hurtMarked = true;
+            }
         } finally {
             target.invulnerableTime = invulnerable;
             dealing = previous;

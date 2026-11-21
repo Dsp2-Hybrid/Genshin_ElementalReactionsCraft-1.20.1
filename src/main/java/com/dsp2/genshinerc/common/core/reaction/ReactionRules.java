@@ -79,7 +79,8 @@ final class ReactionRules {
     }
 
     static float ratio(ElementType trigger, ElementType aura) {
-        if (trigger == ElementType.ANEMO || trigger == ElementType.GEO) return 0.5f;
+        if (trigger == ElementType.ANEMO) return 1f;
+        if (trigger == ElementType.GEO) return 0.5f;
         if (trigger == ElementType.HYDRO && aura == ElementType.PYRO) return 2f;
         if (trigger == ElementType.PYRO && (aura == ElementType.CRYO || aura == ElementType.FROZEN)) return 2f;
         if (trigger == ElementType.DENDRO && aura == ElementType.HYDRO) return 2f;

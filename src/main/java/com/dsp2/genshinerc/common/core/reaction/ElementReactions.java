@@ -22,12 +22,20 @@ import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.UUID;
 
 public final class ElementReactions {
     private static final float EPS = 1.0e-4f;
     private static final java.util.Map<LivingEntity, Long> EMBER_REFILL_AT = new java.util.WeakHashMap<>();
     private static final java.util.Map<LivingEntity, Long> CRYSTALLIZE_AT = new java.util.WeakHashMap<>();
+    private static final class NaturalPressure {
+        float scale = 1f;
+        long lastTick = Long.MIN_VALUE;
+    }
+
+    private static final Map<LivingEntity, java.util.EnumMap<ElementType, NaturalPressure>> NATURAL_PRESSURE =
+            new java.util.WeakHashMap<>();
 
     private static void consumeEmbers(LivingEntity entity, float amount) {
         int remaining = entity.getRemainingFireTicks();
@@ -74,6 +82,7 @@ public final class ElementReactions {
         OverloadImpulse.reset();
         EMBER_REFILL_AT.clear();
         CRYSTALLIZE_AT.clear();
+        NATURAL_PRESSURE.clear();
     }
 
     public static float tntGauge(double distance, double radius) {
@@ -101,7 +110,24 @@ public final class ElementReactions {
             if (now < resume) return 0f;
             EMBER_REFILL_AT.remove(target);
         }
-        return run(target, null, type, units, true, false).remaining();
+        long now = target.level().getGameTime();
+        java.util.EnumMap<ElementType, NaturalPressure> pressures = NATURAL_PRESSURE.computeIfAbsent(
+                target, ignored -> new java.util.EnumMap<>(ElementType.class));
+        NaturalPressure pressure = pressures.computeIfAbsent(type, ignored -> new NaturalPressure());
+        if (pressure.lastTick != Long.MIN_VALUE && now > pressure.lastTick + 4L) {
+            long quietTicks = now - pressure.lastTick - 4L;
+            pressure.scale = Math.min(1f, pressure.scale + Math.min(0.5f, quietTicks * 0.01f));
+        }
+
+        float effectiveUnits = units * pressure.scale;
+        ReactionResult result = run(target, null, type, effectiveUnits, true, false);
+        if (result.remaining() + EPS < effectiveUnits) {
+            pressure.scale = Math.max(0.15f, pressure.scale - 0.18f);
+        } else {
+            pressure.scale = Math.min(1f, pressure.scale + 0.025f);
+        }
+        pressure.lastTick = now;
+        return result.remaining();
     }
 
     public static ReactionResult run(LivingEntity target, @Nullable Entity attacker, ElementType trigger, float units, boolean natural, boolean applyWear) {
@@ -134,8 +160,6 @@ public final class ElementReactions {
                 if (reaction == null || (!allowElectroCharged && reaction == Reaction.ELECTRO_CHARGED)) continue;
                 if (reaction == Reaction.FREEZE && FrozenControl.resistance(target) >= 1.0) continue;
                 if (target.isUnderWater() && (reaction == Reaction.SWIRL || reaction == Reaction.CRYSTALLIZE)) continue;
-                if (reaction == Reaction.CRYSTALLIZE
-                        && target.level().getGameTime() < CRYSTALLIZE_AT.getOrDefault(target, Long.MIN_VALUE)) continue;
                 if (reaction == Reaction.CRYSTALLIZE
                         && target.level().getGameTime() < CRYSTALLIZE_AT.getOrDefault(target, Long.MIN_VALUE)) continue;
                 ElementType swirlElement = aura == ElementType.FROZEN ? ElementType.CRYO : aura;
@@ -228,9 +252,9 @@ public final class ElementReactions {
             }
             case CRYSTALLIZE -> {
                 res.noteCrystallized(aura);
-                crystallize(atk, aura, s);
+                crystallize(t, atk, aura, s);
                 ReactionSoundEvents.playCrystallize(t);
-                ReactionParticles.spawnCrystallize(t);
+                ReactionParticles.spawnCrystallize(t, aura);
             }
             case BLOOM -> {
                 if (!naturalMode) DendroCores.spawn(t, atk, s);
@@ -314,11 +338,12 @@ public final class ElementReactions {
         ResistanceShred.apply(t, attribute, id, ServerConfig.SWIRL_SHRED.get(), ticks);
     }
 
-    private static void crystallize(@Nullable Entity atk, ElementType aura, ElementalStats s) {
-        if (!(atk instanceof LivingEntity owner)) return;
+    private static void crystallize(LivingEntity reactionTarget, @Nullable Entity atk, ElementType aura, ElementalStats s) {
+        if (!(atk instanceof LivingEntity)) return;
+        if (!(reactionTarget.level() instanceof ServerLevel level)) return;
         float amount = (float) ElementalMath.crystallizeShield(s.level(), s.mastery());
         int ticks = Math.round(ServerConfig.CRYSTALLIZE_SECONDS.get().floatValue() * 20f);
-        ShieldManager.add(owner, ShieldKind.ELEMENTAL, aura, amount, ticks);
+        CrystallizeShardDrop.spawnAt(level, reactionTarget.getBoundingBox().getCenter(), aura, amount, ticks);
     }
 
     public static void overloadAt(ServerLevel level, LivingEntity attacker, Vec3 at) {

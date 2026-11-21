@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 public record SyncShieldPacket(int entityId, boolean hit, List<Entry> shields) {
     private static final int MAX_ENTRIES = 32;
 
-    public record Entry(ShieldKind kind, @Nullable ElementType element, float amount, float max) {}
+    public record Entry(ShieldKind kind, @Nullable ElementType element, float amount, float max, int ticksLeft) {}
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeVarInt(entityId);
@@ -27,6 +27,7 @@ public record SyncShieldPacket(int entityId, boolean hit, List<Entry> shields) {
             buf.writeVarInt(e.element() == null ? -1 : e.element().ordinal());
             buf.writeFloat(e.amount());
             buf.writeFloat(e.max());
+            buf.writeVarInt(e.ticksLeft());
         }
     }
 
@@ -41,7 +42,10 @@ public record SyncShieldPacket(int entityId, boolean hit, List<Entry> shields) {
             ShieldKind kind = buf.readEnum(ShieldKind.class);
             int ord = buf.readVarInt();
             ElementType element = ord >= 0 && ord < types.length ? types[ord] : null;
-            list.add(new Entry(kind, element, buf.readFloat(), buf.readFloat()));
+            float amount = buf.readFloat();
+            float max = buf.readFloat();
+            int ticksLeft = buf.readVarInt();
+            list.add(new Entry(kind, element, amount, max, ticksLeft));
         }
         return new SyncShieldPacket(id, hit, list);
     }

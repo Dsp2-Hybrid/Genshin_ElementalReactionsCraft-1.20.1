@@ -12,7 +12,19 @@ public final class ReactionParticles {
     private static ServerLevel L(LivingEntity e) { return e.level() instanceof ServerLevel sl ? sl : null; }
     public static void spawnOverload(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.sendParticles(ParticleTypes.FLAME,e.getX(),e.getY()+0.5,e.getZ(),20,0.5,0.5,0.5,0.05); sl.sendParticles(ParticleTypes.ELECTRIC_SPARK,e.getX(),e.getY()+0.5,e.getZ(),15,0.5,0.5,0.5,0.1); }
     public static void spawnSuperconduct(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.sendParticles(ParticleTypes.SNOWFLAKE,e.getX(),e.getY()+0.5,e.getZ(),15,0.5,0.5,0.5,0.05); sl.sendParticles(ParticleTypes.ELECTRIC_SPARK,e.getX(),e.getY()+0.5,e.getZ(),10,0.5,0.5,0.5,0.08); }
-    public static void spawnElectroCharged(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.sendParticles(ParticleTypes.ELECTRIC_SPARK,e.getX(),e.getY()+0.5,e.getZ(),8,0.3,0.3,0.3,0.1); sl.sendParticles(ParticleTypes.FALLING_WATER,e.getX(),e.getY()+0.5,e.getZ(),5,0.3,0.3,0.3,0.05); }
+    public static void spawnElectroCharged(LivingEntity e) {
+        ServerLevel level = L(e);
+        if (level == null) return;
+        var center = e.getBoundingBox().getCenter();
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, center.x, center.y, center.z,
+                18, 0.38, 0.42, 0.38, 0.12);
+        level.sendParticles(ParticleTypes.FALLING_WATER, center.x, center.y, center.z,
+                10, 0.34, 0.36, 0.34, 0.07);
+        level.sendParticles(dust(ElementType.ELECTRO, 0.9f), center.x, center.y, center.z,
+                12, 0.32, 0.32, 0.32, 0.08);
+        level.sendParticles(dust(ElementType.HYDRO, 0.75f), center.x, center.y, center.z,
+                8, 0.30, 0.28, 0.30, 0.05);
+    }
     public static void spawnFreeze(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.sendParticles(ParticleTypes.SNOWFLAKE,e.getX(),e.getY()+0.5,e.getZ(),25,0.5,0.5,0.5,0.02); }
     public static void spawnShatter(LivingEntity e) {
         ServerLevel sl = L(e);
@@ -75,13 +87,18 @@ public final class ReactionParticles {
         DustParticleOptions water = dust(ElementType.HYDRO, 0.85f);
         DustParticleOptions electricity = dust(ElementType.ELECTRO, 1.0f);
         double offset = level.getRandom().nextDouble() * Math.PI * 2.0;
-        for (int i = 0; i < 14; i++) {
-            double angle = offset + i * Math.PI / 7.0;
-            double x = center.x + Math.cos(angle) * reach;
-            double z = center.z + Math.sin(angle) * reach;
-            double y = e.getY() + 0.24 + (i % 3) * 0.17;
-            level.sendParticles(i % 2 == 0 ? electricity : water, x, y, z, 1, 0.10, 0.07, 0.10, 0.02);
-            if (i % 3 == 0) level.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y + 0.15, z, 1, 0, 0.04, 0, 0.03);
+        for (int i = 0; i < 32; i++) {
+            double angle = offset + i * Math.PI / 16.0;
+            double distance = reach * (0.82 + level.getRandom().nextDouble() * 0.18);
+            double x = center.x + Math.cos(angle) * distance;
+            double z = center.z + Math.sin(angle) * distance;
+            double y = e.getY() + 0.18 + (i % 4) * 0.14;
+            level.sendParticles(i % 2 == 0 ? electricity : water, x, y, z,
+                    1, 0.12, 0.08, 0.12, 0.025);
+            if (i % 2 == 0) {
+                level.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y + 0.12, z,
+                        1, 0.03, 0.07, 0.03, 0.04);
+            }
         }
     }
 
@@ -96,7 +113,21 @@ public final class ReactionParticles {
         return new DustParticleOptions(new Vector3f(
                 ((rgb >>> 16) & 255) / 255f, ((rgb >>> 8) & 255) / 255f, (rgb & 255) / 255f), scale);
     }
-    public static void spawnCrystallize(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.sendParticles(ParticleTypes.END_ROD,e.getX(),e.getY()+0.5,e.getZ(),12,0.4,0.4,0.4,0.05); }
+    public static void spawnCrystallize(LivingEntity e) {
+        spawnCrystallize(e, ElementType.GEO);
+    }
+
+    public static void spawnCrystallize(LivingEntity e, ElementType element) {
+        ServerLevel level = L(e);
+        if (level == null) return;
+        var center = e.getBoundingBox().getCenter();
+        level.sendParticles(dust(element, 1.0f), center.x, center.y, center.z,
+                18, 0.38, 0.38, 0.38, 0.08);
+        level.sendParticles(dust(ElementType.GEO, 0.75f), center.x, center.y, center.z,
+                10, 0.32, 0.34, 0.32, 0.06);
+        level.sendParticles(ParticleTypes.END_ROD, center.x, center.y, center.z,
+                6, 0.30, 0.32, 0.30, 0.04);
+    }
     public static void spawnBloom(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.sendParticles(ParticleTypes.HAPPY_VILLAGER,e.getX(),e.getY()+0.5,e.getZ(),15,0.5,0.5,0.5,0.05); }
     public static void spawnBurning(LivingEntity e) { ServerLevel sl=L(e); if(sl==null)return; sl.sendParticles(ParticleTypes.SMALL_FLAME,e.getX(),e.getY()+0.5,e.getZ(),3,0.2,0.2,0.2,0.01); }
 }
