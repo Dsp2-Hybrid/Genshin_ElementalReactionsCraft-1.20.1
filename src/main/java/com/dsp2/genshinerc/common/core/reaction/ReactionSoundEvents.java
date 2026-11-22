@@ -50,7 +50,7 @@ public final class ReactionSoundEvents {
                 SoundSource.HOSTILE, 0.38f,
                 1.14f + level.getRandom().nextFloat() * 0.20f);
         level.playSound(null, entity.blockPosition(),
-                SoundEvents.NOTE_BLOCK_BELL,
+                SoundEvents.NOTE_BLOCK_BELL.value(),
                 SoundSource.HOSTILE, 0.20f,
                 1.42f + level.getRandom().nextFloat() * 0.20f);
         level.playSound(null, entity.blockPosition(),
@@ -67,7 +67,7 @@ public final class ReactionSoundEvents {
                 SoundSource.HOSTILE, 0.24f,
                 1.42f + level.getRandom().nextFloat() * 0.36f);
         level.playSound(null, entity.blockPosition(),
-                SoundEvents.NOTE_BLOCK_HAT,
+                SoundEvents.NOTE_BLOCK_HAT.value(),
                 SoundSource.HOSTILE, 0.16f,
                 1.62f + level.getRandom().nextFloat() * 0.30f);
         level.playSound(null, entity.blockPosition(),

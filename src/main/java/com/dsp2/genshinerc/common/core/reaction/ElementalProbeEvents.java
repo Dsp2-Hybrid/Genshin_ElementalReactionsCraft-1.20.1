@@ -1,6 +1,7 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -12,26 +13,70 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = "genshinerc")
 public final class ElementalProbeEvents {
+    private static final double EXPLOSION_RADIUS = 3.5;
+    private static final float EXPLOSION_UNITS = 1.5f;
+    private static final double LIGHTNING_RADIUS = 2.5;
+    private static final float LIGHTNING_CENTER_UNITS = 1.0f;
+    private static final float LIGHTNING_NEAR_UNITS = 0.6f;
+
     private ElementalProbeEvents() {}
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onExplosion(ExplosionEvent.Detonate event) {
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        if (!(event.getLevel() instanceof ServerLevel)) {
+            return;
+        }
 
-        Vec3 position = event.getExplosion().getPosition();
-        double radius = Math.max(1.0, event.getExplosion().getRadius());
-        float units = (float) Math.max(1.0, Math.min(4.0, radius * 0.65));
+        for (Entity entity : event.getAffectedEntities()) {
+            if (!(entity instanceof LivingEntity living)) {
+                continue;
+            }
 
-        ElementReactions.probeExplosion(level, null, position, units, radius);
+            if (!living.isAlive() || living.isSpectator()) {
+                continue;
+            }
+
+            ElementReactions.trigger(
+                    living,
+                    null,
+                    com.dsp2.genshinerc.common.core.element.ElementType.PYRO,
+                    EXPLOSION_UNITS);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onLightning(LivingAttackEvent event) {
-        if (!(event.getSource().getDirectEntity() instanceof LightningBolt lightning)) return;
-        if (!(event.getEntity().level() instanceof ServerLevel level)) return;
+        if (!(event.getSource().getDirectEntity() instanceof LightningBolt)) {
+            return;
+        }
+
+        if (!(event.getEntity().level() instanceof ServerLevel)) {
+            return;
+        }
 
         LivingEntity target = event.getEntity();
-        Vec3 position = lightning.position();
-        ElementReactions.probeLightning(level, target, position, 1.0f, 2.5);
+
+        ElementReactions.trigger(
+                target,
+                null,
+                com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO,
+                LIGHTNING_CENTER_UNITS);
+
+        Vec3 center = target.getBoundingBox().getCenter();
+
+        for (LivingEntity nearby : target.level().getEntitiesOfClass(
+                LivingEntity.class,
+                target.getBoundingBox().inflate(LIGHTNING_RADIUS),
+                entity -> entity != target
+                        && entity.isAlive()
+                        && !entity.isSpectator()
+                        && entity.getBoundingBox().getCenter().distanceToSqr(center)
+                        <= LIGHTNING_RADIUS * LIGHTNING_RADIUS)) {
+            ElementReactions.trigger(
+                    nearby,
+                    null,
+                    com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO,
+                    LIGHTNING_NEAR_UNITS);
+        }
     }
 }

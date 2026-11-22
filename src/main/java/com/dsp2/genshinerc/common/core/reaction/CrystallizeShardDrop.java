@@ -33,8 +33,9 @@ public final class CrystallizeShardDrop {
             ElementType element,
             float amount,
             int ticks) {
-        if (level == null) return;
-        if (element == null || amount <= 0f || ticks <= 0) return;
+        if (element == null || amount <= 0f || ticks <= 0) {
+            return;
+        }
 
         ItemStack stack = new ItemStack(Items.AMETHYST_SHARD);
         CompoundTag tag = stack.getOrCreateTag();
@@ -55,15 +56,13 @@ public final class CrystallizeShardDrop {
         shard.setGlowingTag(true);
         shard.setDeltaMovement(
                 (level.random.nextDouble() - 0.5) * 0.08,
-                0.12 + level.random.nextDouble() * 0.07,
+                0.12 + level.random.nextDouble() * 0.06,
                 (level.random.nextDouble() - 0.5) * 0.08);
 
         level.addFreshEntity(shard);
 
-        DustParticleOptions particle = particle(element);
-
         level.sendParticles(
-                particle,
+                particle(element),
                 position.x,
                 position.y + 0.45,
                 position.z,
@@ -96,12 +95,17 @@ public final class CrystallizeShardDrop {
     @SubscribeEvent
     public static void onPickup(PlayerEvent.ItemPickupEvent event) {
         Player player = event.getEntity();
-        if (player.level().isClientSide()) return;
+
+        if (player.level().isClientSide()) {
+            return;
+        }
 
         ItemStack stack = event.getStack();
         CompoundTag tag = stack.getTag();
 
-        if (tag == null || !tag.contains(ELEMENT_KEY)) return;
+        if (tag == null || !tag.contains(ELEMENT_KEY)) {
+            return;
+        }
 
         ElementType element;
 

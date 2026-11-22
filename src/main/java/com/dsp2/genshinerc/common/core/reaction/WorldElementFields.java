@@ -108,7 +108,7 @@ public final class WorldElementFields {
 
                 level.playSound(null, zone.origin, SoundEvents.AMETHYST_BLOCK_CHIME,
                         SoundSource.PLAYERS, 0.25f, 1.42f + level.random.nextFloat() * 0.24f);
-                level.playSound(null, zone.origin, SoundEvents.NOTE_BLOCK_HAT,
+                level.playSound(null, zone.origin, SoundEvents.NOTE_BLOCK_HAT.value(),
                         SoundSource.PLAYERS, 0.14f, 1.72f + level.random.nextFloat() * 0.22f);
                 DustParticleOptions electro = dust(0xCC66FF, 0.95f);
                 DustParticleOptions hydro = dust(0x27C8FF, 0.75f);
