@@ -68,8 +68,18 @@ public final class ZhenMieBarRenderer {
 
         int zhenBase = cfg.zhenColor.getRGB() & 0xFFFFFF;
         int mieBase = cfg.mieColor.getRGB() & 0xFFFFFF;
-        int zc = s.zhenBuff ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : zhenBase;
-        int mc = s.mieBuff ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now) : mieBase;
+        int zc = s.zhenBuff
+                ? cycle(zhenBase, cfg.zhenBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now)
+                : zhenBase;
+        int mc = s.mieBuff
+                ? cycle(mieBase, cfg.mieBuffColor.getRGB() & 0xFFFFFF, cfg.zhenMieBuffCycleHz, now)
+                : mieBase;
+
+        float force = Mth.clamp(s.critForce, 0f, 1f);
+        if (force > 0f) {
+            zc = HudDraw.lerpRgb(zc, 0xFFFFFF, force * 0.30f);
+            mc = HudDraw.lerpRgb(mc, 0xFFFFFF, force * 0.42f);
+        }
 
         float zm = Mth.clamp(s.zhen.main(), 0f, 1f);
         float mm = Mth.clamp(s.mie.main(), 0f, 1f);
@@ -129,6 +139,7 @@ public final class ZhenMieBarRenderer {
 
         if (s.clash != null) {
             float fade = Mth.clamp((float) (s.staggerEndMs - now) / Math.max(1L, s.staggerEndMs - s.clashStartMs), 0f, 1f);
+            fade *= 0.78f + 0.22f * (float) (0.5 + 0.5 * Math.sin(now / 90.0));
             float x = Mth.lerp(s.clashPoint, l, r);
             float half = (topY - bottomY) * MARKER_WIDTH / 2f;
             HudDraw.rect(m, buffers, x - half, bottomY, x + half, topY, z, 0xFFFFFF, alpha * fade);

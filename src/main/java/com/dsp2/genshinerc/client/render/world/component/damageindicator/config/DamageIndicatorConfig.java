@@ -36,7 +36,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public double zOffset = -0.01;
     @SerialEntry public double particleMinSpacing = 0.30;
     @SerialEntry public int numberFormat = 1;
-    @SerialEntry public int lifeTime = 18;
+    @SerialEntry public int lifeTime = 20;
     @SerialEntry public double velocityMultiplier = 0.20;
     @SerialEntry public double gravityStrength = -0.15;
     @SerialEntry public boolean randomVelocityXZ = true;
@@ -228,7 +228,7 @@ public class DamageIndicatorConfig {
                 .option(dblOpt(false, "z_offset", -0.01, () -> c.zOffset, v -> c.zOffset = v, -0.15, 0.15))
                 .option(dblOpt(false, "particle_min_spacing", 0.30, () -> c.particleMinSpacing, v -> c.particleMinSpacing = v, 0.00, 2.00))
                 .option(enumOpt(false, "number_format", NumberFormat.ONE_DECIMAL, () -> NumberFormat.fromInt(c.numberFormat), v -> c.numberFormat = v.ordinal()))
-                .option(intOpt(false, "life_time", 18, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
+                .option(intOpt(false, "life_time", 20, () -> c.lifeTime, v -> c.lifeTime = v, 5, 60))
                 .option(dblOpt(false, "velocity_multiplier", 0.20, () -> c.velocityMultiplier, v -> c.velocityMultiplier = v, 0.00, 1.00))
                 .option(dblOpt(false, "gravity_strength", -0.15, () -> c.gravityStrength, v -> c.gravityStrength = v, -1.00, 1.00))
                 .option(boolOpt(false, "random_velocity_xz", true, () -> c.randomVelocityXZ, v -> c.randomVelocityXZ = v))

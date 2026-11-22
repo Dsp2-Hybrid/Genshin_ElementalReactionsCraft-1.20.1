@@ -3,6 +3,7 @@ package com.dsp2.genshinerc.common.core.combat.zhenmie;
 import com.dsp2.genshinerc.common.network.GenshinercNetwork;
 import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
 import com.dsp2.genshinerc.common.core.combat.epicfight.EfCombatBridge;
+import com.dsp2.genshinerc.common.registry.ModAttributes;
 import com.dsp2.genshinerc.common.level.EntityLevelManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,9 +37,13 @@ public final class ZhenMieManager {
         float clashPoint;
         long staggerUntil;
         long resistanceUntil;
+        long knockdownAt;
         int recentClashes;
 
-        boolean idle() { return zhen <= 0f && mie <= 0f && !zhenBuff && !mieBuff && staggerUntil == 0L && recentClashes == 0; }
+        boolean idle() {
+            return zhen <= 0f && mie <= 0f && !zhenBuff && !mieBuff
+                    && staggerUntil == 0L && knockdownAt == 0L && recentClashes == 0;
+        }
     }
 
     private ZhenMieManager() {}
@@ -57,10 +62,20 @@ public final class ZhenMieManager {
         int defLv = getLevelSafe(defender);
         float cap = ZhenMieRules.maxCapacity(defender.getMaxHealth(), defLv);
         ZhenMieRules.Delta d = ZhenMieRules.forDefense(intensity, outcome, atkLv, defLv, damage, cap);
-        
-        
-                
-        add(defender, d.zhen(), d.mie());
+
+        double attackerBreakPower = attacker == null ? 0.0
+                : attacker.getAttributeValue(ModAttributes.ZHEN_MIE_BREAK_POWER.get());
+        double attackerCrushPower = attacker == null ? 0.0
+                : attacker.getAttributeValue(ModAttributes.ZHEN_MIE_CRUSH_POWER.get());
+        double defenderBreakResistance = defender.getAttributeValue(ModAttributes.ZHEN_MIE_BREAK_RESISTANCE.get());
+        double defenderCrushResistance = defender.getAttributeValue(ModAttributes.ZHEN_MIE_CRUSH_RESISTANCE.get());
+
+        float zhen = d.zhen() * ZhenMieRules.powerMultiplier(attackerBreakPower)
+                * ZhenMieRules.resistanceMultiplier(defenderBreakResistance);
+        float mie = d.mie() * ZhenMieRules.powerMultiplier(attackerCrushPower)
+                * ZhenMieRules.resistanceMultiplier(defenderCrushResistance);
+
+        add(defender, zhen, mie);
     }
 
     public static boolean staggered(LivingEntity entity) {
@@ -71,7 +86,10 @@ public final class ZhenMieManager {
 
     public static float incomingMultiplier(LivingEntity entity) {
         State s = STATES.get(entity);
-        return s != null && staggered(entity) ? 1f + ZhenMieRules.vulnerability(s.clashPoint) : 1f;
+        if (s == null || !staggered(entity)) return 1f;
+        double resistance = entity.getAttributeValue(ModAttributes.ZHEN_MIE_CRUSH_RESISTANCE.get());
+        float reduction = 1f - ZhenMieRules.resistanceMultiplier(resistance);
+        return 1f + ZhenMieRules.vulnerability(s.clashPoint) * (1f - reduction);
     }
 
     public static void fillMie(LivingEntity entity) {
@@ -135,9 +153,19 @@ public final class ZhenMieManager {
         s.recentClashes = Math.min(4, s.recentClashes + 1);
         s.staggerUntil = now + ticks;
         s.resistanceUntil = s.staggerUntil + ZhenMieRules.STAGGER_MEMORY_STEP;
+        s.knockdownAt = 0L;
         com.dsp2.genshinerc.common.core.element.FrozenControl.refresh(entity);
-        EfCombatBridge.applyStun(entity, first ? result.stunType() : yesman.epicfight.world.damagesource.StunType.SHORT,
-                ticks / 20f);
+
+        if (result == ClashResult.KNOCKDOWN && s.clashPoint >= ZhenMieRules.KNOCKUP_MIN_POINT) {
+            double lift = 0.28 + 0.42 * Math.max(0f, Math.min(1f, (s.clashPoint - 0.75f) / 0.25f));
+            entity.push(0.0, lift, 0.0);
+            entity.hurtMarked = true;
+            s.knockdownAt = now + 12L;
+            EfCombatBridge.applyStun(entity, yesman.epicfight.world.damagesource.StunType.SHORT, 0.45f);
+        } else {
+            EfCombatBridge.applyStun(entity, first ? result.stunType() : yesman.epicfight.world.damagesource.StunType.SHORT,
+                    ticks / 20f);
+        }
     }
 
     public static void setBuffs(LivingEntity entity, boolean zhenBuff, boolean mieBuff) {
@@ -182,6 +210,13 @@ public final class ZhenMieManager {
             int oldResistance = s.recentClashes;
             recoverResistance(s, time);
             if (oldResistance != s.recentClashes) DIRTY.add(e);
+            if (s.knockdownAt != 0L && time >= s.knockdownAt) {
+                s.knockdownAt = 0L;
+                if (e.isAlive()) {
+                    EfCombatBridge.applyStun(e, yesman.epicfight.world.damagesource.StunType.KNOCKDOWN, 1.0f);
+                }
+                DIRTY.add(e);
+            }
             if (s.staggerUntil != 0L && (time >= s.staggerUntil || !e.isAlive())) {
                 s.staggerUntil = 0L;
                 com.dsp2.genshinerc.common.core.element.FrozenControl.refresh(e);
@@ -224,14 +259,39 @@ public final class ZhenMieManager {
         float cap = ZhenMieRules.maxCapacity(e.getMaxHealth(), getLevelSafe(e));
         float normalizedZhen = cap > 0f ? s.zhen / cap : 0f;
         float normalizedMie = cap > 0f ? s.mie / cap : 0f;
-        
-                
-        return new SyncZhenMiePacket(e.getId(), normalizedZhen, normalizedMie, s.zhenBuff, s.mieBuff, s.decaying,
-                withClash || staggered(e) ? s.pendingClash != null ? s.pendingClash
-                        : staggered(e) ? ZhenMieRules.classify(s.clashPoint) : null : null,
-                s.clashPoint, (int) Math.max(0L, s.staggerUntil - e.level().getGameTime()));
+
+        ClashResult clash = withClash || staggered(e)
+                ? s.pendingClash != null
+                ? s.pendingClash
+                : staggered(e)
+                ? ZhenMieRules.classify(s.clashPoint)
+                : null
+                : null;
+
+        return new SyncZhenMiePacket(
+                e.getId(),
+                normalizedZhen,
+                normalizedMie,
+                s.zhenBuff,
+                s.mieBuff,
+                s.decaying,
+                clash,
+                s.clashPoint,
+                (int) Math.max(0L, s.staggerUntil - e.level().getGameTime()),
+                attributeValue(e, ModAttributes.ZHEN_MIE_BREAK_POWER),
+                attributeValue(e, ModAttributes.ZHEN_MIE_CRUSH_POWER),
+                attributeValue(e, ModAttributes.ZHEN_MIE_RESOLVE),
+                attributeValue(e, ModAttributes.ZHEN_MIE_BREAK_RESISTANCE),
+                attributeValue(e, ModAttributes.ZHEN_MIE_CRUSH_RESISTANCE),
+                attributeValue(e, ModAttributes.ZHEN_MIE_CRIT_FORCE));
     }
 
+    private static float attributeValue(
+            LivingEntity entity,
+            net.minecraftforge.registries.RegistryObject<net.minecraft.world.entity.ai.attributes.Attribute> attribute) {
+        var instance = entity.getAttribute(attribute.get());
+        return instance == null ? 0f : (float) Math.max(0.0, instance.getValue());
+    }
     public static void save(LivingEntity entity) {
         State s = STATES.get(entity);
         CompoundTag nbt = entity.getPersistentData();
@@ -246,6 +306,7 @@ public final class ZhenMieManager {
             tag.putLong("lastCombatTick", s.lastCombatTick);
             tag.putLong("staggerUntil", s.staggerUntil);
             tag.putLong("resistanceUntil", s.resistanceUntil);
+            tag.putLong("knockdownAt", s.knockdownAt);
             tag.putInt("recentClashes", s.recentClashes);
             tag.putFloat("clashPoint", s.clashPoint);
             nbt.put(NBT_KEY, tag);
@@ -265,6 +326,8 @@ public final class ZhenMieManager {
             long now = entity.level().getGameTime();
             s.staggerUntil = Math.min(now + 60L, tag.getLong("staggerUntil"));
             if (s.staggerUntil <= now) s.staggerUntil = 0L;
+            s.knockdownAt = Math.min(now + 60L, tag.getLong("knockdownAt"));
+            if (s.knockdownAt <= now) s.knockdownAt = 0L;
             s.resistanceUntil = Math.min(now + 60L + ZhenMieRules.STAGGER_MEMORY_STEP, tag.getLong("resistanceUntil"));
             s.recentClashes = Mth.clamp(tag.getInt("recentClashes"), 0, 4);
             s.clashPoint = Mth.clamp(tag.getFloat("clashPoint"), 0f, 1f);

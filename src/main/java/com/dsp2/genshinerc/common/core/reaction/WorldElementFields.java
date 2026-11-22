@@ -101,12 +101,15 @@ public final class WorldElementFields {
                                 && entity.getBoundingBox().getCenter().distanceToSqr(center) <= radiusSquared
                                 && (entity.isInWater() || entity.isUnderWater()
                                 || ElementAuraManager.hasAura(entity, ElementType.HYDRO)))) {
-                    ReactionParticles.spawnElectroCharged(target);
+                    ReactionParticles.spawnElectroArea(target, WATER_RADIUS);
+                    ReactionSoundEvents.playElectroCharged(target);
                     ReactionDamage.dealElectroCharged(target, owner, stats, owner == null);
                 }
 
-                level.playSound(null, zone.origin, SoundEvents.LIGHTNING_BOLT_IMPACT,
-                        SoundSource.PLAYERS, 0.28f, 1.55f + level.random.nextFloat() * 0.2f);
+                level.playSound(null, zone.origin, SoundEvents.AMETHYST_BLOCK_CHIME,
+                        SoundSource.PLAYERS, 0.25f, 1.42f + level.random.nextFloat() * 0.24f);
+                level.playSound(null, zone.origin, SoundEvents.NOTE_BLOCK_HAT,
+                        SoundSource.PLAYERS, 0.14f, 1.72f + level.random.nextFloat() * 0.22f);
                 DustParticleOptions electro = dust(0xCC66FF, 0.95f);
                 DustParticleOptions hydro = dust(0x27C8FF, 0.75f);
                 for (int i = 0; i < 12; i++) {
@@ -163,6 +166,9 @@ public final class WorldElementFields {
             }
             case GEO -> {
                 if (fire && level.removeBlock(pos, false)) {
+                    if (attacker instanceof LivingEntity living) {
+                        ElementReactions.probeCrystallize(level, living, Vec3.atCenterOf(pos), ElementType.PYRO);
+                    }
                     level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.55f, 1.15f);
                     level.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 0.45,
                             pos.getZ() + 0.5, 8, 0.25, 0.2, 0.25, 0.03);

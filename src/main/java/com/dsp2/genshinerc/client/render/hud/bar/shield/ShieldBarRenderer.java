@@ -35,7 +35,9 @@ public final class ShieldBarRenderer {
         if (s == null) return;
         long now = Util.getMillis();
         s.bar.update(now, cfg.subBarFillSpeed, cfg.subBarWhiteDrainSpeed);
-        final float renderAlpha = alpha * s.warningAlpha(now);
+        float warning = s.warningAlpha(now);
+        float progress = s.warningProgress(now);
+        final float renderAlpha = alpha * warning;
 
         float hpMax = entity.getMaxHealth();
         if (hpMax <= 0f) return;
@@ -106,7 +108,7 @@ public final class ShieldBarRenderer {
             SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l3, z, s.color(cfg, hpMax, 2), renderAlpha);
         }
 
-        float sa = s.bar.whiteness(now, cfg.subBarFlashTime);
+        float sa = Math.max(s.bar.whiteness(now, cfg.subBarFlashTime), progress * 0.45f);
         if (sa > 0.01f) {
             SlicedBar.draw(m, buffers, BarTextures.FILL, fill, q, vx1, vx1 + w * l1, z, 0xFFFFFF, renderAlpha * sa);
         }

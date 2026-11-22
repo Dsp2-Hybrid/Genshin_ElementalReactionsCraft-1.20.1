@@ -2,6 +2,7 @@ package com.dsp2.genshinerc.common.core.combat.epicfight;
 
 import com.dsp2.genshinerc.common.core.combat.zhenmie.AttackIntensity;
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ClashResult;
+import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
@@ -21,6 +22,10 @@ public final class EfCombatBridge {
 
     public static void applyStun(LivingEntity entity, StunType type, float seconds) {
         if (entity == null || type == null || !(seconds > 0f)) return;
+        if (ShieldManager.protectsFromImpact(entity)
+                && (type == StunType.KNOCKDOWN || type == StunType.LONG)) {
+            return;
+        }
         try {
             Optional<?> opt = EpicFightCapabilities.getUnparameterizedEntityPatch(entity, LivingEntityPatch.class);
             if (opt != null && opt.isPresent()) {

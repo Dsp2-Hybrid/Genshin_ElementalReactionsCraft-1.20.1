@@ -29,6 +29,13 @@ public final class ModAttributes {
     public static final RegistryObject<Attribute> ELEMENTAL_TOUGHNESS = REGISTRY.register("elemental_toughness",
             () -> new RangedAttribute("attribute.name." + GenshinERC.MODID + ".elemental_toughness", 0.0, 0.0, 100000.0).setSyncable(true));
 
+    public static final RegistryObject<Attribute> ZHEN_MIE_BREAK_POWER = zhenMie("zhen_mie_break_power");
+    public static final RegistryObject<Attribute> ZHEN_MIE_CRUSH_POWER = zhenMie("zhen_mie_crush_power");
+    public static final RegistryObject<Attribute> ZHEN_MIE_RESOLVE = zhenMie("zhen_mie_resolve");
+    public static final RegistryObject<Attribute> ZHEN_MIE_BREAK_RESISTANCE = zhenMie("zhen_mie_break_resistance");
+    public static final RegistryObject<Attribute> ZHEN_MIE_CRUSH_RESISTANCE = zhenMie("zhen_mie_crush_resistance");
+    public static final RegistryObject<Attribute> ZHEN_MIE_CRIT_FORCE = zhenMie("zhen_mie_crit_force");
+
     public static final RegistryObject<Attribute> BASE_ATTACK = REGISTRY.register("base_attack",
             () -> new RangedAttribute("attribute.name." + GenshinERC.MODID + ".base_attack", 0.0, 0.0, 10000.0).setSyncable(true));
     public static final RegistryObject<Attribute> BONUS_ATTACK = REGISTRY.register("bonus_attack",
@@ -86,7 +93,9 @@ public final class ModAttributes {
                     ELEMENTAL_TOUGHNESS_PYRO, ELEMENTAL_TOUGHNESS_HYDRO, ELEMENTAL_TOUGHNESS_DENDRO,
                     ELEMENTAL_TOUGHNESS_ELECTRO, ELEMENTAL_TOUGHNESS_ANEMO, ELEMENTAL_TOUGHNESS_CRYO,
                     ELEMENTAL_TOUGHNESS_GEO, ELEMENTAL_TOUGHNESS_PHYSICAL,
-                    CRIT_RATE, CRIT_DAMAGE)).toList();
+                    CRIT_RATE, CRIT_DAMAGE,
+                    ZHEN_MIE_BREAK_POWER, ZHEN_MIE_CRUSH_POWER, ZHEN_MIE_RESOLVE,
+                    ZHEN_MIE_BREAK_RESISTANCE, ZHEN_MIE_CRUSH_RESISTANCE, ZHEN_MIE_CRIT_FORCE)).toList();
 
     private ModAttributes() {}
 
@@ -99,6 +108,11 @@ public final class ModAttributes {
                 "attribute.name." + GenshinERC.MODID + "." + name, 0.0, -10.0, 100.0).setSyncable(true));
     }
     private static RegistryObject<Attribute> toughness(String name) {
+        return REGISTRY.register(name, () -> new RangedAttribute(
+                "attribute.name." + GenshinERC.MODID + "." + name, 0.0, 0.0, 10000.0).setSyncable(true));
+    }
+
+    private static RegistryObject<Attribute> zhenMie(String name) {
         return REGISTRY.register(name, () -> new RangedAttribute(
                 "attribute.name." + GenshinERC.MODID + "." + name, 0.0, 0.0, 10000.0).setSyncable(true));
     }

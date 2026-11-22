@@ -57,6 +57,9 @@ public final class ElementHudRenderer {
         float gauge = aura.display(nowTicks, nowMs);
         float white = aura.whiteness(nowMs, cfg);
         float alpha = globalAlpha * aura.opacity(nowTicks, nowMs, gauge, cfg, vfx);
+        if (aura.type() == ElementType.QUICKEN) {
+            white = Math.max(white, (float) (0.5 + 0.5 * Math.sin(nowTicks * 0.18)));
+        }
         if (alpha <= 0.004f) return;
 
         float z = cfg.elementOffsetZ;

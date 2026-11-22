@@ -86,7 +86,10 @@ public final class FrozenSurface {
     }
 
     public static float tintWeight(LivingEntity entity, float partialTick) {
-        return (float) (0.18 + 0.22 * Math.pow(gaugeRatio(entity), 0.65));
+        float ratio = gaugeRatio(entity);
+        float pulse = pulseStrength(entity, partialTick);
+        return net.minecraft.util.Mth.clamp(
+                (float) (0.08 + 0.42 * Math.pow(ratio, 0.72) + pulse * 0.08), 0.05f, 0.62f);
     }
 
     public static float alpha(LivingEntity entity) {
@@ -106,9 +109,9 @@ public final class FrozenSurface {
         float amount = ratio * com.dsp2.genshinerc.common.core.element.FrozenControl.MAX_GAUGE;
         float pulse = pulseStrength(entity, partialTick);
         float base = net.minecraft.util.Mth.clamp(cfg.cryoTintAlpha, 0f, 1f);
-        double opacity = base * (0.78 + 0.72 * Math.pow(ratio, 0.55));
+        double opacity = base * (0.15 + 0.75 * Math.pow(ratio, 0.55));
         if (amount < 1.2f) opacity *= 1.0 - pulse * 0.92;
-        return (float) Math.min(0.72, opacity);
+        return (float) Math.min(0.72, Math.max(0.02, opacity));
     }
     private static final class SurfaceType extends RenderType {
         private SurfaceType(VertexFormat.Mode mode) {

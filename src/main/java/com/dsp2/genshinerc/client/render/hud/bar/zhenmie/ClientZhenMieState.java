@@ -12,6 +12,12 @@ public final class ClientZhenMieState {
     final AnimatedBarValue mie = new AnimatedBarValue();
     private final ClashFlash flash = new ClashFlash();
     boolean zhenBuff, mieBuff;
+    float breakPower;
+    float crushPower;
+    float resolve;
+    float breakResistance;
+    float crushResistance;
+    float critForce;
     @Nullable ClashResult clash;
     long clashStartMs;
     long staggerEndMs;
@@ -30,6 +36,12 @@ public final class ClientZhenMieState {
         mie.set(msg.mie(), nowMs, cfg.subBarWhiteHoldTime, trail);
         zhenBuff = msg.zhenBuff();
         mieBuff = msg.mieBuff();
+        breakPower = msg.breakPower();
+        crushPower = msg.crushPower();
+        resolve = msg.resolve();
+        breakResistance = msg.breakResistance();
+        crushResistance = msg.crushResistance();
+        critForce = msg.critForce();
         staggerEndMs = nowMs + Math.max(0, msg.staggerTicks()) * 50L;
         if (msg.staggerTicks() <= 0) clash = null;
         if (msg.clash() != null && msg.staggerTicks() > 0 && clash == null) {

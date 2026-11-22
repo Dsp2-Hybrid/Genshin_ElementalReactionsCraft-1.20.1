@@ -55,10 +55,13 @@ public final class ShieldManager {
         float blocked = 0f;
         float spent = 0f;
         boolean broke = false;
+        float remainingDamage = damage;
         ElementType displayElement = null;
         float displayAmount = -1f;
 
         for (ShieldInstance shield : list) {
+            if (remainingDamage <= 0.001f) break;
+
             boolean sameElement = shield.kind() == ShieldKind.ELEMENTAL
                     && shield.element() != null
                     && DamageKind.fromElement(shield.element()) == kind;
@@ -67,12 +70,15 @@ public final class ShieldManager {
             costPerDamage = Math.max(0.0001f, costPerDamage);
 
             float available = shield.amount();
-            float needed = damage * costPerDamage;
-            float consumed = Math.min(available, needed);
+            float shieldBlock = Math.min(remainingDamage, available / costPerDamage);
+            float consumed = shieldBlock * costPerDamage;
+
             shield.damage(consumed);
             spent += consumed;
-            blocked = Math.max(blocked, Math.min(damage, available / costPerDamage));
-            if (available < needed) broke = true;
+            blocked += shieldBlock;
+            remainingDamage -= shieldBlock;
+
+            if (shieldBlock > 0f && available <= consumed + 0.001f) broke = true;
 
             if (available > displayAmount) {
                 displayAmount = available;
@@ -91,6 +97,29 @@ public final class ShieldManager {
     public static List<ShieldInstance> get(LivingEntity entity) {
         List<ShieldInstance> list = SHIELDS.get(entity);
         return list == null ? List.of() : Collections.unmodifiableList(list);
+    }
+
+    public static boolean hasActive(LivingEntity entity) {
+        List<ShieldInstance> list = SHIELDS.get(entity);
+        if (list == null) return false;
+        return list.stream().anyMatch(shield -> shield.amount() > 0f);
+    }
+
+    public static boolean protectsFromImpact(LivingEntity entity) {
+        List<ShieldInstance> list = SHIELDS.get(entity);
+        if (list == null) return false;
+        return list.stream().anyMatch(shield -> shield.amount() > 0f);
+    }
+
+    public static float protectionRatio(LivingEntity entity) {
+        float amount = 0f;
+        float max = 0f;
+        for (ShieldInstance shield : get(entity)) {
+            amount += Math.max(0f, shield.amount());
+            max += Math.max(0f, shield.max());
+        }
+        if (max <= 0f) return 0f;
+        return Math.max(0f, Math.min(1f, amount / max));
     }
 
     public static float largest(LivingEntity entity) {

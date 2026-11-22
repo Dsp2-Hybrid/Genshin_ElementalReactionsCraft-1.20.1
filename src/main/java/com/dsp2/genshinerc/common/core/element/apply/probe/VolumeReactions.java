@@ -184,16 +184,44 @@ public final class VolumeReactions {
         for (BlockPos pos : positions) {
             BlockState state = level.getBlockState(pos);
             boolean fire = state.is(BlockTags.FIRE);
+            boolean snowLayer = state.is(Blocks.SNOW);
+            boolean snowBlock = state.is(Blocks.SNOW_BLOCK);
+            boolean powderSnow = state.is(Blocks.POWDER_SNOW);
+            boolean snowSource = snowLayer || snowBlock || powderSnow;
+
             switch (imbue.element()) {
                 case CRYO -> {
                     if (!grief) break;
-                    if (fire && level.removeBlock(pos, false)) {
+                    if (snowSource) {
+                        ElementReactions.probeSuperconduct(level, attacker, Vec3.atCenterOf(pos));
+                        if (level.removeBlock(pos, false)) {
+                            level.playSound(null, pos, SoundEvents.SNOW_BREAK, SoundSource.BLOCKS, 0.8f, 1.15f);
+                            level.sendParticles(ParticleTypes.SNOWFLAKE,
+                                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                                    18, 0.3, 0.25, 0.3, 0.04);
+                        }
+                    } else if (fire && level.removeBlock(pos, false)) {
                         extinguish(level, pos, true);
                     } else if (state.is(Blocks.WATER) && ServerConfig.CRYO_FREEZE_BLOCKS.get()) {
                         EleIceBlock.freeze(level, pos, state.getFluidState().isSource(), imbue.units());
                     }
                 }
                 case PYRO -> {
+                    if (snowSource && grief) {
+                        if (powderSnow) {
+                            level.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
+                        } else {
+                            level.removeBlock(pos, false);
+                        }
+                        Vec3 melt = Vec3.atCenterOf(pos);
+                        level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH,
+                                SoundSource.BLOCKS, 0.85f, 1.35f);
+                        level.sendParticles(ParticleTypes.CLOUD,
+                                melt.x, melt.y, melt.z, 14, 0.3, 0.25, 0.3, 0.03);
+                        level.sendParticles(ParticleTypes.SPLASH,
+                                melt.x, melt.y, melt.z, 10, 0.24, 0.2, 0.24, 0.03);
+                        break;
+                    }
                     if (attacker.isUnderWater() && state.getFluidState().is(Fluids.WATER)) {
                         if (!sweep.steamPlayed) {
                             sweep.steamPlayed = true;
@@ -218,6 +246,7 @@ public final class VolumeReactions {
                 }
                 case GEO -> {
                     if (fire && grief && level.removeBlock(pos, false)) {
+                        ElementReactions.probeCrystallize(level, attacker, Vec3.atCenterOf(pos), ElementType.PYRO);
                         extinguish(level, pos, false);
                         if (!sweep.geoPlayed) {
                             sweep.geoPlayed = true;
@@ -242,6 +271,15 @@ public final class VolumeReactions {
                     }
                 }
                 case ELECTRO -> {
+                    if ((snowLayer || snowBlock) && grief) {
+                        ElementReactions.probeSuperconduct(level, attacker, Vec3.atCenterOf(pos));
+                        level.removeBlock(pos, false);
+                        Vec3 at = Vec3.atCenterOf(pos);
+                        level.sendParticles(ParticleTypes.ELECTRIC_SPARK,
+                                at.x, at.y, at.z, 14, 0.3, 0.28, 0.3, 0.08);
+                        level.playSound(null, pos, SoundEvents.LIGHTNING_BOLT_IMPACT,
+                                SoundSource.PLAYERS, 0.32f, 1.85f);
+                    }
                     if (state.getFluidState().is(Fluids.WATER)) {
                         WorldElementFields.startElectroWaterZone(level, pos, attacker);
                         Vec3 at = Vec3.atCenterOf(pos);

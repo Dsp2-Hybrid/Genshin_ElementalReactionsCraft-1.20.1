@@ -34,6 +34,9 @@ public class DendroCoreEntity extends Entity {
     private double ownerMastery;
     private boolean exploded;
     private boolean homing;
+    private int triggerCount;
+    private long lastTriggerTick = Long.MIN_VALUE;
+    private int randomSeed;
 
     public DendroCoreEntity(EntityType<? extends DendroCoreEntity> type, Level level) {
         super(type, level);
@@ -45,13 +48,51 @@ public class DendroCoreEntity extends Entity {
         this.owner = owner;
         this.ownerLevel = stats.level();
         this.ownerMastery = Math.max(0.0, stats.mastery());
+        this.randomSeed = level().random.nextInt();
     }
 
     public boolean isHoming() { return homing; }
 
+    public int triggerCount() { return triggerCount; }
+
+    public boolean canTrigger() {
+        long now = level().getGameTime();
+        return now != lastTriggerTick && triggerCount < 3;
+    }
+
+    private void markTriggered() {
+        triggerCount++;
+        lastTriggerTick = level().getGameTime();
+    }
+
     @Override protected void defineSynchedData() {}
-    @Override protected void readAdditionalSaveData(CompoundTag tag) {}
-    @Override protected void addAdditionalSaveData(CompoundTag tag) {}
+
+    @Override
+    protected void readAdditionalSaveData(CompoundTag tag) {
+        if (tag.hasUUID("Owner")) owner = tag.getUUID("Owner");
+        if (tag.hasUUID("HomingTarget")) homingTarget = tag.getUUID("HomingTarget");
+        ownerLevel = Math.max(1, tag.getInt("OwnerLevel"));
+        ownerMastery = Math.max(0.0, tag.getDouble("OwnerMastery"));
+        exploded = tag.getBoolean("Exploded");
+        homing = tag.getBoolean("Homing");
+        triggerCount = Math.max(0, tag.getInt("TriggerCount"));
+        lastTriggerTick = tag.getLong("LastTriggerTick");
+        randomSeed = tag.getInt("RandomSeed");
+    }
+
+    @Override
+    protected void addAdditionalSaveData(CompoundTag tag) {
+        if (owner != null) tag.putUUID("Owner", owner);
+        if (homingTarget != null) tag.putUUID("HomingTarget", homingTarget);
+        tag.putInt("OwnerLevel", ownerLevel);
+        tag.putDouble("OwnerMastery", ownerMastery);
+        tag.putBoolean("Exploded", exploded);
+        tag.putBoolean("Homing", homing);
+        tag.putInt("TriggerCount", triggerCount);
+        tag.putLong("LastTriggerTick", lastTriggerTick);
+        tag.putInt("RandomSeed", randomSeed);
+    }
+
     @Override public boolean isPickable() { return false; }
 
     @Override
@@ -62,8 +103,8 @@ public class DendroCoreEntity extends Entity {
             if (homing || getDeltaMovement().lengthSqr() > 0.01) {
                 Vec3 velocity = getDeltaMovement();
                 DustParticleOptions trail = new DustParticleOptions(new Vector3f(0.34f, 0.95f, 0.22f), 1.0f);
-                for (int i = 0; i < 5; i++) {
-                    double spread = 0.045 + i * 0.012;
+                for (int i = 0; i < 9; i++) {
+                    double spread = 0.035 + i * 0.014;
                     level().addParticle(trail,
                             getX() + (random.nextDouble() - 0.5) * 0.12,
                             getY() + (random.nextDouble() - 0.5) * 0.12,
@@ -129,10 +170,11 @@ public class DendroCoreEntity extends Entity {
         side = side.normalize();
         Vec3 secondary = direction.cross(side);
         if (secondary.lengthSqr() > 0.001) secondary = secondary.normalize();
-        double phase = tickCount * 0.36;
-        Vec3 sway = side.scale(Math.sin(phase) * 0.11)
-                .add(secondary.scale(Math.cos(phase * 0.73) * 0.045))
-                .add(0.0, Math.sin(phase * 0.51) * 0.035, 0.0);
+        double phase = tickCount * 0.36 + randomSeed * 0.0007;
+        double noise = Math.sin(tickCount * 0.17 + getId() * 0.31 + randomSeed * 0.001) * 0.05;
+        Vec3 sway = side.scale(Math.sin(phase) * (0.12 + noise))
+                .add(secondary.scale(Math.cos(phase * 0.73) * 0.065))
+                .add(0.0, Math.sin(phase * 0.51) * 0.05, 0.0);
         Vec3 velocity = direction.scale(0.50).add(sway);
         setDeltaMovement(velocity);
         setPos(getX() + velocity.x, getY() + velocity.y, getZ() + velocity.z);
@@ -150,15 +192,22 @@ public class DendroCoreEntity extends Entity {
             ReactionDamage.deal(hit, attacker, DamageKind.DENDRO, Reaction.HYPERBLOOM, stats);
             ReactionText.send(hit, Reaction.HYPERBLOOM, ElementType.ELECTRO, ElementType.DENDRO);
         }
-        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 18, 0.34, 0.34, 0.34, 0.045);
-        server.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY(), getZ(), 10, 0.28, 0.28, 0.28, 0.08);
-        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
-                SoundSource.HOSTILE, 0.48f, 1.35f + server.getRandom().nextFloat() * 0.35f);
+        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 32, 0.34, 0.34, 0.34, 0.055);
+        server.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY(), getZ(), 22, 0.28, 0.28, 0.28, 0.10);
+        server.sendParticles(ParticleTypes.END_ROD, getX(), getY(), getZ(), 8, 0.20, 0.20, 0.20, 0.035);
+        server.playSound(null, blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER,
+                SoundSource.HOSTILE, 0.32f, 1.45f + server.getRandom().nextFloat() * 0.40f);
+        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE,
+                SoundSource.HOSTILE, 0.44f, 1.15f + server.getRandom().nextFloat() * 0.25f);
         discard();
     }
 
     public void detonate(Reaction reaction, @Nullable Entity detonator) {
         if (exploded || !(level() instanceof ServerLevel server)) return;
+        if (reaction == Reaction.HYPERBLOOM || reaction == Reaction.BURGEON) {
+            if (!canTrigger()) return;
+            markTriggered();
+        }
 
         if (reaction == Reaction.HYPERBLOOM) {
             List<LivingEntity> candidates = ReactionTargets.nearbyEnemies(
@@ -209,10 +258,21 @@ public class DendroCoreEntity extends Entity {
             }
         }
 
-        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 24, 0.38, 0.34, 0.38, 0.045);
-        server.sendParticles(ParticleTypes.COMPOSTER, getX(), getY(), getZ(), 18, 0.34, 0.28, 0.34, 0.06);
-        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
-                SoundSource.HOSTILE, 0.52f, 1.05f + server.getRandom().nextFloat() * 0.30f);
+        if (reaction == Reaction.BURGEON) {
+            server.sendParticles(ParticleTypes.FLAME, getX(), getY(), getZ(), 28,
+                    0.42, 0.35, 0.42, 0.08);
+            server.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 18,
+                    0.35, 0.30, 0.35, 0.035);
+            server.playSound(null, blockPosition(), SoundEvents.GENERIC_EXPLODE,
+                    SoundSource.HOSTILE, 0.42f, 1.25f + server.getRandom().nextFloat() * 0.30f);
+        } else {
+            server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 32,
+                    0.38, 0.34, 0.38, 0.055);
+            server.sendParticles(ParticleTypes.COMPOSTER, getX(), getY(), getZ(), 26,
+                    0.34, 0.28, 0.34, 0.07);
+            server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE,
+                    SoundSource.HOSTILE, 0.48f, 1.05f + server.getRandom().nextFloat() * 0.30f);
+        }
         discard();
     }
 }

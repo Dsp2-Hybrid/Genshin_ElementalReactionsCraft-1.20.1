@@ -16,7 +16,7 @@
     "mods.core.combat.epicfight.MixinBattleModeGui"
   ],
   "client": [
-    "client.render.MixinVanillaFrozenSurface",
+    "client.render.MixinVanillaEntityOverlayRender",
     "client.render.FrozenCameraAccessor",
     "client.render.vfx.MixinAaaEmitterPosition",
     "mods.gui.epicfight.EntityRenderDispatcherMixin",

@@ -29,6 +29,11 @@ public final class ElementReactions {
     private static final float EPS = 1.0e-4f;
     private static final java.util.Map<LivingEntity, Long> EMBER_REFILL_AT = new java.util.WeakHashMap<>();
     private static final java.util.Map<LivingEntity, Long> CRYSTALLIZE_AT = new java.util.WeakHashMap<>();
+    private static final java.util.Map<LivingEntity, java.util.EnumMap<Reaction, Long>> REACTION_COOLDOWNS =
+            new java.util.WeakHashMap<>();
+    private static final java.util.Map<LivingEntity, java.util.EnumMap<Reaction, Float>> REACTION_PRESSURE =
+            new java.util.WeakHashMap<>();
+
     private static final class NaturalPressure {
         float scale = 1f;
         long lastTick = Long.MIN_VALUE;
@@ -82,6 +87,8 @@ public final class ElementReactions {
         OverloadImpulse.reset();
         EMBER_REFILL_AT.clear();
         CRYSTALLIZE_AT.clear();
+        REACTION_COOLDOWNS.clear();
+        REACTION_PRESSURE.clear();
         NATURAL_PRESSURE.clear();
     }
 
@@ -107,10 +114,29 @@ public final class ElementReactions {
                 && !target.level().getBlockState(target.blockPosition()).is(net.minecraft.tags.BlockTags.FIRE)) {
             long now = target.level().getGameTime();
             long resume = EMBER_REFILL_AT.getOrDefault(target, Long.MIN_VALUE);
-            if (now < resume) return 0f;
-            EMBER_REFILL_AT.remove(target);
+            if (now < resume) {
+                units *= 0.15f;
+            } else {
+                EMBER_REFILL_AT.remove(target);
+            }
         }
         long now = target.level().getGameTime();
+        java.util.EnumMap<Reaction, Float> reactionPressures =
+                REACTION_PRESSURE.get(target);
+        java.util.EnumMap<Reaction, Long> reactionCooldowns =
+                REACTION_COOLDOWNS.get(target);
+
+        if (reactionPressures != null) {
+            for (Reaction reaction : Reaction.values()) {
+                float value = reactionPressures.getOrDefault(reaction, 1f);
+                reactionPressures.put(reaction, Math.min(1f, value + 0.0125f));
+            }
+        }
+
+        if (reactionCooldowns != null) {
+            reactionCooldowns.entrySet().removeIf(entry -> entry.getValue() <= now);
+        }
+
         java.util.EnumMap<ElementType, NaturalPressure> pressures = NATURAL_PRESSURE.computeIfAbsent(
                 target, ignored -> new java.util.EnumMap<>(ElementType.class));
         NaturalPressure pressure = pressures.computeIfAbsent(type, ignored -> new NaturalPressure());
@@ -119,7 +145,7 @@ public final class ElementReactions {
             pressure.scale = Math.min(1f, pressure.scale + Math.min(0.5f, quietTicks * 0.01f));
         }
 
-        float effectiveUnits = units * pressure.scale;
+        float effectiveUnits = Math.max(0.001f, units * pressure.scale);
         ReactionResult result = run(target, null, type, effectiveUnits, true, false);
         if (result.remaining() + EPS < effectiveUnits) {
             pressure.scale = Math.max(0.15f, pressure.scale - 0.18f);
@@ -162,6 +188,12 @@ public final class ElementReactions {
                 if (target.isUnderWater() && (reaction == Reaction.SWIRL || reaction == Reaction.CRYSTALLIZE)) continue;
                 if (reaction == Reaction.CRYSTALLIZE
                         && target.level().getGameTime() < CRYSTALLIZE_AT.getOrDefault(target, Long.MIN_VALUE)) continue;
+
+                long reactionNow = target.level().getGameTime();
+                java.util.EnumMap<Reaction, Long> cooldowns =
+                        REACTION_COOLDOWNS.computeIfAbsent(target, ignored -> new java.util.EnumMap<>(Reaction.class));
+                long reactionCooldown = cooldowns.getOrDefault(reaction, Long.MIN_VALUE);
+                if (reactionNow < reactionCooldown) continue;
                 ElementType swirlElement = aura == ElementType.FROZEN ? ElementType.CRYO : aura;
                 if (reaction == Reaction.SWIRL && swirled.contains(swirlElement)) continue;
 
@@ -184,6 +216,26 @@ public final class ElementReactions {
                 if (reaction == Reaction.SWIRL) swirled.add(swirlElement);
                 boolean first = result.add(reaction);
                 if (!first && reaction.once()) continue;
+
+                java.util.EnumMap<Reaction, Float> pressures =
+                        REACTION_PRESSURE.computeIfAbsent(target, ignored -> new java.util.EnumMap<>(Reaction.class));
+                float pressure = pressures.getOrDefault(reaction, 1f);
+                if (reaction == Reaction.OVERLOAD
+                        || reaction == Reaction.SUPERCONDUCT
+                        || reaction == Reaction.SWIRL
+                        || reaction == Reaction.ELECTRO_CHARGED) {
+                    if (pressure < 0.12f) continue;
+                    if (reaction == Reaction.OVERLOAD || reaction == Reaction.SUPERCONDUCT) {
+                        pressure = Math.max(0.12f, pressure - 0.22f);
+                    } else {
+                        pressure = Math.max(0.18f, pressure - 0.14f);
+                    }
+                    pressures.put(reaction, pressure);
+                    cooldowns.put(reaction, reactionNow + (
+                            reaction == Reaction.ELECTRO_CHARGED ? 10L :
+                            reaction == Reaction.SWIRL ? 6L : 8L));
+                }
+
                 force |= effect(reaction, target, attacker, stats, trigger, aura, used, triggerUsed, result);
 
                 ReactionText.send(target, reaction, trigger, aura);
@@ -277,6 +329,28 @@ public final class ElementReactions {
         return false;
     }
 
+    public static void probeSuperconduct(ServerLevel level, @Nullable LivingEntity attacker, Vec3 at) {
+        if (level == null || at == null) return;
+        ElementalStats stats = ElementalStats.of(attacker);
+        double radius = 2.5;
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(at, at).inflate(radius),
+                entity -> entity.isAlive()
+                        && entity.getBoundingBox().getCenter().distanceToSqr(at) <= radius * radius
+                        && (attacker == null || ReactionTargets.isEnemy(attacker, entity)))) {
+            superconduct(target, attacker, stats);
+        }
+    }
+
+    public static void probeCrystallize(ServerLevel level, @Nullable LivingEntity attacker,
+                                        Vec3 at, ElementType aura) {
+        if (level == null || at == null || aura == null || attacker == null) return;
+        float amount = (float) ElementalMath.crystallizeShield(
+                ElementalStats.of(attacker).level(), ElementalStats.of(attacker).mastery());
+        int ticks = Math.round(ServerConfig.CRYSTALLIZE_SECONDS.get().floatValue() * 20f);
+        CrystallizeShardDrop.spawnAt(level, at, aura, amount, ticks);
+    }
+
     private static void superconduct(LivingEntity target, @Nullable Entity attacker, ElementalStats stats) {
         double radius = 5.0;
         int ticks = Math.round(ServerConfig.SUPERCONDUCT_RES_SECONDS.get().floatValue() * 20f);
@@ -346,7 +420,36 @@ public final class ElementReactions {
         CrystallizeShardDrop.spawnAt(level, reactionTarget.getBoundingBox().getCenter(), aura, amount, ticks);
     }
 
+    public static void probeLightning(ServerLevel level, @Nullable LivingEntity attacker,
+                                      Vec3 at, float units, double radius) {
+        if (level == null || at == null || !Float.isFinite(units) || units <= 0f || radius <= 0.0) return;
+
+        AABB bounds = new AABB(at, at).inflate(radius);
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, bounds,
+                entity -> entity.isAlive()
+                        && entity.getBoundingBox().getCenter().distanceToSqr(at) <= radius * radius
+                        && (attacker == null || entity == attacker || ReactionTargets.isEnemy(attacker, entity)))) {
+            trigger(target, attacker, ElementType.ELECTRO, units);
+        }
+    }
+
+    public static void probeExplosion(ServerLevel level, @Nullable LivingEntity attacker,
+                                      Vec3 at, float units, double radius) {
+        if (level == null || at == null || !Float.isFinite(units) || units <= 0f || radius <= 0.0) return;
+
+        AABB bounds = new AABB(at, at).inflate(radius);
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, bounds,
+                entity -> entity.isAlive()
+                        && entity.getBoundingBox().getCenter().distanceToSqr(at) <= radius * radius
+                        && (attacker == null || ReactionTargets.isEnemy(attacker, entity)))) {
+            trigger(target, attacker, ElementType.PYRO, units);
+        }
+    }
+
     public static void overloadAt(ServerLevel level, LivingEntity attacker, Vec3 at) {
+        probeExplosion(level, attacker, at,
+                Math.max(1.0f, ServerConfig.OVERLOAD_RADIUS.get().floatValue()),
+                ServerConfig.OVERLOAD_RADIUS.get());
         double radius = ServerConfig.OVERLOAD_RADIUS.get();
         var targets = level.getEntitiesOfClass(LivingEntity.class, new AABB(at, at).inflate(radius),
                 target -> ReactionTargets.isEnemy(attacker, target)

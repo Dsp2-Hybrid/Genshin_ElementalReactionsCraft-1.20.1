@@ -12,7 +12,7 @@ public enum ElementType {
     GEO("geo.png", null, "geo"),
     BURNING("pyro.png", "pyro_ani", "pyro"),
     FROZEN("cry_0.png", "cry_ani", "cryo"),
-    QUICKEN("den.png", null, "dendro");
+    QUICKEN("den.png", "den_ani", "dendro");
 
     private static final ElementType[] DEBUG_ORDER = {PYRO, HYDRO, ELECTRO, CRYO, DENDRO, ANEMO, GEO};
 

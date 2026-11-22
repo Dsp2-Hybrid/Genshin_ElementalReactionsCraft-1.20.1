@@ -75,13 +75,27 @@ public final class ClientShieldState {
     }
 
     public float warningAlpha(long nowMs) {
-        if (warningEndMs == Long.MAX_VALUE) return 1f;
-        long remainingMs = warningEndMs - nowMs;
-        if (remainingMs >= 4000L) return 1f;
-        float progress = Mth.clamp(1f - remainingMs / 4000f, 0f, 1f);
-        double frequency = 0.8 + progress * 4.2;
-        double wave = (Math.sin(nowMs / 1000.0 * frequency * Math.PI * 2.0) + 1.0) * 0.5;
-        return (float) (0.05 + 0.95 * wave);
+    if (warningEndMs == Long.MAX_VALUE) return 1f;
+
+    long remainingMs = warningEndMs - nowMs;
+    if (remainingMs >= 4000L) return 1f;
+
+    float progress = Mth.clamp(1f - remainingMs / 4000f, 0f, 1f);
+    double frequency = 0.7 + progress * 6.8;
+    double wave = (Math.sin(nowMs / 1000.0 * frequency * Math.PI * 2.0) + 1.0) * 0.5;
+    double shaped = wave * wave * (3.0 - 2.0 * wave);
+
+    return (float) Mth.clamp(0.04 + shaped * 0.96, 0.04, 1.0);
+}
+
+public float warningProgress(long nowMs) {
+    if (warningEndMs == Long.MAX_VALUE) return 0f;
+    return Mth.clamp(1f - (warningEndMs - nowMs) / 4000f, 0f, 1f);
+}
+
+    public float warningProgress(long nowMs) {
+        if (warningEndMs == Long.MAX_VALUE) return 0f;
+        return Mth.clamp(1f - (warningEndMs - nowMs) / 4000f, 0f, 1f);
     }
 
     public float amount() { return bar.main(); }
