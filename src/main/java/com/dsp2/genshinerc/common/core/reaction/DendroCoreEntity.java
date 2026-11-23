@@ -195,10 +195,10 @@ public class DendroCoreEntity extends Entity {
         server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 32, 0.34, 0.34, 0.34, 0.055);
         server.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY(), getZ(), 22, 0.28, 0.28, 0.28, 0.10);
         server.sendParticles(ParticleTypes.END_ROD, getX(), getY(), getZ(), 8, 0.20, 0.20, 0.20, 0.035);
-        server.playSound(null, blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER,
-                SoundSource.HOSTILE, 0.32f, 1.45f + server.getRandom().nextFloat() * 0.40f);
-        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE,
-                SoundSource.HOSTILE, 0.44f, 1.15f + server.getRandom().nextFloat() * 0.25f);
+        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundSource.HOSTILE, 0.34f, 1.55f + server.getRandom().nextFloat() * 0.25f);
+        server.playSound(null, blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(),
+                SoundSource.HOSTILE, 0.18f, 1.70f + server.getRandom().nextFloat() * 0.20f);
         discard();
     }
 

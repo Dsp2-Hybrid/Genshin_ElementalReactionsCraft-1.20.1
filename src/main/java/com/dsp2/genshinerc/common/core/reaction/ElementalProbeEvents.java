@@ -13,7 +13,6 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = "genshinerc")
 public final class ElementalProbeEvents {
-    private static final double EXPLOSION_RADIUS = 3.5;
     private static final float EXPLOSION_UNITS = 1.5f;
     private static final double LIGHTNING_RADIUS = 2.5;
     private static final float LIGHTNING_CENTER_UNITS = 1.0f;
@@ -28,15 +27,13 @@ public final class ElementalProbeEvents {
         }
 
         for (Entity entity : event.getAffectedEntities()) {
-            if (!(entity instanceof LivingEntity living)) {
+            if (!(entity instanceof LivingEntity living)
+                    || !living.isAlive()
+                    || living.isSpectator()) {
                 continue;
             }
 
-            if (!living.isAlive() || living.isSpectator()) {
-                continue;
-            }
-
-            ElementReactions.trigger(
+            ElementReactions.triggerProbe(
                     living,
                     null,
                     com.dsp2.genshinerc.common.core.element.ElementType.PYRO,
@@ -56,7 +53,7 @@ public final class ElementalProbeEvents {
 
         LivingEntity target = event.getEntity();
 
-        ElementReactions.trigger(
+        ElementReactions.triggerProbe(
                 target,
                 null,
                 com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO,
@@ -72,7 +69,7 @@ public final class ElementalProbeEvents {
                         && !entity.isSpectator()
                         && entity.getBoundingBox().getCenter().distanceToSqr(center)
                         <= LIGHTNING_RADIUS * LIGHTNING_RADIUS)) {
-            ElementReactions.trigger(
+            ElementReactions.triggerProbe(
                     nearby,
                     null,
                     com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO,

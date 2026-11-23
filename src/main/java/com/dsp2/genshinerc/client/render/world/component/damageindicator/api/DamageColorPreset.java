@@ -9,7 +9,8 @@ public enum DamageColorPreset {
     LIGHT_BLUE  (0x87CEEB, "Light Blue"),
     DARK_BLUE   (0x1E3A8A, "Dark Blue"),
     CYAN_GREEN  (0x20B2AA, "Cyan Green"),
-    RED         (0xFF2D2D, "Red (Overload)");
+    RED         (0xFF2D2D, "Red (Overload)"),
+    BLACK       (0x101010, "Black (True Damage)");
 
     private final int hex;
     private final String label;

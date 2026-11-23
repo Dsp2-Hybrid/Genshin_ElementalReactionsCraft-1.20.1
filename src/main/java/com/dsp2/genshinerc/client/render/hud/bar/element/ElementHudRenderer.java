@@ -57,8 +57,16 @@ public final class ElementHudRenderer {
         float gauge = aura.display(nowTicks, nowMs);
         float white = aura.whiteness(nowMs, cfg);
         float alpha = globalAlpha * aura.opacity(nowTicks, nowMs, gauge, cfg, vfx);
+
+        boolean middleAura = aura.type() == ElementType.FROZEN
+                || aura.type() == ElementType.QUICKEN
+                || aura.type() == ElementType.BURNING;
+        if (middleAura) {
+            alpha = globalAlpha * (gauge >= 1f ? 1f : 0.8f + 0.2f * Mth.clamp(gauge, 0f, 1f));
+        }
+
         if (aura.type() == ElementType.QUICKEN) {
-            white = Math.max(white, (float) (0.5 + 0.5 * Math.sin(nowTicks * 0.18)));
+            white = Math.max(white, (float) (0.5 + 0.5 * Math.sin(nowTicks * 0.36)));
         }
         if (alpha <= 0.004f) return;
 
@@ -74,8 +82,23 @@ public final class ElementHudRenderer {
                 HudDraw.scaleRgb(color, cfg.elementGaugeBgBrightness), alpha * cfg.elementGaugeBgAlpha * 0.85f);
         float fill = Mth.clamp(gauge / ElementGauge.MAX_GAUGE, 0f, 1f);
         if (fill > 0.001f) {
-            HudDraw.rect(m, buffers, bx1, barBottom, bx1 + barW * fill, barBottom + barH, z,
-                    HudDraw.lerpRgb(color, 0xFFFFFF, white), alpha * 0.7f);
+            if (middleAura) {
+                int segments = 16;
+                float width = barW * fill / segments;
+                float phase = (float) (nowTicks * 0.36);
+                for (int i = 0; i < segments; i++) {
+                    float t = (i + 0.5f) / segments;
+                    int animatedColor = middleAuraColor(aura.type(), t + phase);
+                    int finalColor = HudDraw.lerpRgb(animatedColor, 0xFFFFFF, white);
+                    float x0 = bx1 + width * i;
+                    float x1 = i == segments - 1 ? bx1 + barW * fill : x0 + width + 0.002f;
+                    HudDraw.rect(m, buffers, x0, barBottom, x1, barBottom + barH, z,
+                            finalColor, alpha * 0.88f);
+                }
+            } else {
+                HudDraw.rect(m, buffers, bx1, barBottom, bx1 + barW * fill, barBottom + barH, z,
+                        HudDraw.lerpRgb(color, 0xFFFFFF, white), alpha * 0.7f);
+            }
         }
 
         ResourceLocation icon = ElementTextures.currentFrame(aura.type(), nowMs);
@@ -88,6 +111,37 @@ public final class ElementHudRenderer {
         }
     }
 
+    private static int middleAuraColor(ElementType type, float phase) {
+        float t = phase - (float) Math.floor(phase);
+        int[] colors;
+
+        if (type == ElementType.FROZEN) {
+            colors = new int[]{0x82DFFF, 0xEAFBFF, 0x174A9C, 0xFFFFFF};
+        } else if (type == ElementType.QUICKEN) {
+            colors = new int[]{0xA9FF55, 0xFFFFFF, 0x3677C8, 0xFFFFFF};
+        } else {
+            colors = new int[]{0xFF7438, 0xFFFFFF, 0x5BE34C, 0xFFFFFF};
+        }
+
+        float scaled = t * colors.length;
+        int index = (int) scaled;
+        float local = scaled - index;
+        int first = colors[index % colors.length];
+        int second = colors[(index + 1) % colors.length];
+
+        int red = Mth.lerpInt(local, (first >> 16) & 255, (second >> 16) & 255);
+        int green = Mth.lerpInt(local, (first >> 8) & 255, (second >> 8) & 255);
+        int blue = Mth.lerpInt(local, first & 255, second & 255);
+
+        return (red << 16) | (green << 8) | blue;
+    }
+    private static int interpolateColor(int first, int second, float amount) {
+        float t = Mth.clamp(amount, 0f, 1f);
+        int red = Mth.lerpInt(t, (first >> 16) & 255, (second >> 16) & 255);
+        int green = Mth.lerpInt(t, (first >> 8) & 255, (second >> 8) & 255);
+        int blue = Mth.lerpInt(t, first & 255, second & 255);
+        return (red << 16) | (green << 8) | blue;
+    }
     public static int elementColor(ElementType type) {
         return BarConfig.toAwt(DamageIndicatorConfig.get().colorFor(type.colorKey())).getRGB() & 0xFFFFFF;
     }

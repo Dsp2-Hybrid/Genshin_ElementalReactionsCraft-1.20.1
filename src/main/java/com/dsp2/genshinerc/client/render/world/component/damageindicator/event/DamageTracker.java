@@ -60,14 +60,37 @@ public class DamageTracker {
         Vector3d basePos = new Vector3d(info.entity.getX(), yBase, info.entity.getZ());
 
         Vector3d last = LAST_SPAWN.get(info.entity.getId());
-        if (last != null) {
-            double dist = basePos.distance(last);
-            if (dist < cfg.particleMinSpacing) {
-                double angle = Math.random() * Math.PI * 2;
-                basePos.x += Math.cos(angle) * cfg.particleMinSpacing;
-                basePos.z += Math.sin(angle) * cfg.particleMinSpacing;
+        int sameEntityCount = 0;
+        for (TextParticle particle : PARTICLES) {
+            if (particle.position(1f).distanceToSqr(basePos.x, basePos.y, basePos.z) < 9.0) {
+                sameEntityCount++;
             }
         }
+
+        double dynamicSpacing = Math.max(
+                0.22,
+                Math.min(cfg.particleMinSpacing, 0.72) / (1.0 + sameEntityCount * 0.16));
+
+        if (last != null) {
+            double dx = basePos.x - last.x;
+            double dz = basePos.z - last.z;
+            double dist = Math.sqrt(dx * dx + dz * dz);
+
+            if (dist < dynamicSpacing) {
+                double angle = Math.atan2(dz, dx);
+                if (!Double.isFinite(angle)) angle = Math.random() * Math.PI * 2.0;
+                double push = dynamicSpacing - dist;
+                basePos.x += Math.cos(angle) * push;
+                basePos.z += Math.sin(angle) * push;
+            }
+        }
+
+        double goldenAngle = 2.399963229728653;
+        double radial = dynamicSpacing * Math.sqrt(sameEntityCount + 1.0);
+        double angle = sameEntityCount * goldenAngle;
+        basePos.x += Math.cos(angle) * radial;
+        basePos.z += Math.sin(angle) * radial;
+
         LAST_SPAWN.put(info.entity.getId(), new Vector3d(basePos));
 
         Vector3d toCamera = new Vector3d(

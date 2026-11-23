@@ -44,11 +44,19 @@ public final class ElementCryoVisuals {
                     || (living == mc.getCameraEntity() && mc.options.getCameraType().isFirstPerson())) continue;
             if (mc.player == null || mc.player.distanceToSqr(living) > 1024.0) continue;
             double spread = living.getBbWidth() * 1.1;
+            double angle = random.nextDouble() * Math.PI * 2.0;
+            double radial = 0.018 + random.nextDouble() * 0.045;
+            double height = living.getY() + random.nextDouble() * living.getBbHeight();
+            double x = living.getX() + (random.nextDouble() - 0.5) * spread;
+            double z = living.getZ() + (random.nextDouble() - 0.5) * spread;
             mc.level.addParticle(ParticleTypes.SNOWFLAKE,
-                    living.getX() + (random.nextDouble() - 0.5) * spread,
-                    living.getY() + random.nextDouble() * living.getBbHeight(),
-                    living.getZ() + (random.nextDouble() - 0.5) * spread,
-                    0.0, 0.018, 0.0);
+                    x, height, z,
+                    Math.cos(angle) * radial, 0.015 + random.nextDouble() * 0.018,
+                    Math.sin(angle) * radial);
+            mc.level.addParticle(ParticleTypes.END_ROD,
+                    x, height, z,
+                    Math.cos(angle) * radial * 0.55, 0.012,
+                    Math.sin(angle) * radial * 0.55);
         }
     }
 

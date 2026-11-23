@@ -7,8 +7,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
-import com.dsp2.genshinerc.common.core.combat.shield.ShieldKind;
-import com.dsp2.genshinerc.common.core.combat.shield.ShieldManager;
 import com.dsp2.genshinerc.common.core.damage.DamageKind;
 import com.dsp2.genshinerc.common.core.damage.ElementalMath;
 import com.dsp2.genshinerc.common.core.damage.ElementalStats;
@@ -102,6 +100,13 @@ public final class ElementReactions {
         return run(target, attacker, trigger, units, false, false);
     }
 
+    public static ReactionResult triggerProbe(
+            LivingEntity target,
+            @Nullable Entity attacker,
+            ElementType trigger,
+            float units) {
+        return run(target, attacker, trigger, units, false, false, true, false);
+    }
     public static void forceSendText(LivingEntity target, ReactionResult rr) {
         if (rr == null || rr.reactions().isEmpty()) return;
         for (Reaction r : rr.reactions()) {
@@ -162,6 +167,13 @@ public final class ElementReactions {
 
     public static ReactionResult run(LivingEntity target, @Nullable Entity attacker, ElementType trigger, float units,
                                      boolean natural, boolean applyWear, boolean allowElectroCharged) {
+        return run(target, attacker, trigger, units, natural, applyWear, allowElectroCharged, true);
+    }
+
+
+    public static ReactionResult run(LivingEntity target, @Nullable Entity attacker, ElementType trigger, float units,
+                                     boolean natural, boolean applyWear, boolean allowElectroCharged,
+                                     boolean allowAuraApplication) {
         ReactionResult result = new ReactionResult();
         result.setRemaining(units);
         if (target.level().isClientSide() || !target.isAlive() || !Float.isFinite(units) || units <= EPS) return result;
@@ -194,6 +206,12 @@ public final class ElementReactions {
                         REACTION_COOLDOWNS.computeIfAbsent(target, ignored -> new java.util.EnumMap<>(Reaction.class));
                 long reactionCooldown = cooldowns.getOrDefault(reaction, Long.MIN_VALUE);
                 if (reactionNow < reactionCooldown) continue;
+                java.util.EnumMap<Reaction, Float> prePressure = REACTION_PRESSURE.get(target);
+                float currentPressure = prePressure == null ? 1f : prePressure.getOrDefault(reaction, 1f);
+                boolean pressureLimited = reaction == Reaction.OVERLOAD || reaction == Reaction.SUPERCONDUCT
+                        || reaction == Reaction.SWIRL || reaction == Reaction.ELECTRO_CHARGED;
+                if (pressureLimited && currentPressure < 0.12f) continue;
+
                 ElementType swirlElement = aura == ElementType.FROZEN ? ElementType.CRYO : aura;
                 if (reaction == Reaction.SWIRL && swirled.contains(swirlElement)) continue;
 
@@ -224,7 +242,6 @@ public final class ElementReactions {
                         || reaction == Reaction.SUPERCONDUCT
                         || reaction == Reaction.SWIRL
                         || reaction == Reaction.ELECTRO_CHARGED) {
-                    if (pressure < 0.12f) continue;
                     if (reaction == Reaction.OVERLOAD || reaction == Reaction.SUPERCONDUCT) {
                         pressure = Math.max(0.12f, pressure - 0.22f);
                     } else {
@@ -242,7 +259,7 @@ public final class ElementReactions {
             }
             result.setRemaining(gauge);
 
-            if (!natural && gauge > EPS && attachable(trigger) && (!consumedAny || force)) {
+            if (allowAuraApplication && !natural && gauge > EPS && attachable(trigger) && (!consumedAny || force)) {
                 if (consumedAny) {
                     ElementAuraManager.apply(target, trigger, gauge, ElementGauge.durationTicksFromUnits(gauge));
                 } else {
@@ -429,7 +446,7 @@ public final class ElementReactions {
                 entity -> entity.isAlive()
                         && entity.getBoundingBox().getCenter().distanceToSqr(at) <= radius * radius
                         && (attacker == null || entity == attacker || ReactionTargets.isEnemy(attacker, entity)))) {
-            trigger(target, attacker, ElementType.ELECTRO, units);
+            triggerProbe(target, attacker, ElementType.ELECTRO, units);
         }
     }
 
@@ -442,7 +459,7 @@ public final class ElementReactions {
                 entity -> entity.isAlive()
                         && entity.getBoundingBox().getCenter().distanceToSqr(at) <= radius * radius
                         && (attacker == null || ReactionTargets.isEnemy(attacker, entity)))) {
-            trigger(target, attacker, ElementType.PYRO, units);
+            triggerProbe(target, attacker, ElementType.PYRO, units);
         }
     }
 

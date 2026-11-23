@@ -1,7 +1,5 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
-// Assembled from fragments Claude supplied across replies.
-
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;

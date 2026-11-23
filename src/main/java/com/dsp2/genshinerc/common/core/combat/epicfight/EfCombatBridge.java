@@ -22,10 +22,7 @@ public final class EfCombatBridge {
 
     public static void applyStun(LivingEntity entity, StunType type, float seconds) {
         if (entity == null || type == null || !(seconds > 0f)) return;
-        if (ShieldManager.protectsFromImpact(entity)
-                && (type == StunType.KNOCKDOWN || type == StunType.LONG)) {
-            return;
-        }
+        if (ShieldManager.protectsFromImpact(entity)) return;
         try {
             Optional<?> opt = EpicFightCapabilities.getUnparameterizedEntityPatch(entity, LivingEntityPatch.class);
             if (opt != null && opt.isPresent()) {

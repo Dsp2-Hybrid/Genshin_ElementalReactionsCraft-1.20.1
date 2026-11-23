@@ -22,95 +22,221 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = "genshinerc")
 public final class FrozenControl {
     public static final float MAX_GAUGE = 8f;
-    private static final UUID SPEED_LOCK = UUID.fromString("c473a997-b0a7-4f7e-9b95-d0641937ddf2");
-    private static final UUID CRYO_SLOW = UUID.fromString("44ddcab4-aa3c-4e4e-b422-f67d38157f65");
+
+    private static final UUID SPEED_LOCK =
+            UUID.fromString("c473a997-b0a7-4f7e-9b95-d0641937ddf2");
+    private static final UUID CRYO_SLOW =
+            UUID.fromString("44ddcab4-aa3c-4e4e-b422-f67d38157f65");
     private static final double CRYO_SPEED_PENALTY = -0.15;
-    private static final TagKey<EntityType<?>> IMMUNE = TagKey.create(
-            Registries.ENTITY_TYPE, new ResourceLocation("genshinerc", "freeze_immune"));
+    private static final String NO_GRAVITY_MEMORY =
+            "GenshinERC_FrozenWaterNoGravityBefore";
+
+    private static final TagKey<EntityType<?>> IMMUNE =
+            TagKey.create(
+                    Registries.ENTITY_TYPE,
+                    new ResourceLocation("genshinerc", "freeze_immune"));
 
     private FrozenControl() {}
 
     public static double resistance(LivingEntity entity) {
-        if (entity.getType().is(IMMUNE)) return 1.0;
-        AttributeInstance attr = entity.getAttribute(ModAttributes.FREEZE_RESISTANCE.get());
-        return attr == null ? 0.0 : Math.max(0.0, Math.min(1.0, attr.getValue()));
+        if (entity.getType().is(IMMUNE)) {
+            return 1.0;
+        }
+
+        AttributeInstance attribute =
+                entity.getAttribute(ModAttributes.FREEZE_RESISTANCE.get());
+
+        return attribute == null
+                ? 0.0
+                : Math.max(0.0, Math.min(1.0, attribute.getValue()));
     }
 
     public static boolean active(LivingEntity entity) {
-        return entity.isAlive() && ElementAuraManager.hasAura(entity, ElementType.FROZEN);
+        return entity.isAlive()
+                && ElementAuraManager.hasAura(entity, ElementType.FROZEN);
     }
 
     public static boolean locked(LivingEntity entity) {
-        if (!entity.isAlive() || entity.isSpectator()) return false;
+        if (!entity.isAlive() || entity.isSpectator()) {
+            return false;
+        }
+
         if (entity.level().isClientSide()) {
-            AttributeInstance speed = entity.getAttribute(Attributes.MOVEMENT_SPEED);
+            AttributeInstance speed =
+                    entity.getAttribute(Attributes.MOVEMENT_SPEED);
             return speed != null && speed.getModifier(SPEED_LOCK) != null;
         }
-        return active(entity) || com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager.staggered(entity);
+
+        return active(entity)
+                || com.dsp2.genshinerc.common.core.combat.zhenmie
+                .ZhenMieManager.staggered(entity);
     }
 
     public static void refresh(LivingEntity entity) {
-        if (entity.level().isClientSide()) return;
-        boolean locked = locked(entity);
-        AttributeInstance speed = entity.getAttribute(Attributes.MOVEMENT_SPEED);
-        if (speed != null) {
-            modifier(speed, SPEED_LOCK, "genshinerc_action_lock", -1.0, locked);
-            modifier(speed, CRYO_SLOW, "genshinerc_cryo_aura", CRYO_SPEED_PENALTY,
-                    entity.isAlive() && !locked && ElementAuraManager.hasAura(entity, ElementType.CRYO));
+        if (entity.level().isClientSide()) {
+            return;
         }
-        if (!locked) return;
-        if (entity instanceof Mob mob) mob.getNavigation().stop();
-        if (entity.isUsingItem()) entity.stopUsingItem();
-        if (entity.isSprinting()) entity.setSprinting(false);
+
+        boolean isLocked = locked(entity);
+        AttributeInstance speed =
+                entity.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        if (speed != null) {
+            modifier(
+                    speed,
+                    SPEED_LOCK,
+                    "genshinerc_action_lock",
+                    -1.0,
+                    isLocked);
+
+            modifier(
+                    speed,
+                    CRYO_SLOW,
+                    "genshinerc_cryo_aura",
+                    CRYO_SPEED_PENALTY,
+                    entity.isAlive()
+                            && !isLocked
+                            && ElementAuraManager.hasAura(entity, ElementType.CRYO));
+        }
+
+        updateWaterGravity(entity);
+
+        if (!isLocked) {
+            return;
+        }
+
+        if (entity instanceof Mob mob) {
+            mob.getNavigation().stop();
+        }
+
+        if (entity.isUsingItem()) {
+            entity.stopUsingItem();
+        }
+
+        if (entity.isSprinting()) {
+            entity.setSprinting(false);
+        }
     }
 
-    private static void modifier(AttributeInstance attribute, UUID id, String name, double amount, boolean enabled) {
+    private static void updateWaterGravity(LivingEntity entity) {
+        boolean frozenInWater = active(entity)
+                && (entity.isInWater() || entity.isUnderWater());
+
+        if (frozenInWater) {
+            if (!entity.getPersistentData().contains(NO_GRAVITY_MEMORY)) {
+                entity.getPersistentData().putBoolean(
+                        NO_GRAVITY_MEMORY,
+                        entity.isNoGravity());
+            }
+
+            entity.setNoGravity(true);
+            entity.setDeltaMovement(
+                    entity.getDeltaMovement().x * 0.25,
+                    0.0,
+                    entity.getDeltaMovement().z * 0.25);
+            entity.hasImpulse = true;
+            entity.hurtMarked = true;
+            return;
+        }
+
+        if (entity.getPersistentData().contains(NO_GRAVITY_MEMORY)) {
+            boolean previous = entity.getPersistentData()
+                    .getBoolean(NO_GRAVITY_MEMORY);
+            entity.getPersistentData().remove(NO_GRAVITY_MEMORY);
+            entity.setNoGravity(previous);
+        }
+    }
+
+    private static void modifier(
+            AttributeInstance attribute,
+            UUID id,
+            String name,
+            double amount,
+            boolean enabled) {
         AttributeModifier current = attribute.getModifier(id);
-        if (current != null && (!enabled || current.getAmount() != amount)) {
+
+        if (current != null
+                && (!enabled || current.getAmount() != amount)) {
             attribute.removeModifier(id);
             current = null;
         }
+
         if (enabled && current == null) {
-            attribute.addTransientModifier(new AttributeModifier(id, name, amount, AttributeModifier.Operation.MULTIPLY_TOTAL));
+            attribute.addTransientModifier(
+                    new AttributeModifier(
+                            id,
+                            name,
+                            amount,
+                            AttributeModifier.Operation.MULTIPLY_TOTAL));
         }
     }
 
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
         LivingEntity entity = event.getEntity();
-        if (!entity.level().isClientSide() && locked(entity)) refresh(entity);
+
+        if (entity.level().isClientSide()) {
+            return;
+        }
+
+        if (locked(entity) || entity.getPersistentData().contains(NO_GRAVITY_MEMORY)) {
+            refresh(entity);
+        }
     }
 
     @SubscribeEvent
-    public static void onInteract(net.minecraftforge.event.entity.player.PlayerInteractEvent event) {
-        if (event.isCancelable() && locked(event.getEntity())) event.setCanceled(true);
+    public static void onInteract(
+            net.minecraftforge.event.entity.player.PlayerInteractEvent event) {
+        if (event.isCancelable() && locked(event.getEntity())) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
-    public static void onPlayerAttack(net.minecraftforge.event.entity.player.AttackEntityEvent event) {
-        if (locked(event.getEntity())) event.setCanceled(true);
+    public static void onPlayerAttack(
+            net.minecraftforge.event.entity.player.AttackEntityEvent event) {
+        if (locked(event.getEntity())) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
-    public static void onUse(net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Start event) {
-        if (locked(event.getEntity())) event.setCanceled(true);
+    public static void onUse(
+            net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Start event) {
+        if (locked(event.getEntity())) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
     public static void onJump(LivingEvent.LivingJumpEvent event) {
         LivingEntity entity = event.getEntity();
-        if (!locked(entity)) return;
+
+        if (!locked(entity)) {
+            return;
+        }
+
         var velocity = entity.getDeltaMovement();
-        entity.setDeltaMovement(velocity.x, Math.min(0.0, velocity.y), velocity.z);
+        entity.setDeltaMovement(
+                velocity.x,
+                Math.min(0.0, velocity.y),
+                velocity.z);
         entity.hurtMarked = true;
     }
 
     @SubscribeEvent
     public static void onAttack(LivingAttackEvent event) {
-        if (event.getEntity().level().isClientSide() || ReactionDamage.isDealing()) return;
+        if (event.getEntity().level().isClientSide()
+                || ReactionDamage.isDealing()) {
+            return;
+        }
+
         var source = event.getSource();
+
         if (source.getEntity() instanceof LivingEntity attacker
-                && source.getDirectEntity() == attacker && attacker != event.getEntity() && locked(attacker)) {
+                && source.getDirectEntity() == attacker
+                && attacker != event.getEntity()
+                && locked(attacker)) {
             event.setCanceled(true);
         }
     }

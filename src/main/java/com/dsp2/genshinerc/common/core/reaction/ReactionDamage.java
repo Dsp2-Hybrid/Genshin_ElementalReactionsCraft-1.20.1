@@ -76,7 +76,7 @@ public final class ReactionDamage {
 
     private static void deal(LivingEntity target, @Nullable Entity attacker, DamageKind kind, Reaction reaction,
                              ElementalStats stats, float shieldCost, boolean naturalElectroCharged) {
-        if (ElementReactions.isNatural() && reaction != Reaction.OVERLOAD) return;
+        if (ElementReactions.isNatural()) return;
         if (!(target.level() instanceof ServerLevel level) || !target.isAlive()) return;
         if (!allow(target, reaction, level.getGameTime())) return;
 
@@ -144,7 +144,7 @@ public final class ReactionDamage {
         try {
             target.invulnerableTime = 0;
             target.hurt(source, (float) amount);
-            if (reaction == Reaction.ELECTRO_CHARGED) {
+            if (reaction == Reaction.ELECTRO_CHARGED || reaction == Reaction.BURNING) {
                 target.setDeltaMovement(priorVelocity);
                 target.hurtMarked = true;
             }

@@ -22,9 +22,11 @@ public final class DamageMapper {
         if (source.is(DamageTypes.DROWN)) return DamageKind.HYDRO;
         if (source.is(DamageTypes.LIGHTNING_BOLT)) return DamageKind.ELECTRO;
         if (source.is(DamageTypeTags.IS_FREEZING) || source.is(DamageTypes.FREEZE)) return DamageKind.CRYO;
+        if (source.is(DamageTypes.WITHER)) {
+            return DamageKind.TRUE;
+        }
         if (source.is(DamageTypes.MAGIC)
                 || source.is(DamageTypes.INDIRECT_MAGIC)
-                || source.is(DamageTypes.WITHER)
                 || source.is(DamageTypes.DRAGON_BREATH)
                 || source.is(DamageTypes.SONIC_BOOM)) {
             return DamageKind.DENDRO;

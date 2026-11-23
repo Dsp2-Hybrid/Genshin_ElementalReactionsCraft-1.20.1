@@ -86,6 +86,7 @@ public final class WorldElementFields {
                     iterator.remove();
                     continue;
                 }
+                emitAmbient(level, zone, now);
                 if (now < zone.nextPulse) continue;
                 zone.nextPulse = now + WATER_PERIOD;
 
@@ -131,6 +132,40 @@ public final class WorldElementFields {
         }
     }
 
+    private static void emitAmbient(ServerLevel level, WaterZone zone, long now) {
+        long remaining = Math.max(0L, zone.expires - now);
+        double fade = Math.min(1.0, remaining / 16.0);
+        if (fade <= 0.0) return;
+
+        Vec3 center = Vec3.atCenterOf(zone.origin);
+        int count = Math.max(1, (int) Math.ceil(10.0 * fade));
+        DustParticleOptions electro = dust(0xCC66FF, 0.78f);
+        DustParticleOptions hydro = dust(0x27C8FF, 0.66f);
+
+        for (int i = 0; i < count; i++) {
+            double angle = level.random.nextDouble() * Math.PI * 2.0;
+            double radius = Math.sqrt(level.random.nextDouble()) * WATER_RADIUS;
+            double x = center.x + Math.cos(angle) * radius;
+            double z = center.z + Math.sin(angle) * radius;
+            double y = center.y + 0.12 + level.random.nextDouble() * 0.45;
+
+            level.sendParticles(
+                    i % 2 == 0 ? electro : hydro,
+                    x, y, z,
+                    1,
+                    0.025, 0.018, 0.025,
+                    0.006);
+
+            if (i % 3 == 0) {
+                level.sendParticles(
+                        ParticleTypes.ELECTRIC_SPARK,
+                        x, y, z,
+                        1,
+                        0.015, 0.04, 0.015,
+                        0.018);
+            }
+        }
+    }
     public static void applySwirlToWorld(LivingEntity center, @Nullable Entity attacker,
                                          ElementType element, float units, double radius) {
         if (!(center.level() instanceof ServerLevel level) || radius <= 0.0) return;

@@ -1,7 +1,6 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
 import com.dsp2.genshinerc.common.config.ServerConfig;
-
 import com.dsp2.genshinerc.common.core.combat.zhenmie.ZhenMieManager;
 
 import com.dsp2.genshinerc.common.core.damage.ElementalStats;

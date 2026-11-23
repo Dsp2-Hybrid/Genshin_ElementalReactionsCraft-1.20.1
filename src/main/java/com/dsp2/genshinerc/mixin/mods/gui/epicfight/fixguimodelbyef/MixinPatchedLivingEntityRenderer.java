@@ -1,8 +1,6 @@
 package com.dsp2.genshinerc.mixin.mods.gui.epicfight.fixguimodelbyef;
 
 import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.FrozenSurface;
-import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.ShieldSurface;
-
 import com.dsp2.genshinerc.patch.core.gui.render.GuiRenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -103,8 +101,6 @@ public abstract class MixinPatchedLivingEntityRenderer {
                                       LivingEntity entity, OpenMatrix4f[] poses, MultiBufferSource buffer,
                                       PoseStack pose, int light, float partial, CallbackInfo ci) {
         float alpha = FrozenSurface.alpha(entity, partial);
-        ShieldSurface.Overlay shield = ShieldSurface.sample(entity);
-        if (alpha <= 0f && shield.alpha() <= 0.001f) return;
         PatchedEntityRenderer base = (PatchedEntityRenderer) (Object) this;
         SkinnedMesh mesh = (SkinnedMesh) base.getMeshProvider(patch).get();
         Armature armature = patch.getArmature();
@@ -118,12 +114,6 @@ public abstract class MixinPatchedLivingEntityRenderer {
             green += (1.0f - green) * flash;
             mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light,
                     red, green, 1.0f, alpha, OverlayTexture.NO_OVERLAY, armature, poses);
-        }
-
-        if (shield.alpha() > 0.001f) {
-            mesh.draw(pose, buffer, FrozenSurface.EPIC_FIGHT, light,
-                    shield.red(), shield.green(), shield.blue(), shield.alpha(),
-                    OverlayTexture.NO_OVERLAY, armature, poses);
         }
     }
 }

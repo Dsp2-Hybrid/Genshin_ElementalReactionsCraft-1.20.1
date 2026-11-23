@@ -24,6 +24,7 @@ public final class CrystallizeShardDrop {
     public static final String AMOUNT_KEY = "GenshinERC_CrystalDropAmount";
     public static final String TICKS_KEY = "GenshinERC_CrystalDropTicks";
     public static final String COLOR_KEY = "GenshinERC_CrystalDropColor";
+    public static final String LIFETIME_KEY = "GenshinERC_CrystalDropLifetime";
 
     private CrystallizeShardDrop() {}
 
@@ -44,6 +45,7 @@ public final class CrystallizeShardDrop {
         tag.putFloat(AMOUNT_KEY, amount);
         tag.putInt(TICKS_KEY, ticks);
         tag.putInt(COLOR_KEY, color(element));
+        tag.putInt(LIFETIME_KEY, 6000);
 
         ItemEntity shard = new ItemEntity(
                 level,
@@ -53,6 +55,7 @@ public final class CrystallizeShardDrop {
                 stack);
 
         shard.setPickUpDelay(10);
+        shard.setInvulnerable(true);
         shard.setGlowingTag(true);
         shard.setDeltaMovement(
                 (level.random.nextDouble() - 0.5) * 0.08,
@@ -146,6 +149,7 @@ public final class CrystallizeShardDrop {
         tag.remove(AMOUNT_KEY);
         tag.remove(TICKS_KEY);
         tag.remove(COLOR_KEY);
+        tag.remove(LIFETIME_KEY);
     }
 
     private static DustParticleOptions particle(ElementType element) {

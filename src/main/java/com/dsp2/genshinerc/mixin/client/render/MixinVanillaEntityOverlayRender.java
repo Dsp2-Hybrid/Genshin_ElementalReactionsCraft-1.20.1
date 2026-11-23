@@ -34,11 +34,5 @@ public abstract class MixinVanillaEntityOverlayRender {
             model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), light, OverlayTexture.NO_OVERLAY,
                     iceRed, iceGreen, 1.0f, ice);
         }
-
-        ShieldSurface.Overlay shield = ShieldSurface.sample(entity);
-        if (shield.alpha() > 0.001f) {
-            model.renderToBuffer(pose, buffers.getBuffer(FrozenSurface.VANILLA), light, OverlayTexture.NO_OVERLAY,
-                    shield.red(), shield.green(), shield.blue(), shield.alpha());
-        }
     }
 }
