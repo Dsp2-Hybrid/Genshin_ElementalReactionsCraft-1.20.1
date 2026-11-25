@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.entity.elereaction.overlay;
+﻿package com.dsp2.genshinerc.client.render.entity.elereaction.overlay;
 
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.registry.block.ModBlocks;
@@ -22,11 +22,10 @@ public final class SpecialIceColors {
 
     private static int color(BlockState state, BlockAndTintGetter level, BlockPos pos, int tintIndex) {
         if (tintIndex != 0) return -1;
-        float progress = state.getValue(EleIceBlock.AGE) / 4f;
-        float fade = progress * progress * (3f - 2f * progress);
-        int alpha = Math.round(220f - 150f * fade);
-        int red = Math.round(190f + 58f * progress);
-        int green = Math.round(224f + 29f * progress);
-        return (alpha << 24) | (red << 16) | (green << 8) | 255;
+        float progress = state.getValue(EleIceBlock.AGE) / 40f;
+        float smooth = progress * progress * (3f - 2f * progress);
+        int red = Math.round(224f + 31f * smooth);
+        int green = Math.round(240f + 15f * smooth);
+        return 0xFF000000 | (red << 16) | (green << 8) | 255;
     }
 }

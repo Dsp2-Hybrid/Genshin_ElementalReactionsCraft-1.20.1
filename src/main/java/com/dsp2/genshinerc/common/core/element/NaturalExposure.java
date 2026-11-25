@@ -36,7 +36,7 @@ public final class NaturalExposure {
         if (!ServerConfig.NATURAL_ENABLED.get()) return;
         int phase = e.tickCount + e.getId();
         if (e instanceof Slime && phase % ServerConfig.PERIODIC_INTERVAL_TICKS.get() == 0) periodic(e);
-        if (phase % STEP != 0) return;
+        if (phase % STEP != 0 && !e.isInWater()) return;
         exposure(e);
         if (phase % NEAR_STEP == 0) nearSwamp(e);
     }
@@ -108,11 +108,12 @@ public final class NaturalExposure {
     private static boolean snowingAt(Level level, BlockPos pos) { return level.isRaining() && level.canSeeSky(pos) && level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY() && level.getBiome(pos).value().getPrecipitationAt(pos) == Biome.Precipitation.SNOW; }
     private static boolean immune(LivingEntity e, ElementType type) { return (type == ElementType.PYRO && e instanceof MagmaCube) || (type == ElementType.DENDRO && e instanceof Slime && !(e instanceof MagmaCube)); }
 
-    private static void apply(LivingEntity e, ElementType type, float cap, double seconds, int step) {
+private static void apply(LivingEntity e, ElementType type, float cap, double seconds, int step) {
         if (immune(e, type)) return;
-        int ticks = Math.max(step, (int) Math.round(seconds * 20.0));
-        float add = cap * step / ticks;
+        int interval = e.isInWater() ? 1 : step;
+        int ticks = Math.max(interval, (int) Math.round(seconds * 20.0));
+        float add = cap * interval / ticks;
         float rest = ElementReactions.natural(e, type, add);
-        ElementAuraManager.hold(e, type, rest, cap, step);
+        ElementAuraManager.hold(e, type, rest, cap, interval);
     }
 }

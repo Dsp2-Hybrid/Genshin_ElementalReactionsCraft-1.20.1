@@ -11,6 +11,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinMobActionLock {
     @Inject(method = "serverAiStep", at = @At("HEAD"), cancellable = true)
     private void genshinerc$lockAi(CallbackInfo ci) {
-        if (FrozenControl.locked((Mob) (Object) this)) ci.cancel();
+        Mob mob = (Mob) (Object) this;
+        if (FrozenControl.locked(mob)) {
+            mob.getNavigation().stop();
+            ci.cancel();
+        }
     }
 }

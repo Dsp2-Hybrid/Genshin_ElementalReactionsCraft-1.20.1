@@ -14,6 +14,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import com.dsp2.genshinerc.common.registry.block.ModBlocks;
+import com.dsp2.genshinerc.common.registry.block.ModBlockEntities;
 
 
 @Mod(GenshinERC.MODID)
@@ -36,6 +37,7 @@ public class GenshinERC {
         ModAttributes.REGISTRY.register(modEventBus);
         ModEntities.REGISTRY.register(modEventBus);
         ModBlocks.REGISTRY.register(modEventBus);
+        ModBlockEntities.REGISTRY.register(modEventBus);
 
 
         modEventBus.addListener(this::onCommonSetup);

@@ -31,7 +31,7 @@ public class VFXConfig {
     @SerialEntry public double statusTextScale = 0.9;
     @SerialEntry public boolean elementShellEnabled = true;
     @SerialEntry public boolean aaaLightEnabled = true;
-    @SerialEntry public float aaaLightIntensity = 5.0f;
+    @SerialEntry public float aaaLightIntensity = 2.0f;
     @SerialEntry public int aaaLightMaxCount = 30;
     @SerialEntry public float aaaLightRadiusScale = 6.0f;
     @SerialEntry public float shellScale = 1.0f;
@@ -61,7 +61,7 @@ public class VFXConfig {
                 .name(t("genshinerc.bar.group.visuals"))
                 .description(OptionDescription.of(td("genshinerc.bar.group.visuals")))
                 .option(boolOpt("aaa_light_enabled", true, () -> c.aaaLightEnabled, v -> c.aaaLightEnabled = v))
-                .option(floatOpt("aaa_light_intensity", 5.0f, () -> c.aaaLightIntensity, v -> c.aaaLightIntensity = v, 0.0f, 50.0f))
+                .option(floatOpt("aaa_light_intensity", 2.0f, () -> c.aaaLightIntensity, v -> c.aaaLightIntensity = v, 0.0f, 10.0f))
                 .option(intOpt("aaa_light_max_count", 30, () -> c.aaaLightMaxCount, v -> c.aaaLightMaxCount = v, 8, 128))
                 .option(floatOpt("aaa_light_radius_scale", 6.0f, () -> c.aaaLightRadiusScale, v -> c.aaaLightRadiusScale = v, 0.1f, 64.0f))
                 .option(floatOpt("shell_scale", 1.0f, () -> c.shellScale, v -> c.shellScale = v, 0.1f, 3f))

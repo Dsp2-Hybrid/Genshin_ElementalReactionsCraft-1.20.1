@@ -7,6 +7,7 @@
   "mixins": [
     "core.combat.MixinLivingActionLock",
     "core.combat.MixinMobActionLock",
+    "core.combat.MixinWitchFrozenLock",
     "core.combat.CreeperPoweredAccessor",
     "core.damage.MixinLivingEntityArmor",
     "core.damage.DamageSourceTypeAccessor",
@@ -28,13 +29,8 @@
     "mods.shaders.efn.AirTrailParticleMixin",
     "mods.shaders.efn.BloomTrailParticleMixin",
     "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher",
-
     "client.render.vfx.MixinAaapCurLight",
     "client.render.vfx.MixinAaapApplyLight"
-
-
-
-
   ],
   "injectors": {
     "defaultRequire": 1

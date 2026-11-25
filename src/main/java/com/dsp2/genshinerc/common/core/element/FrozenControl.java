@@ -11,7 +11,11 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Witch;
+import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -28,6 +32,7 @@ public final class FrozenControl {
     private static final UUID CRYO_SLOW =
             UUID.fromString("44ddcab4-aa3c-4e4e-b422-f67d38157f65");
     private static final double CRYO_SPEED_PENALTY = -0.15;
+    private static final String MOB_AI_MEMORY = "GenshinERC_FrozenMobPreviousNoAI";
     private static final String NO_GRAVITY_MEMORY =
             "GenshinERC_FrozenWaterNoGravityBefore";
 
@@ -100,14 +105,25 @@ public final class FrozenControl {
         }
 
         updateWaterGravity(entity);
+        restoreMobAi(entity);
 
-        if (!isLocked) {
-            return;
+        if (isLocked) {
+            suppress(entity);
         }
+    }
 
+    private static void suppress(LivingEntity entity) {
         if (entity instanceof Mob mob) {
             mob.getNavigation().stop();
+            mob.setAggressive(false);
         }
+
+        entity.xxa = 0f;
+        entity.yya = 0f;
+        entity.zza = 0f;
+        entity.setJumping(false);
+        entity.swinging = false;
+        entity.swingTime = 0;
 
         if (entity.isUsingItem()) {
             entity.stopUsingItem();
@@ -115,6 +131,25 @@ public final class FrozenControl {
 
         if (entity.isSprinting()) {
             entity.setSprinting(false);
+        }
+
+        if (entity instanceof Creeper creeper) {
+            creeper.setSwellDir(-1);
+        }
+
+        if (entity instanceof Witch witch && witch.isDrinkingPotion()) {
+            witch.setUsingItem(false);
+            witch.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,
+                    net.minecraft.world.item.ItemStack.EMPTY);
+        }
+    }
+
+    private static void restoreMobAi(LivingEntity entity) {
+        if (!(entity instanceof Mob mob)) return;
+        if (entity.getPersistentData().contains(MOB_AI_MEMORY)) {
+            boolean previous = entity.getPersistentData().getBoolean(MOB_AI_MEMORY);
+            entity.getPersistentData().remove(MOB_AI_MEMORY);
+            mob.setNoAi(previous);
         }
     }
 
@@ -179,7 +214,9 @@ public final class FrozenControl {
             return;
         }
 
-        if (locked(entity) || entity.getPersistentData().contains(NO_GRAVITY_MEMORY)) {
+        if (locked(entity)
+                || entity.getPersistentData().contains(NO_GRAVITY_MEMORY)
+                || entity.getPersistentData().contains(MOB_AI_MEMORY)) {
             refresh(entity);
         }
     }
@@ -201,9 +238,30 @@ public final class FrozenControl {
     }
 
     @SubscribeEvent
-    public static void onUse(
-            net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Start event) {
+    public static void onUse(LivingEntityUseItemEvent.Start event) {
         if (locked(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onUseTick(LivingEntityUseItemEvent.Tick event) {
+        if (locked(event.getEntity())) {
+            event.setCanceled(true);
+            event.getEntity().stopUsingItem();
+        }
+    }
+
+    @SubscribeEvent
+    public static void onEnderTeleport(EntityTeleportEvent.EnderEntity event) {
+        if (event.getEntity() instanceof LivingEntity living && locked(living)) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onChorusTeleport(EntityTeleportEvent.ChorusFruit event) {
+        if (event.getEntity() instanceof LivingEntity living && locked(living)) {
             event.setCanceled(true);
         }
     }
