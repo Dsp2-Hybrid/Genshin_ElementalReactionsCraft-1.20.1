@@ -14,7 +14,7 @@ public class Motions {
         AssetAccessor<? extends Armature> rig = Rigs.UNIT;
         TRAINING_IDLE = builder.nextAccessor("training/living/idle", a -> new StaticAnimation(0.1F, true, a, rig));
         TRAINING_WALK = builder.nextAccessor("training/living/walk", a -> new MovementAnimation(true, a, rig));
-        TRAINING_STRIKE = builder.nextAccessor("training/combat/strike", a -> new StaticAnimation(0.05F, false, a, rig));
-        TRAINING_THRUST = builder.nextAccessor("training/combat/thrust", a -> new StaticAnimation(0.05F, false, a, rig));
+        TRAINING_STRIKE = builder.nextAccessor("training/reaction/strike", a -> new StaticAnimation(0.05F, false, a, rig));
+        TRAINING_THRUST = builder.nextAccessor("training/reaction/thrust", a -> new StaticAnimation(0.05F, false, a, rig));
     }
 }

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "all": "genshinerc:block/ele_ice/special_ice_0",
+    "particle": "genshinerc:block/ele_ice/special_ice_0"
+  }
+}

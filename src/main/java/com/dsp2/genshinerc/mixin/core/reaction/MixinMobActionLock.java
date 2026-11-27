@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.mixin.core.combat;
+package com.dsp2.genshinerc.mixin.core.reaction;
 
 import com.dsp2.genshinerc.common.core.element.FrozenControl;
 import net.minecraft.world.entity.Mob;

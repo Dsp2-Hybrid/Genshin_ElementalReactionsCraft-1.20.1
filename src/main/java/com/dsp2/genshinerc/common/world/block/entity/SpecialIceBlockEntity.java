@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.world.block.entity;
+package com.dsp2.genshinerc.common.world.block.entity;
 
 import com.dsp2.genshinerc.common.registry.block.ModBlockEntities;
 import net.minecraft.core.BlockPos;
@@ -11,8 +11,10 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public final class SpecialIceBlockEntity extends BlockEntity {
     private long startTime;
-    private long expiresAt;
-    private long originalDuration;
+    private long duration;
+    private long anchorTime;
+    private double anchorLife;
+    private int rate = 1;
     private long textureSeed;
     private int densityTier;
     private int waterLevel;
@@ -22,35 +24,29 @@ public final class SpecialIceBlockEntity extends BlockEntity {
         textureSeed = pos.asLong();
     }
 
-    public void setLifetime(long startTime, long expiresAt) {
-        this.startTime = startTime;
-        this.expiresAt = expiresAt;
-        if (originalDuration <= 0L) originalDuration = Math.max(1L, expiresAt - startTime);
-        setChanged();
-        sync();
-    }
-
     public void setFreezeData(long startTime, long expiresAt, long textureSeed, int densityTier, int waterLevel) {
         this.startTime = startTime;
-        this.expiresAt = expiresAt;
-        this.originalDuration = Math.max(1L, expiresAt - startTime);
+        this.duration = Math.max(1L, expiresAt - startTime);
+        this.anchorTime = startTime;
+        this.anchorLife = this.duration;
+        this.rate = 1;
         this.textureSeed = textureSeed;
         this.densityTier = Math.max(0, densityTier);
         this.waterLevel = Math.max(0, Math.min(7, waterLevel));
-        setChanged();
         sync();
     }
 
-    public void setExpiresAt(long expiresAt) {
-        this.expiresAt = expiresAt;
-        setChanged();
-        sync();
+    public double remaining(double now) {
+        return Math.max(0.0, anchorLife - Math.max(0.0, now - anchorTime) * rate);
     }
 
-    private void sync() {
-        if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-        }
+    public void setRate(long now, int nextRate) {
+        nextRate = nextRate == 2 ? 2 : 1;
+        if (rate == nextRate) return;
+        anchorLife = remaining(now);
+        anchorTime = now;
+        rate = nextRate;
+        sync();
     }
 
     public long getStartTime() {
@@ -58,11 +54,11 @@ public final class SpecialIceBlockEntity extends BlockEntity {
     }
 
     public long getExpiresAt() {
-        return expiresAt;
+        return anchorTime + (long) Math.ceil(anchorLife / rate);
     }
 
     public long getDuration() {
-        return originalDuration > 0L ? originalDuration : Math.max(1L, expiresAt - startTime);
+        return Math.max(1L, duration);
     }
 
     public long getTextureSeed() {
@@ -78,19 +74,26 @@ public final class SpecialIceBlockEntity extends BlockEntity {
     }
 
     public float opacity(float partialTick) {
-        if (level == null || expiresAt <= startTime) return 1f;
-        double now = level.getGameTime() + partialTick;
-        double progress = Math.max(0.0, Math.min(1.0,
-                (now - startTime) / (double) Math.max(1L, originalDuration)));
-        return (float) (1.0 - 0.75 * progress);
+        if (level == null || duration <= 0L) return 0.85f;
+        float remainingRatio = (float) (remaining(level.getGameTime() + partialTick) / duration);
+        return net.minecraft.util.Mth.clamp(0.20f + 0.65f * remainingRatio, 0.20f, 0.85f);
+    }
+
+    private void sync() {
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putLong("StartTime", startTime);
-        tag.putLong("ExpiresAt", expiresAt);
-        tag.putLong("OriginalDuration", originalDuration);
+        tag.putLong("OriginalDuration", duration);
+        tag.putLong("IceAnchorTime", anchorTime);
+        tag.putDouble("IceAnchorLife", anchorLife);
+        tag.putInt("IceRate", rate);
         tag.putLong("TextureSeed", textureSeed);
         tag.putInt("DensityTier", densityTier);
         tag.putInt("WaterLevel", waterLevel);
@@ -100,12 +103,14 @@ public final class SpecialIceBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         startTime = tag.getLong("StartTime");
-        expiresAt = tag.getLong("ExpiresAt");
-        originalDuration = tag.contains("OriginalDuration")
-                ? tag.getLong("OriginalDuration") : Math.max(1L, expiresAt - startTime);
+        duration = tag.contains("OriginalDuration") ? tag.getLong("OriginalDuration") : 1L;
+        anchorTime = tag.contains("IceAnchorTime") ? tag.getLong("IceAnchorTime") : startTime;
+        anchorLife = tag.contains("IceAnchorLife") ? tag.getDouble("IceAnchorLife")
+                : Math.max(0L, duration);
+        rate = tag.getInt("IceRate") == 2 ? 2 : 1;
         textureSeed = tag.contains("TextureSeed") ? tag.getLong("TextureSeed") : worldPosition.asLong();
-        densityTier = tag.getInt("DensityTier");
-        waterLevel = tag.getInt("WaterLevel");
+        densityTier = Math.max(0, tag.getInt("DensityTier"));
+        waterLevel = Math.max(0, Math.min(7, tag.getInt("WaterLevel")));
     }
 
     @Override

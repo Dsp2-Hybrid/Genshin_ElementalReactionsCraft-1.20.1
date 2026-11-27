@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.entity.elereaction.overlay;
+package com.dsp2.genshinerc.client.render.entity.elereaction.overlay.shield;
 
 import com.dsp2.genshinerc.client.render.hud.bar.ClientCombatBars;
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;

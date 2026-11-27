@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.client.render.entity.elereaction.overlay;
+package com.dsp2.genshinerc.client.render.entity.elereaction.specice;
 
 import com.dsp2.genshinerc.GenshinERC;
 import com.dsp2.genshinerc.common.registry.block.ModBlocks;

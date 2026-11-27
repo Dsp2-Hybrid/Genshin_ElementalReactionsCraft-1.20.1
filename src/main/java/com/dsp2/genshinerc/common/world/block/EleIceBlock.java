@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.common.world.block;
+package com.dsp2.genshinerc.common.world.block;
 
 import com.dsp2.genshinerc.common.core.element.ElementGauge;
 import com.dsp2.genshinerc.common.registry.block.ModBlocks;
@@ -11,6 +11,8 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
@@ -33,225 +35,217 @@ import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.WeakHashMap;
-
 public class EleIceBlock extends BaseEntityBlock {
     public static final BooleanProperty SOURCE = BooleanProperty.create("source");
     public static final IntegerProperty AGE = IntegerProperty.create("age", 0, 40);
-    private static final Map<ServerLevel, Map<BlockPos, Long>> EXPIRES = new WeakHashMap<>();
-    private static final Map<ServerLevel, Map<BlockPos, Long>> DURATIONS = new WeakHashMap<>();
-    private static final Map<ServerLevel, Map<BlockPos, Long>> LAST_TICK = new WeakHashMap<>();
+    public static final IntegerProperty WATER_LEVEL = IntegerProperty.create("water_level", 0, 7);
 
     public EleIceBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(SOURCE, false).setValue(AGE, 0));
+        registerDefaultState(stateDefinition.any().setValue(SOURCE, false)
+                .setValue(AGE, 0).setValue(WATER_LEVEL, 0));
+    }
+
+    public static BlockState originalWater(BlockState ice) {
+        int waterLevel = ice.getValue(SOURCE) ? 0 : Math.max(1, ice.getValue(WATER_LEVEL));
+        return Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, waterLevel);
     }
 
     public static void freeze(ServerLevel level, BlockPos pos, boolean source, float units) {
-        BlockPos at = pos.immutable();
-        BlockState previous = level.getBlockState(at);
+        BlockState previous = level.getBlockState(pos);
         if (previous.getBlock() instanceof EleIceBlock) {
-            IceEntityResolver.resolveAround(level, at);
+            IceEntityResolver.resolveAround(level, pos);
             return;
         }
 
         FluidState fluid = previous.getFluidState();
-        if (!fluid.is(net.minecraft.tags.FluidTags.WATER)) return;
+        if (!fluid.is(FluidTags.WATER)) return;
 
-        boolean isSource = source || fluid.isSource();
-        int waterLevel = isSource ? 0 : Math.max(1, Math.min(7, 8 - fluid.getAmount()));
+        boolean waterSource = source || fluid.isSource();
+        BlockState legacyWater = fluid.createLegacyBlock();
+        int waterLevel = waterSource ? 0 : legacyWater.hasProperty(LiquidBlock.LEVEL)
+                ? Math.max(1, Math.min(7, legacyWater.getValue(LiquidBlock.LEVEL)))
+                : Math.max(1, Math.min(7, 8 - fluid.getAmount()));
+
+        long now = level.getGameTime();
         long duration = Math.max(60L,
                 ElementGauge.durationTicksFromUnits(Math.max(0.25f, units)) + level.random.nextInt(10));
-        long start = level.getGameTime();
-        long expires = start + duration;
-        int densityTier = Math.max(0, (int) Math.floor(Math.max(0f, units) / 0.5f));
-
-        EXPIRES.computeIfAbsent(level, ignored -> new HashMap<>()).put(at, expires);
-        DURATIONS.computeIfAbsent(level, ignored -> new HashMap<>()).put(at, duration);
-        LAST_TICK.computeIfAbsent(level, ignored -> new HashMap<>()).put(at, start);
-
         BlockState ice = ModBlocks.SPECIAL_ICE.get().defaultBlockState()
-                .setValue(SOURCE, isSource).setValue(AGE, 0);
-        if (!level.setBlockAndUpdate(at, ice)) {
-            removeTracking(level, at);
-            return;
+                .setValue(SOURCE, waterSource).setValue(WATER_LEVEL, waterLevel).setValue(AGE, 0);
+
+        if (!level.setBlockAndUpdate(pos, ice)) return;
+        if (level.getBlockEntity(pos) instanceof SpecialIceBlockEntity be) {
+            be.setFreezeData(now, now + duration, level.random.nextLong(),
+                    Math.max(0, (int) Math.floor(Math.max(0f, units) * 2f)), waterLevel);
         }
 
-        if (level.getBlockEntity(at) instanceof SpecialIceBlockEntity be) {
-            be.setFreezeData(start, expires, level.random.nextLong(), densityTier, waterLevel);
-        }
-
-        IceEntityResolver.resolveAround(level, at);
-        schedule(level, at, duration);
-        level.playSound(null, at, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS,
+        IceEntityResolver.resolveAround(level, pos);
+        level.scheduleTick(pos, ModBlocks.SPECIAL_ICE.get(), 1);
+        level.playSound(null, pos, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS,
                 0.78f, 1.26f + level.random.nextFloat() * 0.16f);
-        level.sendParticles(ParticleTypes.SNOWFLAKE, at.getX() + 0.5, at.getY() + 0.96, at.getZ() + 0.5,
-                30, 0.36, 0.12, 0.36, 0.04);
+        level.sendParticles(ParticleTypes.SNOWFLAKE, pos.getX() + 0.5, pos.getY() + 0.96,
+                pos.getZ() + 0.5, 30, 0.36, 0.12, 0.36, 0.04);
         level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.ICE.defaultBlockState()),
-                at.getX() + 0.5, at.getY() + 0.97, at.getZ() + 0.5, 22, 0.32, 0.10, 0.32, 0.06);
-    }
-
-    private static void schedule(ServerLevel level, BlockPos pos, long delay) {
-        level.scheduleTick(pos, ModBlocks.SPECIAL_ICE.get(),
-                (int) Math.max(1L, Math.min(Integer.MAX_VALUE, delay)));
+                pos.getX() + 0.5, pos.getY() + 0.97, pos.getZ() + 0.5,
+                22, 0.32, 0.10, 0.32, 0.06);
     }
 
     public static void melt(ServerLevel level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        if (!(state.getBlock() instanceof EleIceBlock)) return;
+        BlockState ice = level.getBlockState(pos);
+        if (!(ice.getBlock() instanceof EleIceBlock)) return;
 
-        boolean source = state.getValue(SOURCE);
-        SpecialIceBlockEntity be = level.getBlockEntity(pos) instanceof SpecialIceBlockEntity blockEntity
-                ? blockEntity : null;
-        int waterLevel = be == null ? (source ? 0 : 1) : be.getWaterLevel();
-        removeTracking(level, pos);
+        BlockState water = originalWater(ice);
+        if (level.getBlockEntity(pos) instanceof SpecialIceBlockEntity be
+                && !ice.getValue(SOURCE) && be.getWaterLevel() > 0) {
+            water = water.setValue(LiquidBlock.LEVEL, be.getWaterLevel());
+        }
 
-        BlockState water = source
-                ? Blocks.WATER.defaultBlockState()
-                : Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, Math.max(1, waterLevel));
         level.setBlockAndUpdate(pos, water);
+        FluidState restoredFluid = level.getFluidState(pos);
+        if (restoredFluid.is(FluidTags.WATER)) {
+            level.scheduleTick(pos, restoredFluid.getType(), restoredFluid.getType().getTickDelay(level));
+        }
+
         level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS,
-                0.56f, 1.22f + level.random.nextFloat() * 0.14f);
-        level.sendParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.4, pos.getZ() + 0.5,
-                10, 0.27, 0.22, 0.27, 0.025);
-        level.sendParticles(ParticleTypes.FALLING_WATER, pos.getX() + 0.5, pos.getY() + 0.65, pos.getZ() + 0.5,
-                14, 0.28, 0.20, 0.28, 0.03);
+                0.78f, 1.05f + level.random.nextFloat() * 0.20f);
+        level.sendParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5,
+                pos.getZ() + 0.5, 14, 0.34, 0.30, 0.34, 0.04);
+        level.sendParticles(ParticleTypes.FALLING_WATER, pos.getX() + 0.5, pos.getY() + 0.65,
+                pos.getZ() + 0.5, 20, 0.32, 0.28, 0.32, 0.045);
     }
 
-    private static void removeTracking(ServerLevel level, BlockPos pos) {
-        remove(level, pos, EXPIRES);
-        remove(level, pos, DURATIONS);
-        remove(level, pos, LAST_TICK);
-    }
-
-    private static void remove(ServerLevel level, BlockPos pos, Map<ServerLevel, Map<BlockPos, Long>> tracking) {
-        Map<BlockPos, Long> values = tracking.get(level);
-        if (values == null) return;
-        values.remove(pos);
-        if (values.isEmpty()) tracking.remove(level);
-    }
-
-    private static boolean isFire(ServerLevel level, BlockPos pos) {
-        return level.hasChunkAt(pos) && level.getBlockState(pos).is(net.minecraft.tags.BlockTags.FIRE);
+    private static boolean isFire(BlockState state) {
+        return state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE);
     }
 
     private static boolean isLava(ServerLevel level, BlockPos pos) {
         if (!level.hasChunkAt(pos)) return false;
-        return level.getFluidState(pos).is(Fluids.LAVA) || level.getBlockState(pos).is(Blocks.LAVA);
+        BlockState state = level.getBlockState(pos);
+        FluidState fluid = state.getFluidState();
+        return state.is(Blocks.LAVA) || fluid.is(FluidTags.LAVA)
+                || fluid.getType() == Fluids.LAVA;
     }
 
-    private static boolean hasAdjacentLava(ServerLevel level, BlockPos pos) {
-        for (Direction direction : Direction.values()) {
-            if (isLava(level, pos.relative(direction))) return true;
+    private static int heatRate(ServerLevel level, BlockPos origin) {
+        if (isFire(level.getBlockState(origin.above()))) return 0;
+
+        boolean firstShellFire = false;
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (int radius = 1; radius <= 2; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dy = -radius; dy <= radius; dy++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        if (Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz))) != radius) continue;
+                        cursor.setWithOffset(origin, dx, dy, dz);
+                        if (!level.hasChunkAt(cursor)) continue;
+
+                        BlockState neighbor = level.getBlockState(cursor);
+                        if (isLava(level, cursor)) return radius == 1 ? 0 : 2;
+                        if (radius == 1 && !(dx == 0 && dy == 1 && dz == 0) && isFire(neighbor)) {
+                            firstShellFire = true;
+                        }
+                    }
+                }
+            }
+            if (radius == 1 && firstShellFire) return 2;
         }
-        return false;
+        return 1;
     }
 
-    private static boolean hasHeatWithinTwo(ServerLevel level, BlockPos pos) {
-        for (BlockPos test : BlockPos.withinManhattan(pos, 2, 2, 2)) {
-            if (pos.distManhattan(test) == 2 && (isLava(level, test) || isFire(level, test))) return true;
-        }
-        return false;
+    private static void removeFireAbove(ServerLevel level, BlockPos pos) {
+        BlockPos above = pos.above();
+        if (!isFire(level.getBlockState(above))) return;
+        level.removeBlock(above, false);
+        level.playSound(null, above, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS,
+                0.8f, 1f + level.random.nextFloat() * 0.2f);
+        level.sendParticles(ParticleTypes.SMOKE, above.getX() + 0.5, above.getY() + 0.5,
+                above.getZ() + 0.5, 8, 0.18, 0.18, 0.18, 0.01);
     }
 
-    private static boolean hasAdjacentFire(ServerLevel level, BlockPos pos) {
-        for (Direction direction : Direction.values()) {
-            if (isFire(level, pos.relative(direction))) return true;
+    private static void checkHeat(ServerLevel level, BlockPos pos) {
+        if (heatRate(level, pos) != 0) return;
+        removeFireAbove(level, pos);
+        melt(level, pos);
+    }
+
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighbor,
+                                BlockPos neighborPos, boolean moving) {
+        super.neighborChanged(state, level, pos, neighbor, neighborPos, moving);
+        if (level instanceof ServerLevel server) {
+            checkHeat(server, pos);
+            if (server.getBlockState(pos).getBlock() instanceof EleIceBlock) {
+                server.scheduleTick(pos, this, 1);
+            }
         }
-        return false;
+    }
+
+    @Override
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
+                                  net.minecraft.world.level.LevelAccessor level, BlockPos pos,
+                                  BlockPos neighborPos) {
+        if (level instanceof ServerLevel server) {
+            checkHeat(server, pos);
+            if (server.getBlockState(pos).getBlock() instanceof EleIceBlock) {
+                server.scheduleTick(pos, this, 1);
+            }
+        }
+        return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
     }
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        SpecialIceBlockEntity be = level.getBlockEntity(pos) instanceof SpecialIceBlockEntity blockEntity
-                ? blockEntity : null;
+        if (!(level.getBlockEntity(pos) instanceof SpecialIceBlockEntity be)) return;
+
+        int rate = heatRate(level, pos);
+        if (rate == 0) {
+            removeFireAbove(level, pos);
+            melt(level, pos);
+            return;
+        }
+
         long now = level.getGameTime();
-        long fallback = ElementGauge.durationTicksFromUnits(2f);
-        long expires = be != null && be.getExpiresAt() > 0L
-                ? be.getExpiresAt()
-                : EXPIRES.getOrDefault(level, Map.of()).getOrDefault(pos, now + fallback);
-
-        if (isFire(level, pos.above())) {
-            level.removeBlock(pos.above(), false);
-            melt(level, pos);
-            return;
+        if (be.getExpiresAt() <= 0L) {
+            long duration = Math.max(1L, ElementGauge.durationTicksFromUnits(2f));
+            be.setFreezeData(now, now + duration, random.nextLong(), 4, state.getValue(WATER_LEVEL));
         }
-        if (hasAdjacentLava(level, pos)) {
+        be.setRate(now, rate);
+        if (be.remaining(now) <= 0.0) {
             melt(level, pos);
             return;
         }
 
-        long last = LAST_TICK.computeIfAbsent(level, ignored -> new HashMap<>()).getOrDefault(pos, now);
-        long elapsed = Math.max(0L, now - last);
-        long multiplier = hasHeatWithinTwo(level, pos) || hasAdjacentFire(level, pos) ? 2L : 1L;
-        expires -= elapsed * multiplier;
-        LAST_TICK.get(level).put(pos.immutable(), now);
-        EXPIRES.computeIfAbsent(level, ignored -> new HashMap<>()).put(pos.immutable(), expires);
-        if (be != null) be.setExpiresAt(expires);
-
-        if (now >= expires) {
-            melt(level, pos);
-            return;
+        int age = (int) Math.min(40L, Math.max(0L,
+                (long) (40.0 * (1.0 - be.remaining(now) / be.getDuration()))));
+        if (state.getValue(AGE) != age) {
+            level.setBlock(pos, state.setValue(AGE, age), Block.UPDATE_CLIENTS);
         }
-
         IceEntityResolver.resolveAround(level, pos);
-        long duration = be != null && be.getDuration() > 0L
-                ? be.getDuration()
-                : DURATIONS.getOrDefault(level, Map.of()).getOrDefault(pos, fallback);
-        long elapsedLife = Math.max(0L, duration - Math.max(0L, expires - now));
-        int age = (int) Math.min(40L, elapsedLife * 40L / Math.max(1L, duration));
-        if (state.getValue(AGE) != age) level.setBlock(pos, state.setValue(AGE, age), 3);
-
-        long remaining = expires - now;
-        schedule(level, pos, Math.min(4L, Math.max(1L, remaining / Math.max(1L, 41L - age))));
+        level.scheduleTick(pos, this, 1);
     }
 
     @Override
-    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moving) {
-        if (level.isClientSide || !(level instanceof ServerLevel server) || old.getBlock() == this) return;
-
-        long duration = ElementGauge.durationTicksFromUnits(2f);
-        long start = server.getGameTime();
-        long expires = start + duration;
-        Map<BlockPos, Long> expiries = EXPIRES.computeIfAbsent(server, ignored -> new HashMap<>());
-        Map<BlockPos, Long> durations = DURATIONS.computeIfAbsent(server, ignored -> new HashMap<>());
-        LAST_TICK.computeIfAbsent(server, ignored -> new HashMap<>()).put(pos.immutable(), start);
-
-        if (!expiries.containsKey(pos)) {
-            expiries.put(pos.immutable(), expires);
-            durations.put(pos.immutable(), duration);
-            schedule(server, pos, duration);
-        } else {
-            expires = expiries.get(pos);
-            duration = durations.getOrDefault(pos, duration);
-            start = expires - duration;
+    public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moving) {
+        super.onPlace(state, level, pos, oldState, moving);
+        if (level instanceof ServerLevel server && !oldState.is(this)) {
+            server.scheduleTick(pos, this, 1);
         }
-
-        if (server.getBlockEntity(pos) instanceof SpecialIceBlockEntity be) {
-            if (be.getExpiresAt() <= 0L) {
-                be.setFreezeData(start, expires, server.random.nextLong(), 4, 0);
-            } else {
-                be.setLifetime(start, expires);
-            }
-        }
-        IceEntityResolver.resolveAround(server, pos);
     }
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        float strength = 1.0f - state.getValue(AGE) * 0.10f;
+        float strength = 1f - state.getValue(AGE) / 40f;
         if (random.nextInt(3) == 0) {
-            level.addParticle(ParticleTypes.SNOWFLAKE, pos.getX() + random.nextDouble(), pos.getY() + 0.96,
-                    pos.getZ() + random.nextDouble(), (random.nextDouble() - 0.5) * 0.012,
-                    0.015 * strength, (random.nextDouble() - 0.5) * 0.012);
+            level.addParticle(ParticleTypes.SNOWFLAKE, pos.getX() + random.nextDouble(),
+                    pos.getY() + 0.96, pos.getZ() + random.nextDouble(),
+                    (random.nextDouble() - 0.5) * 0.012, 0.015 * strength,
+                    (random.nextDouble() - 0.5) * 0.012);
         }
         if (random.nextInt(3) == 0) {
             level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.ICE.defaultBlockState()),
-                    pos.getX() + random.nextDouble(), pos.getY() + 0.94, pos.getZ() + random.nextDouble(),
-                    (random.nextDouble() - 0.5) * 0.008, 0.008 * strength,
-                    (random.nextDouble() - 0.5) * 0.008);
+                    pos.getX() + random.nextDouble(), pos.getY() + 0.94,
+                    pos.getZ() + random.nextDouble(), (random.nextDouble() - 0.5) * 0.008,
+                    0.008 * strength, (random.nextDouble() - 0.5) * 0.008);
         }
     }
 
@@ -277,11 +271,12 @@ public class EleIceBlock extends BaseEntityBlock {
 
     @Override
     public float getShadeBrightness(BlockState state, BlockGetter level, BlockPos pos) {
-        return 1.0f;
+        return 1f;
     }
 
     @Override
-    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos,
+                                        CollisionContext context) {
         if (context instanceof EntityCollisionContext entityContext) {
             Entity entity = entityContext.getEntity();
             if (entity != null && entity.getBoundingBox().deflate(1.0E-4).intersects(new AABB(pos))) {
@@ -293,6 +288,6 @@ public class EleIceBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(SOURCE, AGE);
+        builder.add(SOURCE, AGE, WATER_LEVEL);
     }
 }

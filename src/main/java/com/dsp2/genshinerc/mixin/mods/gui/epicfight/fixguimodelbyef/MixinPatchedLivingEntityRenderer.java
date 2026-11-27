@@ -1,4 +1,4 @@
-﻿package com.dsp2.genshinerc.mixin.mods.gui.epicfight.fixguimodelbyef;
+package com.dsp2.genshinerc.mixin.mods.gui.epicfight.fixguimodelbyef;
 
 import com.dsp2.genshinerc.client.render.entity.elereaction.overlay.FrozenSurface;
 import com.dsp2.genshinerc.patch.core.gui.render.GuiRenderContext;
@@ -31,48 +31,47 @@ import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 @Mixin(value = PatchedLivingEntityRenderer.class, remap = false)
 public abstract class MixinPatchedLivingEntityRenderer {
     @Shadow(remap = false)
-    protected abstract void prepareModel(SkinnedMesh mesh, LivingEntity entity, LivingEntityPatch<?> entitypatch, LivingEntityRenderer<?, ?> renderer);
+    protected abstract void prepareModel(SkinnedMesh mesh, LivingEntity entity, LivingEntityPatch<?> patch,
+                                         LivingEntityRenderer<?, ?> renderer);
 
     @Shadow(remap = false)
-    protected abstract void renderLayer(LivingEntityRenderer<?, ?> renderer, LivingEntityPatch<?> entitypatch, LivingEntity entity, OpenMatrix4f[] poses, MultiBufferSource buffer, PoseStack poseStack, int packedLight, float partialTicks);
+    protected abstract void renderLayer(LivingEntityRenderer<?, ?> renderer, LivingEntityPatch<?> patch,
+                                        LivingEntity entity, OpenMatrix4f[] poses, MultiBufferSource buffer,
+                                        PoseStack pose, int light, float partial);
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void genshinerc$renderInGui(LivingEntity entity, LivingEntityPatch<?> entitypatch,
+    private void genshinerc$renderInGui(LivingEntity entity, LivingEntityPatch<?> patch,
                                         LivingEntityRenderer<?, ?> renderer, MultiBufferSource buffer,
-                                        PoseStack poseStack, int packedLight, float partialTicks,
-                                        CallbackInfo ci) {
+                                        PoseStack pose, int light, float partial, CallbackInfo ci) {
         if (!GuiRenderContext.isInGui()) return;
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
         PatchedEntityRenderer base = (PatchedEntityRenderer) (Object) this;
-        Armature armature = entitypatch.getArmature();
-        poseStack.pushPose();
-        base.mulPoseStack(poseStack, armature, entity, entitypatch, partialTicks);
-        base.setArmaturePose(entitypatch, armature, partialTicks);
+        Armature armature = patch.getArmature();
+        pose.pushPose();
+        try {
+            base.mulPoseStack(pose, armature, entity, patch, partial);
+            base.setArmaturePose(patch, armature, partial);
+            SkinnedMesh mesh = (SkinnedMesh) base.getMeshProvider(patch).get();
+            prepareModel(mesh, entity, patch, renderer);
 
-        @SuppressWarnings("unchecked")
-        SkinnedMesh mesh = (SkinnedMesh) base.getMeshProvider(entitypatch).get();
-        prepareModel(mesh, entity, entitypatch, renderer);
+            ResourceLocation texture = ((LivingEntityRenderer) renderer).getTextureLocation(entity);
+            RenderSystem.enableDepthTest();
+            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            RenderSystem.setShaderTexture(0, texture);
+            BufferBuilder builder = Tesselator.getInstance().getBuilder();
+            builder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+            mesh.drawPosed(pose, builder, DrawingFunction.POSITION_TEX_COLOR_NORMAL,
+                    -1, 0.9411f, 0.9411f, 0.9411f, 1f, OverlayTexture.NO_OVERLAY,
+                    armature, armature.getPoseMatrices());
+            BufferUploader.drawWithShader(builder.end());
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        ResourceLocation texture = ((LivingEntityRenderer) renderer).getTextureLocation(entity);
-        RenderSystem.enableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
-        RenderSystem.setShaderTexture(0, texture);
-
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder builder = tesselator.getBuilder();
-        builder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-        mesh.drawPosed(poseStack, builder, DrawingFunction.POSITION_TEX_COLOR_NORMAL,
-                -1, 0.9411F, 0.9411F, 0.9411F, 1.0F, OverlayTexture.NO_OVERLAY,
-                armature, armature.getPoseMatrices());
-        BufferUploader.drawWithShader(builder.end());
-
-        if (!entity.isSpectator()) {
-            renderLayer(renderer, entitypatch, entity, armature.getPoseMatrices(),
-                    buffer, poseStack, packedLight, partialTicks);
+            if (!entity.isSpectator()) {
+                renderLayer(renderer, patch, entity, armature.getPoseMatrices(), buffer, pose, light, partial);
+            }
+        } finally {
+            pose.popPose();
         }
-        poseStack.popPose();
         ci.cancel();
     }
 
@@ -81,19 +80,12 @@ public abstract class MixinPatchedLivingEntityRenderer {
     private void genshinerc$iceSurface(LivingEntityRenderer<?, ?> renderer, LivingEntityPatch<?> patch,
                                        LivingEntity entity, OpenMatrix4f[] poses, MultiBufferSource buffer,
                                        PoseStack pose, int light, float partial, CallbackInfo ci) {
-        float alpha = FrozenSurface.alpha(entity, partial);
-        if (alpha <= 0f) return;
+        float coating = FrozenSurface.alpha(entity, partial);
+        if (coating <= 0f) return;
 
         PatchedEntityRenderer base = (PatchedEntityRenderer) (Object) this;
         SkinnedMesh mesh = (SkinnedMesh) base.getMeshProvider(patch).get();
-        Armature armature = patch.getArmature();
-        float tint = FrozenSurface.tintWeight(entity, partial);
-        float flash = FrozenSurface.whiteFlashStrength(entity, partial);
-        float red = 0.91f - 0.06f * tint;
-        float green = 0.965f - 0.035f * tint;
-        red += (1.0f - red) * flash;
-        green += (1.0f - green) * flash;
-        mesh.draw(pose, FrozenSurface.randomized(buffer, entity), FrozenSurface.EPIC_FIGHT,
-                light, red, green, 1.0f, alpha, OverlayTexture.NO_OVERLAY, armature, poses);
+        mesh.drawPosed(pose, buffer.getBuffer(FrozenSurface.layer(entity, true)), DrawingFunction.NEW_ENTITY,
+                light, 1f, 1f, 1f, coating, OverlayTexture.NO_OVERLAY, patch.getArmature(), poses);
     }
 }

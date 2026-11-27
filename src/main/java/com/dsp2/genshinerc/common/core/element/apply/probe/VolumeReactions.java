@@ -18,7 +18,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
-import com.dsp2.genshinerc.mixin.core.combat.CreeperPoweredAccessor;
+import com.dsp2.genshinerc.mixin.core.reaction.CreeperPoweredAccessor;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.level.GameRules;

@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.client.render.entity.elereaction.overlay;
+package com.dsp2.genshinerc.client.render.entity.elereaction.overlay.shield;
 
 import com.dsp2.genshinerc.client.render.hud.bar.ClientCombatBars;
 import com.dsp2.genshinerc.client.render.hud.bar.config.BarConfig;
@@ -10,7 +10,7 @@ import net.minecraft.world.entity.LivingEntity;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ShieldSurface {
+public final class EleShieldSurface {
     public record Overlay(float red, float green, float blue, float alpha) {}
 
     private static final class Blend {
@@ -23,7 +23,7 @@ public final class ShieldSurface {
 
     private static final Map<Integer, Blend> STATES = new HashMap<>();
 
-    private ShieldSurface() {}
+    private EleShieldSurface() {}
 
     public static Overlay sample(LivingEntity entity) {
         int id = entity.getId();

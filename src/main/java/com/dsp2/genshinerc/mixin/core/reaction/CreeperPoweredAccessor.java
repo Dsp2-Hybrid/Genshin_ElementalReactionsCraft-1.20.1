@@ -1,4 +1,4 @@
-package com.dsp2.genshinerc.mixin.core.combat;
+package com.dsp2.genshinerc.mixin.core.reaction;
 
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.entity.monster.Creeper;

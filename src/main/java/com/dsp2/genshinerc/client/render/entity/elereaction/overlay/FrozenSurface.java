@@ -1,215 +1,125 @@
-﻿package com.dsp2.genshinerc.client.render.entity.elereaction.overlay;
+package com.dsp2.genshinerc.client.render.entity.elereaction.overlay;
 
 import com.dsp2.genshinerc.client.render.hud.bar.element.ClientAuraCache;
 import com.dsp2.genshinerc.client.render.vfx.config.VFXConfig;
 import com.dsp2.genshinerc.common.core.element.ElementType;
+import com.dsp2.genshinerc.common.core.element.FrozenControl;
 import com.dsp2.genshinerc.patch.core.gui.render.GuiRenderContext;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
-import org.lwjgl.opengl.GL11;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.opengl.GL30;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @SuppressWarnings({"deprecation", "removal"})
+@Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT)
 public final class FrozenSurface {
-    private static final ResourceLocation ICE = new ResourceLocation("genshinerc", "textures/entity/frozen_ice_pattern.png");
-    private static final RenderType BASE = RenderType.entityTranslucent(ICE, false);
-    public static final RenderType VANILLA = new SurfaceType(VertexFormat.Mode.QUADS);
-    public static final RenderType EPIC_FIGHT = new SurfaceType(VertexFormat.Mode.TRIANGLES);
-    private static final Map<LivingEntity, FreezeVisual> VISUALS = new WeakHashMap<>();
-    private static final Map<LivingEntity, Pulse> PULSES = new WeakHashMap<>();
+    private static final int SIZE = 512;
+    private static final int WRAP = SIZE - 1;
+    private static final int COLS = 2;
+    private static final int ROWS = 4;
+
+    private static final float PULSE_THRESHOLD = FrozenControl.MAX_GAUGE * 0.5f;
+    private static final double SLOW_HZ = 1.2;
+    private static final double FAST_HZ = 5.0;
+    private static final float BASE_ALPHA_MIN = 0.5f;
+    private static final float BASE_ALPHA_MAX = 0.8f;
+
+    private static final float DEEP_FREEZE_START = 3.0f;
+    private static final float DEEP_FREEZE_END = 4.0f;
+    private static final int DEEP_FREEZE_STEPS = 6;
+
+    private static final ResourceLocation MASKS = new ResourceLocation(
+            "genshinerc", "textures/entity/frozen_long_crack_masks.png");
+    private static final RenderType BASE = RenderType.entityTranslucent(MASKS, false);
+
+    private static final Map<LivingEntity, Visual> VISUALS = new IdentityHashMap<>();
+
+    private static MaskSheet sheet;
+    private static long generation;
 
     private FrozenSurface() {}
 
-    private static final class FreezeVisual {
-        long seed;
-        int band;
-        float offsetU;
-        float offsetV;
-        float scale;
-    }
-
-    private static final class Pulse {
-        double time;
-        double phase;
+    private static float amount(LivingEntity entity) {
+        var auras = ClientAuraCache.get(entity.getId());
+        if (!entity.isAlive() || auras == null || !auras.hasActive(ElementType.FROZEN)) return 0f;
+        return Mth.clamp(auras.gauge(ElementType.FROZEN), 0f, FrozenControl.MAX_GAUGE);
     }
 
     public static boolean frozen(LivingEntity entity) {
-        var auras = ClientAuraCache.get(entity.getId());
-        return entity.isAlive() && auras != null && auras.hasActive(ElementType.FROZEN);
+        return amount(entity) > 0f;
     }
 
     public static float gaugeRatio(LivingEntity entity) {
-        var auras = ClientAuraCache.get(entity.getId());
-        return auras == null || !entity.isAlive() ? 0f : net.minecraft.util.Mth.clamp(
-                auras.gauge(ElementType.FROZEN)
-                        / com.dsp2.genshinerc.common.core.element.FrozenControl.MAX_GAUGE,
-                0f, 1f);
+        return amount(entity) / FrozenControl.MAX_GAUGE;
     }
 
-    private static float gauge(LivingEntity entity) {
-        return gaugeRatio(entity) * com.dsp2.genshinerc.common.core.element.FrozenControl.MAX_GAUGE;
+    public static float tintWeight(LivingEntity entity, float partialTick) {
+        return 1f - gaugeRatio(entity);
     }
 
-    private static FreezeVisual visual(LivingEntity entity) {
-        int band = Math.max(0, Math.min(16, (int) Math.floor(gauge(entity) * 2f)));
-        FreezeVisual visual = VISUALS.get(entity);
-        if (visual == null) {
-            visual = new FreezeVisual();
-            visual.seed = entity.getUUID().getMostSignificantBits()
-                    ^ entity.getUUID().getLeastSignificantBits()
-                    ^ (long) entity.tickCount * 0x9E3779B97F4A7C15L;
-            visual.band = band;
-            VISUALS.put(entity, visual);
-            randomize(visual, band);
-        } else if (visual.band != band) {
-            visual.band = band;
-            randomize(visual, band);
-        }
-        return visual;
+    private static Visual visual(LivingEntity entity) {
+        return VISUALS.computeIfAbsent(entity, ignored -> new Visual());
     }
 
-    private static void randomize(FreezeVisual visual, int band) {
-        long value = mix(visual.seed ^ (long) band * 0x9E3779B97F4A7C15L);
-        visual.offsetU = unit(value);
-        visual.offsetV = unit(mix(value + 0x632BE59BD9B4E019L));
-        visual.scale = 1f + band * 0.075f;
+    private static double smooth(double value) {
+        return value * value * (3.0 - 2.0 * value);
     }
 
-    private static long mix(long value) {
-        value = (value ^ (value >>> 30)) * 0xBF58476D1CE4E5B9L;
-        value = (value ^ (value >>> 27)) * 0x94D049BB133111EBL;
-        return value ^ (value >>> 31);
-    }
-
-    private static float unit(long value) {
-        return (float) ((value >>> 40) * (1.0 / 16777216.0));
-    }
-
-    public static VertexConsumer randomized(VertexConsumer consumer, LivingEntity entity) {
-        FreezeVisual visual = visual(entity);
-        return new UvConsumer(consumer, visual.offsetU, visual.offsetV, visual.scale);
-    }
-
-    public static MultiBufferSource randomized(MultiBufferSource source, LivingEntity entity) {
-        return renderType -> {
-            VertexConsumer consumer = source.getBuffer(renderType);
-            return renderType == EPIC_FIGHT ? randomized(consumer, entity) : consumer;
-        };
-    }
-
-    private static final class UvConsumer implements VertexConsumer {
-        private final VertexConsumer delegate;
-        private final float offsetU;
-        private final float offsetV;
-        private final float scale;
-
-        private UvConsumer(VertexConsumer delegate, float offsetU, float offsetV, float scale) {
-            this.delegate = delegate;
-            this.offsetU = offsetU;
-            this.offsetV = offsetV;
-            this.scale = scale;
-        }
-
-        @Override
-        public VertexConsumer vertex(double x, double y, double z) {
-            delegate.vertex(x, y, z);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer color(int red, int green, int blue, int alpha) {
-            delegate.color(red, green, blue, alpha);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer uv(float u, float v) {
-            delegate.uv(fract((u + offsetU) * scale), fract((v + offsetV) * scale));
-            return this;
-        }
-
-        @Override
-        public VertexConsumer overlayCoords(int u, int v) {
-            delegate.overlayCoords(u, v);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer uv2(int u, int v) {
-            delegate.uv2(u, v);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer normal(float x, float y, float z) {
-            delegate.normal(x, y, z);
-            return this;
-        }
-
-        @Override
-        public void endVertex() {
-            delegate.endVertex();
-        }
-
-        @Override
-        public void defaultColor(int red, int green, int blue, int alpha) {
-            delegate.defaultColor(red, green, blue, alpha);
-        }
-
-        @Override
-        public void unsetDefaultColor() {
-            delegate.unsetDefaultColor();
-        }
-
-        private static float fract(float value) {
-            return value - (float) Math.floor(value);
-        }
-    }
-
-    private static float pulseStrength(LivingEntity entity, float partialTick) {
-        float amount = gauge(entity);
-        if (amount >= 4f) {
-            PULSES.remove(entity);
+    private static float pulse(LivingEntity entity, Visual visual, float gauge, float partialTick) {
+        double now = entity.tickCount + (double) Mth.clamp(partialTick, 0f, 1f);
+        double progress = smooth(Mth.clamp((PULSE_THRESHOLD - gauge) / PULSE_THRESHOLD, 0.0, 1.0));
+        if (progress <= 0.0) {
+            visual.pulsing = false;
+            visual.phase = 0.0;
+            visual.time = now;
             return 0f;
         }
 
-        double time = entity.tickCount + partialTick;
-        Pulse pulse = PULSES.computeIfAbsent(entity, ignored -> new Pulse());
-        if (time < pulse.time || time - pulse.time > 5.0) {
-            pulse.time = time;
-            pulse.phase = 0.0;
+        double hz = SLOW_HZ + (FAST_HZ - SLOW_HZ) * progress;
+        if (!visual.pulsing) {
+            visual.pulsing = true;
+            visual.phase = 0.0;
+            visual.time = now;
+            visual.hz = hz;
+        } else if (now > visual.time) {
+            double elapsed = now - visual.time;
+            visual.phase = (visual.phase + elapsed * (visual.hz + hz) / 2.0) % 1.0;
+            visual.time = now;
+            visual.hz = hz;
         }
 
-        double frequency = 1.0 + 2.5 * (1.0 - net.minecraft.util.Mth.clamp(amount / 4f, 0f, 1f));
-        if (time > pulse.time) {
-            pulse.phase = (pulse.phase + (time - pulse.time) * frequency / 20.0) % 1.0;
-            pulse.time = time;
-        }
-
-        double wave = (Math.sin(pulse.phase * Math.PI * 2.0) + 1.0) * 0.5;
-        double smooth = wave * wave * (3.0 - 2.0 * wave);
-        double envelope = net.minecraft.util.Mth.clamp(4.0 - amount, 0.0, 1.0);
-        return (float) (smooth * envelope);
+        return (float) (progress * (0.5 - 0.5 * Math.cos(visual.phase * Math.PI * 2.0)));
     }
 
     public static float whiteFlashStrength(LivingEntity entity, float partialTick) {
-        return gauge(entity) > 2.8f ? pulseStrength(entity, partialTick) : 0f;
+        float gauge = amount(entity);
+        return gauge <= 0f ? 0f : pulse(entity, visual(entity), gauge, partialTick);
     }
 
     public static boolean whiteFlash(LivingEntity entity, float partialTick) {
         return whiteFlashStrength(entity, partialTick) >= 0.98f;
-    }
-
-    public static float tintWeight(LivingEntity entity, float partialTick) {
-        return 1f - net.minecraft.util.Mth.clamp(gauge(entity) / 4f, 0f, 1f);
     }
 
     public static float alpha(LivingEntity entity) {
@@ -217,37 +127,228 @@ public final class FrozenSurface {
     }
 
     public static float alpha(LivingEntity entity, float partialTick) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!VFXConfig.get().cryoTintEnabled || GuiRenderContext.isInGui()
+        var mc = Minecraft.getInstance();
+        float gauge = amount(entity);
+        if (gauge <= 0f || !VFXConfig.get().cryoTintEnabled || GuiRenderContext.isInGui()
                 || entity.isInvisible() || entity.isSpectator()
-                || (entity == mc.getCameraEntity() && mc.options.getCameraType().isFirstPerson())
-                || !frozen(entity)) {
-            PULSES.remove(entity);
-            VISUALS.remove(entity);
+                || (entity == mc.getCameraEntity() && mc.options.getCameraType().isFirstPerson())) {
             return 0f;
         }
 
-        float amount = gauge(entity);
-        visual(entity);
-        float maximum = 0.85f - 0.10f * net.minecraft.util.Mth.clamp(amount, 0f, 4f);
-        return net.minecraft.util.Mth.clamp(maximum * (1f - pulseStrength(entity, partialTick)), 0f, 0.85f);
+        float ratio = Mth.clamp(gauge / FrozenControl.MAX_GAUGE, 0f, 1f);
+        float eased = (float) Math.sqrt(ratio);
+        float baseAlpha = Mth.lerp(eased, BASE_ALPHA_MIN, BASE_ALPHA_MAX);
+        float pulse = pulse(entity, visual(entity), gauge, partialTick);
+        float pulseMultiplier = 1f - pulse;
+        return Mth.clamp(baseAlpha * pulseMultiplier, 0f, BASE_ALPHA_MAX);
     }
 
-    private static final class SurfaceType extends RenderType {
-        private SurfaceType(VertexFormat.Mode mode) {
-            super("genshinerc_frozen_surface_" + mode.name().toLowerCase(java.util.Locale.ROOT),
-                    BASE.format(), mode, 256, false, false,
+    public static RenderType layer(LivingEntity entity, boolean triangles) {
+        Visual visual = visual(entity);
+        if (visual.skin == null) visual.skin = new Skin();
+        Skin skin = visual.skin;
+
+        float gauge = amount(entity);
+        long tick = entity.level().getGameTime();
+        int deepStep = deepFreezeStep(gauge);
+
+        boolean first = !skin.initialized;
+        boolean changed = !first && tick - skin.lastPatternTick >= 20L
+                && Math.abs(gauge - skin.patternGauge) >= 0.5f;
+        boolean deepChanged = !first && deepStep != skin.deepStep;
+
+        if (first || changed) {
+            skin.patternGauge = gauge;
+            skin.lastPatternTick = tick;
+            skin.band = Mth.clamp(Mth.ceil(gauge * 2f), 1, 16);
+            skin.seed = visual.random.nextLong();
+            skin.initialized = true;
+        }
+
+        if (first || changed || deepChanged || skin.generation != generation) {
+            skin.deepStep = deepStep;
+            paint(skin.texture.getPixels(), skin.band, skin.seed, deepStep, masks());
+            skin.texture.upload();
+            skin.generation = generation;
+        }
+
+        return triangles ? skin.triangles : skin.quads;
+    }
+
+    private static int deepFreezeStep(float gauge) {
+        if (gauge <= DEEP_FREEZE_START) return 0;
+        float t = Mth.clamp((gauge - DEEP_FREEZE_START) / (DEEP_FREEZE_END - DEEP_FREEZE_START), 0f, 1f);
+        return Math.round(t * DEEP_FREEZE_STEPS);
+    }
+
+    private static final class Visual {
+        final Random random = new Random(ThreadLocalRandom.current().nextLong());
+        boolean pulsing;
+        double time;
+        double hz;
+        double phase;
+        Skin skin;
+    }
+
+    private static final class Skin {
+        final DynamicTexture texture = new DynamicTexture(SIZE, SIZE, true);
+        final ResourceLocation id = Minecraft.getInstance().getTextureManager()
+                .register("genshinerc_frozen_coating", texture);
+        final RenderType quads = new SkinLayer(id, VertexFormat.Mode.QUADS);
+        final RenderType triangles = new SkinLayer(id, VertexFormat.Mode.TRIANGLES);
+
+        boolean initialized;
+        float patternGauge;
+        int band;
+        int deepStep = -1;
+        long lastPatternTick;
+        long seed;
+        long generation = -1;
+    }
+
+    private static final class SkinLayer extends RenderType {
+        SkinLayer(ResourceLocation texture, VertexFormat.Mode mode) {
+            super("genshinerc_frozen_coating_" + mode.name(), BASE.format(), mode, 4096, false, false,
                     () -> {
                         BASE.setupRenderState();
-                        RenderSystem.enableDepthTest();
-                        RenderSystem.depthFunc(GL11.GL_LEQUAL);
+                        RenderSystem.setShaderTexture(0, texture);
                         RenderSystem.depthMask(false);
+                        GlStateManager._enablePolygonOffset();
+                        GlStateManager._polygonOffset(-1.0f, -10.0f);
                     },
                     () -> {
+                        GlStateManager._disablePolygonOffset();
                         RenderSystem.depthMask(true);
-                        RenderSystem.depthFunc(GL11.GL_LEQUAL);
                         BASE.clearRenderState();
                     });
+        }
+    }
+
+    @SubscribeEvent
+    public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || VISUALS.isEmpty()) return;
+        var mc = Minecraft.getInstance();
+        var iterator = VISUALS.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            LivingEntity entity = entry.getKey();
+            Visual visual = entry.getValue();
+            if (entity.level() == mc.level && !entity.isRemoved() && frozen(entity)) continue;
+            if (visual.skin != null) mc.getTextureManager().release(visual.skin.id);
+            iterator.remove();
+        }
+    }
+
+    @Mod.EventBusSubscriber(modid = "genshinerc", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static final class Reload {
+        @SubscribeEvent
+        public static void register(RegisterClientReloadListenersEvent event) {
+            event.registerReloadListener((ResourceManagerReloadListener) manager -> {
+                sheet = null;
+                generation++;
+            });
+        }
+    }
+
+    private static MaskSheet masks() {
+        if (sheet == null) sheet = readMasks(Minecraft.getInstance().getResourceManager());
+        return sheet;
+    }
+
+    private static MaskSheet readMasks(ResourceManager manager) {
+        try (InputStream input = manager.open(MASKS); NativeImage image = NativeImage.read(input)) {
+            int width = image.getWidth();
+            int height = image.getHeight();
+            if (width < 4 || height < 8 || width % COLS != 0 || height % ROWS != 0) {
+                throw new IllegalArgumentException("Invalid 2 x 4 crack mask sheet: " + MASKS);
+            }
+
+            byte[] alpha = new byte[width * height];
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    alpha[y * width + x] = (byte) (image.getPixelRGBA(x, y) >>> 24);
+                }
+            }
+            return new MaskSheet(width, width / COLS, height / ROWS, alpha);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(MASKS.toString(), ex);
+        }
+    }
+
+    private record MaskSheet(int stride, int width, int height, byte[] alpha) {
+        float sample(int variant, double x, double y) {
+            if (x < 0 || y < 0 || x >= width - 1 || y >= height - 1) return 0f;
+            int ix = (int) x;
+            int iy = (int) y;
+            int index = ((variant / COLS) * height + iy) * stride + (variant % COLS) * width + ix;
+            float tx = (float) (x - ix);
+            float ty = (float) (y - iy);
+            float a = Mth.lerp(tx, alpha[index] & 255, alpha[index + 1] & 255);
+            float b = Mth.lerp(tx, alpha[index + stride] & 255, alpha[index + stride + 1] & 255);
+            return Mth.lerp(ty, a, b) / 255f;
+        }
+    }
+
+    private static int rgb(int red, int green, int blue) {
+        return 0xff000000 | blue << 16 | green << 8 | red;
+    }
+
+    private static int blend(int from, int to, float weight) {
+        int red = Math.round(Mth.lerp(weight, from & 255, to & 255));
+        int green = Math.round(Mth.lerp(weight, from >>> 8 & 255, to >>> 8 & 255));
+        int blue = Math.round(Mth.lerp(weight, from >>> 16 & 255, to >>> 16 & 255));
+        return rgb(red, green, blue);
+    }
+
+    private static void paint(NativeImage image, int band, long seed, int deepStep, MaskSheet masks) {
+        float strength = (band - 1) / 15f;
+        float deepT = deepStep / (float) DEEP_FREEZE_STEPS;
+
+        int base = rgb(181 - Math.round(22 * strength), 221 - Math.round(12 * strength), 250);
+        int dark = rgb(99 - Math.round(75 * strength), 151 - Math.round(90 * strength),
+                197 - Math.round(88 * strength));
+        int edge = rgb(226, 246, 255);
+
+        int deepBase = rgb(86, 132, 196);
+        int deepDark = rgb(42, 74, 132);
+
+        base = blend(base, deepBase, deepT);
+        dark = blend(dark, deepDark, deepT);
+
+        image.fillRect(0, 0, SIZE, SIZE, base);
+
+        Random random = new Random(seed);
+        int count = 14 + 3 * band;
+        for (int n = 0; n < count; n++) {
+            int variant = random.nextInt(COLS * ROWS);
+            int cx = random.nextInt(SIZE);
+            int cy = random.nextInt(SIZE);
+            double angle = random.nextDouble() * Math.PI * 2.0;
+            double cos = Math.cos(angle);
+            double sin = Math.sin(angle);
+            double width = 90.0 + random.nextDouble() * 105.0;
+            double height = width * (0.29 + random.nextDouble() * 0.23);
+            double sx = masks.width / width;
+            double sy = masks.height / height;
+            int rx = (int) Math.ceil(0.5 * (Math.abs(cos) * width + Math.abs(sin) * height)) + 2;
+            int ry = (int) Math.ceil(0.5 * (Math.abs(sin) * width + Math.abs(cos) * height)) + 2;
+
+            for (int dy = -ry; dy <= ry; dy++) {
+                for (int dx = -rx; dx <= rx; dx++) {
+                    double u = (cos * dx + sin * dy) * sx + masks.width * 0.5;
+                    double v = (-sin * dx + cos * dy) * sy + masks.height * 0.5;
+                    float line = masks.sample(variant, u, v);
+                    float rim = masks.sample(variant, u - 0.7, v - 1.8);
+                    if (line + rim < 0.004f) continue;
+
+                    int x = (cx + dx) & WRAP;
+                    int y = (cy + dy) & WRAP;
+                    int color = image.getPixelRGBA(x, y);
+                    if (rim > 0f) color = blend(color, edge, rim * 0.76f);
+                    if (line > 0f) color = blend(color, dark, line);
+                    image.setPixelRGBA(x, y, color);
+                }
+            }
         }
     }
 }

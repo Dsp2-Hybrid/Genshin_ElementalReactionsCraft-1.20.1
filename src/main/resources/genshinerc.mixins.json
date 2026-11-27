@@ -1,38 +1,45 @@
 {
-  "required": true,
-  "minVersion": "0.8",
-  "package": "com.dsp2.genshinerc.mixin",
-  "compatibilityLevel": "JAVA_17",
-  "refmap": "genshinerc.refmap.json",
-  "mixins": [
-    "core.combat.MixinLivingActionLock",
-    "core.combat.MixinMobActionLock",
-    "core.combat.MixinWitchFrozenLock",
-    "core.combat.CreeperPoweredAccessor",
-    "core.damage.MixinLivingEntityArmor",
-    "core.damage.DamageSourceTypeAccessor",
-    "mods.core.combat.epicfight.MixinAttackAnimationImbue",
-    "mods.core.combat.epicfight.MixinGuardSkill",
-    "mods.core.combat.epicfight.MixinImpactGuardSkill",
-    "mods.core.combat.epicfight.MixinBattleModeGui"
-  ],
-  "client": [
-    "client.render.MixinVanillaEntityOverlayRender",
-    "client.render.FrozenCameraAccessor",
-    "client.render.vfx.MixinAaaEmitterPosition",
-    "mods.gui.epicfight.EntityRenderDispatcherMixin",
-    "mods.gui.libs.yacl.YACLScreenActionMixin",
-    "mods.gui.epicfight.fixguimodelbyef.MixinScreen",
-    "mods.gui.epicfight.fixguimodelbyef.MixinPatchedLivingEntityRenderer",
-    "mods.gui.epicfight.bar.MixinHealthBar",
-    "mods.gui.libs.yacl.YACLListFormatErrorScreenEventCallbackMixin",
-    "mods.shaders.efn.AirTrailParticleMixin",
-    "mods.shaders.efn.BloomTrailParticleMixin",
-    "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher",
-    "client.render.vfx.MixinAaapCurLight",
-    "client.render.vfx.MixinAaapApplyLight"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  }
+    "required":  true,
+    "minVersion":  "0.8",
+    "package":  "com.dsp2.genshinerc.mixin",
+    "compatibilityLevel":  "JAVA_17",
+    "refmap":  "genshinerc.refmap.json",
+    "mixins":  [
+      "core.reaction.MixinLivingActionLock",
+      "core.reaction.MixinMobActionLock",
+      "core.reaction.MixinWitchFrozenLock",
+      "core.reaction.CreeperPoweredAccessor",
+       "core.damage.MixinLivingEntityArmor",
+       "core.damage.DamageSourceTypeAccessor",
+       "mods.core.combat.epicfight.MixinAttackAnimationImbue",
+       "mods.core.combat.epicfight.MixinGuardSkill",
+       "mods.core.combat.epicfight.MixinImpactGuardSkill",
+       "mods.core.combat.epicfight.MixinBattleModeGui"
+
+
+
+               ],
+    "client":  [
+       "client.render.MixinVanillaEntityOverlayRender",
+       "client.render.FrozenCameraAccessor",
+       "client.render.vfx.MixinAaaEmitterPosition",
+       "mods.gui.epicfight.EntityRenderDispatcherMixin",
+       "mods.gui.libs.yacl.YACLScreenActionMixin",
+       "mods.gui.epicfight.fixguimodelbyef.MixinScreen",
+       "mods.gui.epicfight.fixguimodelbyef.MixinPatchedLivingEntityRenderer",
+       "mods.gui.epicfight.bar.MixinHealthBar",
+       "mods.gui.libs.yacl.YACLListFormatErrorScreenEventCallbackMixin",
+       "mods.shaders.efn.AirTrailParticleMixin",
+       "mods.shaders.efn.BloomTrailParticleMixin",
+       "mods.shaders.guhao.MixinAAAEffectPostProcessDispatcher",
+       "client.render.vfx.MixinAaapCurLight",
+       "client.render.vfx.MixinAaapApplyLight"
+
+
+
+
+               ],
+    "injectors":  {
+                      "defaultRequire":  1
+                  }
 }
