@@ -4,6 +4,7 @@ import com.dsp2.genshinerc.common.network.sync.packet.SyncElementsPacket;
 import com.dsp2.genshinerc.common.network.packet.vfx.aaap.S2CHitEffectPacket;
 import com.dsp2.genshinerc.common.network.base.combat.SyncShieldPacket;
 import com.dsp2.genshinerc.common.network.base.combat.SyncZhenMiePacket;
+import com.dsp2.genshinerc.common.network.base.element.ReactionSoundPacket;
 import com.dsp2.genshinerc.common.network.base.element.ReactionTextPacket;
 import com.dsp2.genshinerc.common.network.base.element.SyncAuraPacket;
 import com.dsp2.genshinerc.common.network.sync.packet.SyncPlayerHudPacket;
@@ -14,7 +15,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 
 @SuppressWarnings({"deprecation", "removal"})
 public final class GenshinercNetwork {
-    private static final String VERSION = "8";
+    private static final String VERSION = "9";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation("genshinerc", "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 
@@ -57,6 +58,12 @@ public final class GenshinercNetwork {
                 .encoder(ReactionTextPacket::encode)
                 .decoder(ReactionTextPacket::decode)
                 .consumerMainThread(ReactionTextPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(ReactionSoundPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ReactionSoundPacket::encode)
+                .decoder(ReactionSoundPacket::decode)
+                .consumerMainThread(ReactionSoundPacket::handle)
                 .add();
     }
 }

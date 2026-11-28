@@ -4,13 +4,11 @@ import com.dsp2.genshinerc.common.config.ServerConfig;
 import com.dsp2.genshinerc.common.core.damage.ElementalStats;
 import com.dsp2.genshinerc.common.core.element.ElementAuraManager;
 import com.dsp2.genshinerc.common.core.element.ElementType;
-import com.dsp2.genshinerc.common.world.block.EleIceBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
@@ -19,7 +17,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -56,12 +53,6 @@ public final class WorldElementFields {
     }
 
     private WorldElementFields() {}
-
-    private static void snd(ServerLevel level, BlockPos pos, SoundEvent sound, SoundSource source, float volume, float pitch) {
-        level.playSound(null, pos, sound, source,
-                volume * (0.9f + level.random.nextFloat() * 0.2f),
-                pitch * (0.93f + level.random.nextFloat() * 0.14f));
-    }
 
     public static void startElectroWaterZone(ServerLevel level, BlockPos pos, @Nullable Entity attacker) {
         long now = level.getGameTime();
@@ -115,8 +106,7 @@ public final class WorldElementFields {
                     ReactionDamage.dealElectroCharged(target, owner, stats, owner == null);
                 }
 
-                snd(level, zone.origin, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.25f, 1.42f);
-                snd(level, zone.origin, SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.14f, 1.72f);
+                ReactionSoundEvents.playElectroAmbient(level, zone.origin);
                 DustParticleOptions electro = dust(0xCC66FF, 0.95f);
                 DustParticleOptions hydro = dust(0x27C8FF, 0.75f);
                 for (int i = 0; i < 12; i++) {
@@ -146,10 +136,8 @@ public final class WorldElementFields {
         DustParticleOptions electro = dust(0xCC66FF, 0.78f);
         DustParticleOptions hydro = dust(0x27C8FF, 0.66f);
 
-        if (level.random.nextInt(7) == 0) {
-            snd(level, zone.origin,
-                    level.random.nextBoolean() ? SoundEvents.CONDUIT_AMBIENT_SHORT : SoundEvents.REDSTONE_TORCH_BURNOUT,
-                    SoundSource.PLAYERS, 0.22f, 1.5f);
+        if (level.random.nextInt(4) == 0) {
+            ReactionSoundEvents.playElectroAmbient(level, zone.origin);
         }
 
         for (int i = 0; i < count; i++) {
@@ -178,7 +166,7 @@ public final class WorldElementFields {
             BlockPos pos = cursor.immutable();
             if (!level.isLoaded(pos)
                     || Vec3.atCenterOf(pos).distanceToSqr(center.getBoundingBox().getCenter()) > radiusSquared) continue;
-            applyToBlock(level, pos, level.getBlockState(pos), attacker, element, units);
+            ElementBlockProbe.apply(level, pos, level.getBlockState(pos), attacker, element, units);
         }
     }
 
@@ -224,15 +212,15 @@ public final class WorldElementFields {
     private static boolean electro(ServerLevel level, BlockPos pos, BlockState state,
                                    @Nullable LivingEntity attacker, boolean allowSuperconduct) {
         boolean reacted = false;
-        if (state.getFluidState().is(FluidTags.WATER)) startElectroWaterZone(level, pos, attacker);
+        if (state.getFluidState().is(FluidTags.WATER)) {
+            startElectroWaterZone(level, pos, attacker);
+            ReactionSoundEvents.playElectroAmbient(level, pos);
+        }
         boolean powder = state.is(Blocks.POWDER_SNOW);
         boolean loose = state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK);
         if ((powder || loose) && allowSuperconduct) {
             Vec3 at = Vec3.atCenterOf(pos);
             ElementReactions.probeSuperconduct(level, attacker, at);
-            level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 14, 0.3, 0.28, 0.3, 0.08);
-            level.sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y, at.z, 10, 0.3, 0.25, 0.3, 0.05);
-            snd(level, pos, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.BLOCKS, 0.32f, 1.85f);
             reacted = true;
         }
         if (loose) level.removeBlock(pos, false);
@@ -251,13 +239,8 @@ public final class WorldElementFields {
         double radius = Math.min(3.0, ServerConfig.SWIRL_RADIUS.get());
         float spread = Math.max(0.5f, Math.min(ServerConfig.SWIRL_SPREAD_UNITS.get().floatValue(), units));
         Vec3 at = Vec3.atCenterOf(pos);
+        ReactionSoundEvents.playSwirl(level, pos, swirled);
         ReactionParticles.spawnSwirlAt(level, at, swirled, radius);
-        LivingEntity livingAttacker = attacker instanceof LivingEntity la ? la : null;
-        if (livingAttacker != null) {
-            ReactionSoundEvents.playSwirl(livingAttacker, swirled);
-        } else {
-            snd(level, pos, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.BLOCKS, 0.5f, 1.3f);
-        }
 
         int reach = (int) Math.ceil(radius);
         for (BlockPos cursor : BlockPos.betweenClosed(
@@ -280,7 +263,7 @@ public final class WorldElementFields {
             float falloff = (float) Math.max(0.5, 1.0 - 0.5 * Math.min(1.0, distance / Math.max(0.01, radius)));
             float appliedUnits = spread * falloff;
             if (isAttacker) {
-                com.dsp2.genshinerc.common.core.element.ElementAuraManager.applyUnits(target, swirled, appliedUnits * 0.5f);
+                ElementAuraManager.applyUnits(target, swirled, appliedUnits * 0.5f);
                 ReactionParticles.spawnSwirl(target, swirled, Math.min(1.0, radius * 0.35));
                 continue;
             }
@@ -292,10 +275,7 @@ public final class WorldElementFields {
     private static void applyToBlock(ServerLevel level, BlockPos pos, BlockState state,
                                      @Nullable Entity attacker, ElementType element, float units) {
         if (element == ElementType.ANEMO) {
-            if (!swirlBlock(level, pos, state, attacker, units)) {
-                ElementType fallback = sourceElement(state);
-                if (fallback == null) ElementBlockProbe.apply(level, pos, state, attacker, element, units);
-            }
+            swirlBlock(level, pos, state, attacker, units);
             return;
         }
         ElementBlockProbe.apply(level, pos, state, attacker, element, units);

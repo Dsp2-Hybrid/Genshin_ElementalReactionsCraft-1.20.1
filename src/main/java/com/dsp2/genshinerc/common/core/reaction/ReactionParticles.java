@@ -98,12 +98,15 @@ public final class ReactionParticles {
 
     public static void spawnSuperconduct(LivingEntity e) { ServerLevel l = level(e); if (l != null) spawnSuperconduct(l, center(e)); }
     public static void spawnSuperconduct(ServerLevel l, Vec3 at) {
-        DustParticleOptions gradient = gradientDust(ElementType.ELECTRO, ElementType.CRYO, 0.6f, 0.95f);
-        DustParticleOptions gradientSmall = gradientDust(ElementType.ELECTRO, ElementType.CRYO, 0.65f, 0.72f);
-        ring(l, at, gradient, 18, 0.34, 0.035);
-        burst(l, at, ParticleTypes.ELECTRIC_SPARK, 16, 0.26, 0.11);
-        burst(l, at, gradientSmall, 16, 0.24, 0.06);
-        burst(l, at, ParticleTypes.SNOWFLAKE, 10, 0.22, 0.03);
+        DustParticleOptions gradient = gradientDust(ElementType.ELECTRO, ElementType.CRYO, 0.6f, 1.0f);
+        DustParticleOptions gradientSmall = gradientDust(ElementType.ELECTRO, ElementType.CRYO, 0.65f, 0.78f);
+        ring(l, at, gradient, 34, 0.45, 0.04);
+        ring(l, at, gradientSmall, 26, 0.7, 0.03);
+        burst(l, at, ParticleTypes.ELECTRIC_SPARK, 40, 0.42, 0.16);
+        burst(l, at, gradientSmall, 36, 0.4, 0.09);
+        burst(l, at, ParticleTypes.SNOWFLAKE, 28, 0.38, 0.06);
+        burst(l, at, ParticleTypes.END_ROD, 10, 0.3, 0.07);
+        burst(l, at, ParticleTypes.CLOUD, 8, 0.25, 0.03);
     }
 
     public static void spawnElectroCharged(LivingEntity e) {
@@ -121,8 +124,7 @@ public final class ReactionParticles {
         spawnElectroCharged(e);
         Vec3 at = center(e);
         double entityR = Math.max(0.28, Math.min(0.48, e.getBbWidth() * 0.30 + e.getBbHeight() * 0.04));
-        ring(l, at, dust(ElementType.ELECTRO, 0.9f), 16, entityR, 0.025);
-        ring(l, at, dust(ElementType.HYDRO, 0.85f), 14, entityR * 0.78, 0.030);
+        ring(l, at, gradientDust(ElementType.ELECTRO, ElementType.HYDRO, 0.5f, 0.9f), 16, entityR, 0.025);
         ring(l, at, ParticleTypes.ELECTRIC_SPARK, 10, entityR * 0.50, 0.040);
     }
 
@@ -167,27 +169,35 @@ public final class ReactionParticles {
     }
 
     public static void spawnSwirlAt(ServerLevel l, Vec3 at, ElementType element, double radius) {
-        double reach = Math.max(0.6, Math.min(2.4, radius * 0.55));
-        DustParticleOptions gradientMain = gradientDust(ElementType.ANEMO, element, 0.75f, 1.15f);
-        DustParticleOptions gradientRing = gradientDust(ElementType.ANEMO, element, 0.75f, 0.95f);
-        burst(l, at, gradientMain, 70, reach, 0.20);
-        ring(l, at, gradientRing, 22, reach * 0.82, 0.05);
+        double reach = Math.max(0.7, Math.min(2.6, radius * 0.6));
+        DustParticleOptions gradientMain = gradientDust(ElementType.ANEMO, element, 0.75f, 1.2f);
+        DustParticleOptions gradientRing = gradientDust(ElementType.ANEMO, element, 0.75f, 1.0f);
+        burst(l, at, gradientMain, 110, reach, 0.24);
+        ring(l, at, gradientRing, 36, reach * 0.85, 0.06);
+        ring(l, at.add(0, 0.4, 0), gradientRing, 24, reach * 0.6, 0.08);
+        burst(l, at, ParticleTypes.CLOUD, 20, reach * 0.6, 0.12);
         ParticleOptions accent = switch (element) {
             case PYRO -> ParticleTypes.FLAME; case HYDRO -> ParticleTypes.SPLASH;
             case CRYO, FROZEN -> ParticleTypes.SNOWFLAKE; case ELECTRO -> ParticleTypes.ELECTRIC_SPARK;
             case DENDRO, QUICKEN -> ParticleTypes.HAPPY_VILLAGER; case GEO -> ParticleTypes.END_ROD;
             default -> ParticleTypes.CLOUD;
         };
-        burst(l, at, accent, 14, reach * 0.7, 0.2);
+        burst(l, at, accent, 26, reach * 0.8, 0.22);
+        l.sendParticles(ParticleTypes.SWEEP_ATTACK, at.x, at.y, at.z, 2, reach * 0.3, 0.1, reach * 0.3, 0);
     }
 
     public static void spawnCrystallize(LivingEntity e) { spawnCrystallize(e, ElementType.GEO); }
     public static void spawnCrystallize(LivingEntity e, ElementType element) {
         ServerLevel l = level(e); if (l == null) return;
-        Vec3 at = center(e);
-        ring(l, at, dust(element, 1.1f), 32, 0.7, 0.05);
-        burst(l, at, dust(ElementType.GEO, 0.85f), 18, 0.35, 0.08);
-        burst(l, at, ParticleTypes.END_ROD, 10, 0.3, 0.05);
+        spawnCrystallize(l, center(e), element);
+    }
+    public static void spawnCrystallize(ServerLevel l, Vec3 at, ElementType element) {
+        ring(l, at, dust(element, 1.4f), 44, 0.8, 0.06);
+        ring(l, at, dust(ElementType.GEO, 1.2f), 30, 0.55, 0.08);
+        burst(l, at, dust(ElementType.GEO, 1.1f), 40, 0.5, 0.14);
+        burst(l, at, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.AMETHYST_BLOCK.defaultBlockState()), 30, 0.45, 0.16);
+        burst(l, at, ParticleTypes.END_ROD, 24, 0.45, 0.1);
+        burst(l, at, ParticleTypes.GLOW, 10, 0.35, 0.05);
     }
     public static void spawnCrystallizeAura(ServerLevel l, Vec3 at, ElementType element) {
         ring(l, at, dust(element, 0.8f), 9, 0.55, 0.02);
