@@ -63,6 +63,7 @@ public final class CrystallizeShardDrop {
                 (level.random.nextDouble() - 0.5) * 0.08);
 
         level.addFreshEntity(shard);
+        ReactionParticles.spawnCrystallizeAura(level, position, element);
 
         level.sendParticles(
                 particle(element),

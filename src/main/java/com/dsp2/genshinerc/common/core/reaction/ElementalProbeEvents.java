@@ -5,6 +5,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -15,6 +16,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class ElementalProbeEvents {
     private static final float EXPLOSION_UNITS = 1.5f;
     private static final double LIGHTNING_RADIUS = 2.5;
+    private static final double LIGHTNING_BLOCK_RADIUS = 3.0;
     private static final float LIGHTNING_CENTER_UNITS = 1.0f;
     private static final float LIGHTNING_NEAR_UNITS = 0.6f;
 
@@ -22,45 +24,31 @@ public final class ElementalProbeEvents {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onExplosion(ExplosionEvent.Detonate event) {
-        if (!(event.getLevel() instanceof ServerLevel)) {
-            return;
-        }
+        if (!(event.getLevel() instanceof ServerLevel)) return;
 
         for (Entity entity : event.getAffectedEntities()) {
-            if (!(entity instanceof LivingEntity living)
-                    || !living.isAlive()
-                    || living.isSpectator()) {
-                continue;
-            }
-
-            ElementReactions.triggerProbe(
-                    living,
-                    null,
-                    com.dsp2.genshinerc.common.core.element.ElementType.PYRO,
-                    EXPLOSION_UNITS);
+            if (!(entity instanceof LivingEntity living) || !living.isAlive() || living.isSpectator()) continue;
+            ElementReactions.triggerProbe(living, null,
+                    com.dsp2.genshinerc.common.core.element.ElementType.PYRO, EXPLOSION_UNITS);
         }
+    }
+
+    @SubscribeEvent
+    public static void onLightningJoin(EntityJoinLevelEvent event) {
+        if (!(event.getEntity() instanceof LightningBolt bolt) || !(event.getLevel() instanceof ServerLevel level)) return;
+        WorldElementFields.applyLightningToWorld(level, bolt.position(), LIGHTNING_BLOCK_RADIUS, bolt.getCause());
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onLightning(LivingAttackEvent event) {
-        if (!(event.getSource().getDirectEntity() instanceof LightningBolt)) {
-            return;
-        }
-
-        if (!(event.getEntity().level() instanceof ServerLevel)) {
-            return;
-        }
+        if (!(event.getSource().getDirectEntity() instanceof LightningBolt)) return;
+        if (!(event.getEntity().level() instanceof ServerLevel)) return;
 
         LivingEntity target = event.getEntity();
-
-        ElementReactions.triggerProbe(
-                target,
-                null,
-                com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO,
-                LIGHTNING_CENTER_UNITS);
+        ElementReactions.triggerProbe(target, null,
+                com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO, LIGHTNING_CENTER_UNITS);
 
         Vec3 center = target.getBoundingBox().getCenter();
-
         for (LivingEntity nearby : target.level().getEntitiesOfClass(
                 LivingEntity.class,
                 target.getBoundingBox().inflate(LIGHTNING_RADIUS),
@@ -69,11 +57,8 @@ public final class ElementalProbeEvents {
                         && !entity.isSpectator()
                         && entity.getBoundingBox().getCenter().distanceToSqr(center)
                         <= LIGHTNING_RADIUS * LIGHTNING_RADIUS)) {
-            ElementReactions.triggerProbe(
-                    nearby,
-                    null,
-                    com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO,
-                    LIGHTNING_NEAR_UNITS);
+            ElementReactions.triggerProbe(nearby, null,
+                    com.dsp2.genshinerc.common.core.element.ElementType.ELECTRO, LIGHTNING_NEAR_UNITS);
         }
     }
 }

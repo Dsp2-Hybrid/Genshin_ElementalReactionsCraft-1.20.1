@@ -26,7 +26,7 @@ public class DamageIndicatorConfig {
     @SerialEntry public double screenTextScale = 1.25;
     @SerialEntry public boolean screenOutlineEnabled = true;
     @SerialEntry public boolean screenOutlineMultiply = true;
-    @SerialEntry public double screenOutlineAlpha = 0.50;
+    @SerialEntry public double screenOutlineAlpha = 0.60;
     @SerialEntry public String screenOutlineColor = "#676767";
     @SerialEntry public boolean drawShadow = false;
     @SerialEntry public String shadowColor = "#929292";
@@ -283,7 +283,7 @@ public class DamageIndicatorConfig {
                 .option(dblOpt(false, "screen_text_scale", 1.25, () -> c.screenTextScale, v -> c.screenTextScale = v, 0.25, 4.00))
                 .option(boolOpt(false, "screen_outline_enabled", true, () -> c.screenOutlineEnabled, v -> c.screenOutlineEnabled = v))
                 .option(boolOpt(false, "screen_outline_multiply", true, () -> c.screenOutlineMultiply, v -> c.screenOutlineMultiply = v))
-                .option(dblOpt(false, "screen_outline_alpha", 0.50, () -> c.screenOutlineAlpha, v -> c.screenOutlineAlpha = v, 0.00, 1.00))
+                .option(dblOpt(false, "screen_outline_alpha", 0.60, () -> c.screenOutlineAlpha, v -> c.screenOutlineAlpha = v, 0.00, 1.00))
                 .option(colorOpt(false, "screen_outline_color",new Color(0x676767) , () -> toAwt(c.screenOutlineColor), v -> c.screenOutlineColor = fromAwt(v)))
                 .option(boolOpt(false, "debug", false, () -> c.debug, v -> c.debug = v))
                 .option(dblOpt(false, "z_random_min", 0.00, () -> c.zRandomMin, v -> c.zRandomMin = v, -1.00, 2.00))

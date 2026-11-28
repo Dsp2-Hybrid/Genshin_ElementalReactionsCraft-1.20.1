@@ -56,6 +56,8 @@ public final class VolumeReactions {
         int ignited;
         boolean steamPlayed;
         boolean geoPlayed;
+        boolean swirled;
+        boolean superconducted;
     }
 
     private VolumeReactions() {}
@@ -94,6 +96,8 @@ public final class VolumeReactions {
             state.ignited = 0;
             state.steamPlayed = false;
             state.geoPlayed = false;
+            state.swirled = false;
+            state.superconducted = false;
         }
         state.elapsed = sample.elapsed();
         state.tick = now;
@@ -167,7 +171,8 @@ public final class VolumeReactions {
     }
 
     private static void affectBlocks(ServerLevel level, LivingEntity attacker, ElementImbue.State imbue,
-                                     SwingVolumeSampler.SwingSample sample, SweepState sweep, boolean grief) {        Set<BlockPos> positions = new java.util.LinkedHashSet<>();
+                                     SwingVolumeSampler.SwingSample sample, SweepState sweep, boolean grief) {
+        Set<BlockPos> positions = new java.util.LinkedHashSet<>();
         for (SwingVolume volume : sample.volumes()) {
             if (positions.size() >= MAX_POSITIONS) break;
             BlockPos min = BlockPos.containing(volume.worldCenter.x - volume.radius, volume.worldCenter.y - volume.radius, volume.worldCenter.z - volume.radius);
@@ -184,31 +189,21 @@ public final class VolumeReactions {
         for (BlockPos pos : positions) {
             BlockState state = level.getBlockState(pos);
             boolean fire = state.is(BlockTags.FIRE);
-            boolean snowLayer = state.is(Blocks.SNOW);
-            boolean snowBlock = state.is(Blocks.SNOW_BLOCK);
-            boolean powderSnow = state.is(Blocks.POWDER_SNOW);
-            boolean snowSource = snowLayer || snowBlock || powderSnow;
+            boolean loose = state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK);
+            boolean powder = state.is(Blocks.POWDER_SNOW);
 
             switch (imbue.element()) {
                 case CRYO -> {
                     if (!grief) break;
-                    if (snowSource) {
-                        ElementReactions.probeSuperconduct(level, attacker, Vec3.atCenterOf(pos));
-                        if (level.removeBlock(pos, false)) {
-                            level.playSound(null, pos, SoundEvents.SNOW_BREAK, SoundSource.BLOCKS, 0.8f, 1.15f);
-                            level.sendParticles(ParticleTypes.SNOWFLAKE,
-                                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                                    18, 0.3, 0.25, 0.3, 0.04);
-                        }
-                    } else if (fire && level.removeBlock(pos, false)) {
+                    if (fire && level.removeBlock(pos, false)) {
                         extinguish(level, pos, true);
                     } else if (state.is(Blocks.WATER) && ServerConfig.CRYO_FREEZE_BLOCKS.get()) {
                         EleIceBlock.freeze(level, pos, state.getFluidState().isSource(), imbue.units());
                     }
                 }
                 case PYRO -> {
-                    if (snowSource && grief) {
-                        if (powderSnow) {
+                    if ((loose || powder) && grief) {
+                        if (powder) {
                             level.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
                         } else {
                             level.removeBlock(pos, false);
@@ -245,9 +240,10 @@ public final class VolumeReactions {
                     if (grief && fire && level.removeBlock(pos, false)) extinguish(level, pos, false);
                 }
                 case GEO -> {
-                    if (fire && grief && level.removeBlock(pos, false)) {
-                        ElementReactions.probeCrystallize(level, attacker, Vec3.atCenterOf(pos), ElementType.PYRO);
-                        extinguish(level, pos, false);
+                    if ((fire || loose) && grief && level.removeBlock(pos, false)) {
+                        ElementReactions.probeCrystallize(level, attacker, Vec3.atCenterOf(pos),
+                                fire ? ElementType.PYRO : ElementType.CRYO);
+                        if (fire) extinguish(level, pos, false);
                         if (!sweep.geoPlayed) {
                             sweep.geoPlayed = true;
                             level.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 0.5,
@@ -256,11 +252,11 @@ public final class VolumeReactions {
                     }
                 }
                 case ANEMO -> {
-                    if (fire) {
+                    if (fire || loose || powder
+                            || state.getFluidState().is(Fluids.WATER)
+                            || state.is(Blocks.LAVA) || state.getFluidState().is(Fluids.LAVA)) {
                         WorldElementFields.applyProbeToBlock(level, pos, attacker, ElementType.ANEMO, imbue.units());
-                        Vec3 at = Vec3.atCenterOf(pos);
-                        level.sendParticles(ParticleTypes.CLOUD, at.x, at.y, at.z, 5, 0.22, 0.18, 0.22, 0.04);
-                        level.sendParticles(ParticleTypes.SWEEP_ATTACK, at.x, at.y, at.z, 2, 0.15, 0.1, 0.15, 0);
+                        sweep.swirled = true;
                     }
                 }
                 case DENDRO -> {
@@ -271,22 +267,25 @@ public final class VolumeReactions {
                     }
                 }
                 case ELECTRO -> {
-                    if ((snowLayer || snowBlock) && grief) {
-                        ElementReactions.probeSuperconduct(level, attacker, Vec3.atCenterOf(pos));
-                        level.removeBlock(pos, false);
+                    if ((loose || powder) && grief) {
+                        if (!sweep.superconducted) {
+                            sweep.superconducted = true;
+                            ElementReactions.probeSuperconduct(level, attacker, Vec3.atCenterOf(pos));
+                        }
+                        if (loose) level.removeBlock(pos, false);
                         Vec3 at = Vec3.atCenterOf(pos);
                         level.sendParticles(ParticleTypes.ELECTRIC_SPARK,
                                 at.x, at.y, at.z, 14, 0.3, 0.28, 0.3, 0.08);
-                        level.playSound(null, pos, SoundEvents.LIGHTNING_BOLT_IMPACT,
-                                SoundSource.PLAYERS, 0.32f, 1.85f);
+                        level.playSound(null, pos, SoundEvents.POWDER_SNOW_BREAK,
+                                SoundSource.PLAYERS, 0.4f, 0.7f);
                     }
                     if (state.getFluidState().is(Fluids.WATER)) {
                         WorldElementFields.startElectroWaterZone(level, pos, attacker);
                         Vec3 at = Vec3.atCenterOf(pos);
                         level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 10,
                                 0.35, 0.3, 0.35, 0.08);
-                        level.playSound(null, pos, SoundEvents.LIGHTNING_BOLT_IMPACT,
-                                SoundSource.PLAYERS, 0.25f, 1.7f);
+                        level.playSound(null, pos, SoundEvents.CONDUIT_AMBIENT_SHORT,
+                                SoundSource.PLAYERS, 0.3f, 1.4f);
                     }
                     if (fire) {
                         if (grief) level.removeBlock(pos, false);

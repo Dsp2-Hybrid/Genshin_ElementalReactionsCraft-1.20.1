@@ -29,6 +29,8 @@ public final class ElementShieldHandler {
 
         if (res.shieldSpent() > 0f) {
             DamageServerEventHandler.shieldAbsorb(entity, res.shieldSpent(), kind.indicatorKey());
+            com.dsp2.genshinerc.common.core.reaction.ReactionSoundEvents.playShieldHit(entity);
+            com.dsp2.genshinerc.common.core.reaction.ReactionParticles.spawnShieldHit(entity, res.shieldElement());
         }
         
         float left = amount - res.blocked();

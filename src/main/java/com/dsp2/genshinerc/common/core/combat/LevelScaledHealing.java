@@ -2,7 +2,6 @@ package com.dsp2.genshinerc.common.core.combat;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -13,10 +12,9 @@ import net.minecraftforge.fml.common.Mod;
 public final class LevelScaledHealing {
     private LevelScaledHealing() {}
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onHeal(LivingHealEvent event) {
         LivingEntity entity = event.getEntity();
-
         if (entity.level().isClientSide() || event.getAmount() <= 0f) return;
 
         if (entity.getType() == EntityType.IRON_GOLEM

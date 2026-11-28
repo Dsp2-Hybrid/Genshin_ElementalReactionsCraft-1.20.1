@@ -22,7 +22,6 @@ import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.lwjgl.opengl.GL30;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,10 +39,10 @@ public final class FrozenSurface {
     private static final int COLS = 2;
     private static final int ROWS = 4;
 
-    private static final float PULSE_THRESHOLD = FrozenControl.MAX_GAUGE * 0.5f;
-    private static final double SLOW_HZ = 1.2;
-    private static final double FAST_HZ = 5.0;
-    private static final float BASE_ALPHA_MIN = 0.5f;
+    private static final float PULSE_THRESHOLD = FrozenControl.MAX_GAUGE * 0.575f;
+    private static final double SLOW_HZ = 0.023;
+    private static final double FAST_HZ = 0.185;
+    private static final float BASE_ALPHA_MIN = 0.35f;
     private static final float BASE_ALPHA_MAX = 0.8f;
 
     private static final float DEEP_FREEZE_START = 3.0f;

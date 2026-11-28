@@ -74,8 +74,26 @@ public final class ReactionDamage {
         deal(target, attacker, DamageKind.ELECTRO, Reaction.ELECTRO_CHARGED, stats, 1f, natural);
     }
 
+    static void dealSwirlScaled(LivingEntity target, @Nullable Entity attacker, DamageKind kind,
+                                ElementalStats stats, float scale) {
+        deal(target, attacker, kind, Reaction.SWIRL, stats, 1f, false,
+                net.minecraft.util.Mth.clamp(scale, 0.5f, 1f));
+    }
+
+    static void dealSwirlScaled(LivingEntity target, @Nullable Entity attacker, DamageKind kind,
+                                ElementalStats stats, float scale, boolean allowSelfDamage) {
+        if (!allowSelfDamage && target == attacker) return;
+        deal(target, attacker, kind, Reaction.SWIRL, stats, 1f, false,
+                net.minecraft.util.Mth.clamp(scale, 0.5f, 1f));
+    }
+
     private static void deal(LivingEntity target, @Nullable Entity attacker, DamageKind kind, Reaction reaction,
                              ElementalStats stats, float shieldCost, boolean naturalElectroCharged) {
+        deal(target, attacker, kind, reaction, stats, shieldCost, naturalElectroCharged, 1f);
+    }
+
+    private static void deal(LivingEntity target, @Nullable Entity attacker, DamageKind kind, Reaction reaction,
+                             ElementalStats stats, float shieldCost, boolean naturalElectroCharged, float damageScale) {
         if (ElementReactions.isNatural()) return;
         if (!(target.level() instanceof ServerLevel level) || !target.isAlive()) return;
         if (!allow(target, reaction, level.getGameTime())) return;
@@ -122,7 +140,7 @@ public final class ReactionDamage {
                 && target == attacker && target instanceof net.minecraft.world.entity.player.Player) {
             amount *= 0.05;
         }
-        amount = ElementalMath.capReaction(amount, target);
+        amount = ElementalMath.capReaction(amount, target) * damageScale;
         if (!Double.isFinite(amount) || amount <= 0.0) return;
 
         Entity cause = attacker;

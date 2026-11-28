@@ -192,13 +192,8 @@ public class DendroCoreEntity extends Entity {
             ReactionDamage.deal(hit, attacker, DamageKind.DENDRO, Reaction.HYPERBLOOM, stats);
             ReactionText.send(hit, Reaction.HYPERBLOOM, ElementType.ELECTRO, ElementType.DENDRO);
         }
-        server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 32, 0.34, 0.34, 0.34, 0.055);
-        server.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY(), getZ(), 22, 0.28, 0.28, 0.28, 0.10);
-        server.sendParticles(ParticleTypes.END_ROD, getX(), getY(), getZ(), 8, 0.20, 0.20, 0.20, 0.035);
-        server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
-                SoundSource.HOSTILE, 0.34f, 1.55f + server.getRandom().nextFloat() * 0.25f);
-        server.playSound(null, blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(),
-                SoundSource.HOSTILE, 0.18f, 1.70f + server.getRandom().nextFloat() * 0.20f);
+        ReactionParticles.spawnHyperbloomImpact(server, position());
+        ReactionSoundEvents.playHyperbloomImpact(server, blockPosition());
         discard();
     }
 
@@ -228,6 +223,8 @@ public class DendroCoreEntity extends Entity {
             ownerMastery = Math.max(0.0, stats.mastery());
             homingTarget = target.getUUID();
             tickCount = 0;
+            ReactionSoundEvents.playHyperbloomTrigger(server, blockPosition());
+            ReactionParticles.spawnHyperbloomTrigger(server, position());
             setDeltaMovement(target.getBoundingBox().getCenter().subtract(position()).normalize().scale(0.5));
             hasImpulse = true;
             return;
@@ -259,19 +256,13 @@ public class DendroCoreEntity extends Entity {
         }
 
         if (reaction == Reaction.BURGEON) {
-            server.sendParticles(ParticleTypes.FLAME, getX(), getY(), getZ(), 28,
-                    0.42, 0.35, 0.42, 0.08);
-            server.sendParticles(ParticleTypes.SMOKE, getX(), getY(), getZ(), 18,
-                    0.35, 0.30, 0.35, 0.035);
-            server.playSound(null, blockPosition(), SoundEvents.GENERIC_EXPLODE,
-                    SoundSource.HOSTILE, 0.42f, 1.25f + server.getRandom().nextFloat() * 0.30f);
+            ReactionSoundEvents.playBurgeonTrigger(server, blockPosition());
+            ReactionParticles.spawnBurgeonTrigger(server, position());
+            ReactionSoundEvents.playBurgeonBurst(server, blockPosition());
+            ReactionParticles.spawnBurgeonBurst(server, position());
         } else {
-            server.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY(), getZ(), 32,
-                    0.38, 0.34, 0.38, 0.055);
-            server.sendParticles(ParticleTypes.COMPOSTER, getX(), getY(), getZ(), 26,
-                    0.34, 0.28, 0.34, 0.07);
-            server.playSound(null, blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE,
-                    SoundSource.HOSTILE, 0.48f, 1.05f + server.getRandom().nextFloat() * 0.30f);
+            ReactionSoundEvents.playBloomBurst(server, blockPosition());
+            ReactionParticles.spawnBloomBurst(server, position());
         }
         discard();
     }
