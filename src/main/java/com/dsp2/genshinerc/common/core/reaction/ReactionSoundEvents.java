@@ -1,53 +1,107 @@
 package com.dsp2.genshinerc.common.core.reaction;
 
-import com.dsp2.genshinerc.common.core.element.ElementType;
+import com.dsp2.genshinerc.common.network.GenshinercNetwork;
+import com.dsp2.genshinerc.common.network.base.element.ReactionSoundPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.network.PacketDistributor;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class ReactionSoundEvents {
     private ReactionSoundEvents() {}
 
-    private static ServerLevel level(LivingEntity e) { return e.level() instanceof ServerLevel s ? s : null; }
+    private static ThreadLocalRandom rnd() { return ThreadLocalRandom.current(); }
 
-    private static void play(ServerLevel l, BlockPos pos, SoundEvent sound, float volume, float pitch) {
-        l.playSound(null, pos, sound, SoundSource.HOSTILE,
-                volume * (0.86f + l.random.nextFloat() * 0.28f),
-                pitch * (0.91f + l.random.nextFloat() * 0.18f));
+    private static float jitter(float base, float spread) {
+        return base + (rnd().nextFloat() * 2f - 1f) * spread;
     }
-    private static void play(ServerLevel l, BlockPos pos, SoundEvent[] s, float v, float p) { play(l, pos, s[l.random.nextInt(s.length)], v, p); }
-    private static void play(LivingEntity e, SoundEvent s, float v, float p) { ServerLevel l = level(e); if (l != null) play(l, e.blockPosition(), s, v, p); }
-    private static void play(LivingEntity e, SoundEvent[] s, float v, float p) { ServerLevel l = level(e); if (l != null) play(l, e.blockPosition(), s, v, p); }
 
-    private static final SoundEvent[] BLOOM_CREATE = { SoundEvents.CHERRY_LEAVES_BREAK, SoundEvents.AZALEA_LEAVES_BREAK, SoundEvents.MOSS_BREAK };
-    private static final SoundEvent[] BLOOM_BURST = { SoundEvents.SLIME_BLOCK_FALL, SoundEvents.HONEY_BLOCK_SLIDE, SoundEvents.MUD_BREAK };
-    private static final SoundEvent[] BURGEON_TRIGGER = { SoundEvents.FIRECHARGE_USE, SoundEvents.BLAZE_SHOOT, SoundEvents.CAMPFIRE_CRACKLE };
-    private static final SoundEvent[] BURGEON_BURST = { SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundEvents.WITHER_SHOOT, SoundEvents.GENERIC_BURN };
-    private static final SoundEvent[] HYPERBLOOM_TRIGGER = { SoundEvents.CONDUIT_ACTIVATE, SoundEvents.BEACON_POWER_SELECT, SoundEvents.AMETHYST_BLOCK_RESONATE };
-    private static final SoundEvent[] HYPERBLOOM_IMPACT = { SoundEvents.TRIDENT_THUNDER, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundEvents.WARDEN_SONIC_BOOM };
-    private static final SoundEvent[] CATALYZE = { SoundEvents.BONE_MEAL_USE, SoundEvents.COMPOSTER_READY, SoundEvents.MOSS_PLACE };
-    private static final SoundEvent[] AGGRAVATE = { SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundEvents.END_PORTAL_FRAME_FILL, SoundEvents.BEACON_ACTIVATE };
-    private static final SoundEvent[] SPREAD = { SoundEvents.SCULK_BLOCK_SPREAD, SoundEvents.SCULK_CATALYST_BLOOM, SoundEvents.CHORUS_FLOWER_GROW };
-    private static final SoundEvent[] SWIRL = { SoundEvents.PHANTOM_FLAP, SoundEvents.PLAYER_ATTACK_SWEEP, SoundEvents.TRIDENT_HIT };
-    private static final SoundEvent[] CRYSTALLIZE_CREATE = { SoundEvents.AMETHYST_BLOCK_PLACE, SoundEvents.AMETHYST_CLUSTER_PLACE, SoundEvents.CALCITE_PLACE };
-    private static final SoundEvent[] SHIELD_HIT = { SoundEvents.AMETHYST_BLOCK_HIT, SoundEvents.GLASS_HIT, SoundEvents.SHIELD_BLOCK };
+    private static ServerLevel level(LivingEntity e) {
+        return e.level() instanceof ServerLevel sl ? sl : null;
+    }
 
-    public static void playOverload(LivingEntity e) { play(e, SoundEvents.GENERIC_EXPLODE, 2.60f, 0.72f); play(e, SoundEvents.LIGHTNING_BOLT_THUNDER, 2.00f, 0.82f); }
-    public static void playOverload(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.GENERIC_EXPLODE, 2.60f, 0.72f); play(l, pos, SoundEvents.LIGHTNING_BOLT_THUNDER, 2.00f, 0.82f); }
-    public static void playSuperconduct(LivingEntity e) { play(e, SoundEvents.POWDER_SNOW_BREAK, 1.35f, 0.72f); play(e, SoundEvents.GLASS_BREAK, 0.85f, 1.45f); }
-    public static void playSuperconduct(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.POWDER_SNOW_BREAK, 1.35f, 0.72f); play(l, pos, SoundEvents.GLASS_BREAK, 0.85f, 1.45f); }
-    public static void playElectroChargedStart(LivingEntity e) { play(e, SoundEvents.BEEHIVE_WORK, 1.45f, 1.30f); play(e, SoundEvents.GENERIC_SPLASH, 0.38f, 1.74f); }
-    public static void playElectroCharged(LivingEntity e) { play(e, SoundEvents.BEEHIVE_WORK, 1.30f, 1.48f); play(e, SoundEvents.NOTE_BLOCK_HAT.value(), 0.32f, 1.70f); }
-    public static void playFreeze(LivingEntity e) { play(e, SoundEvents.GLASS_PLACE, 0.72f, 0.76f); play(e, SoundEvents.POWDER_SNOW_PLACE, 0.34f, 1.35f); }
-    public static void playShatter(LivingEntity e) { play(e, SoundEvents.GLASS_BREAK, 0.94f, 0.92f); play(e, SoundEvents.AMETHYST_CLUSTER_BREAK, 0.36f, 1.25f); }
-    public static void playMelt(LivingEntity e) { play(e, SoundEvents.LAVA_EXTINGUISH, 0.58f, 1.24f); play(e, SoundEvents.POINTED_DRIPSTONE_DRIP_WATER, 0.28f, 1.42f); }
-    public static void playVaporize(LivingEntity e) { play(e, SoundEvents.FIRE_EXTINGUISH, 0.72f, 1.04f); play(e, SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, 0.30f, 1.36f); }
-    public static void playSwirl(LivingEntity e) { playSwirl(e, ElementType.ANEMO); }
-    public static void playSwirl(LivingEntity e, ElementType element) {
-        play(e, SWIRL, 0.52f, 1.30f);
+    private static Vec3 center(LivingEntity e) {
+        return e.position().add(0, e.getBbHeight() * 0.5, 0);
+    }
+
+    private static void send(ServerLevel level, double x, double y, double z, SoundEvent event, float volume, float pitch, int clipTicks, int fadeTicks) {
+        if (level == null) return;
+        ReactionSoundPacket packet = new ReactionSoundPacket(event, x, y, z, volume, pitch, clipTicks, fadeTicks);
+        GenshinercNetwork.CHANNEL.send(PacketDistributor.NEAR.with(
+                () -> new PacketDistributor.TargetPoint(x, y, z, 48.0, level.dimension())), packet);
+    }
+
+    private static void play(LivingEntity e, SoundEvent event, float volume, float pitch, int clipTicks, int fadeTicks) {
+        ServerLevel l = level(e);
+        if (l == null) return;
+        Vec3 c = center(e);
+        send(l, c.x, c.y, c.z, event, volume, pitch, clipTicks, fadeTicks);
+    }
+
+    private static void play(ServerLevel l, BlockPos pos, SoundEvent event, float volume, float pitch, int clipTicks, int fadeTicks) {
+        send(l, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, event, volume, pitch, clipTicks, fadeTicks);
+    }
+
+    public static void playElectroChargedStart(LivingEntity e) {
+        ServerLevel l = level(e);
+        if (l == null) return;
+        Vec3 c = center(e);
+        send(l, c.x, c.y, c.z, SoundEvents.RESPAWN_ANCHOR_CHARGE, jitter(1.1f, 0.1f), jitter(1.4f, 0.1f), 14, 6);
+        send(l, c.x, c.y, c.z, SoundEvents.BEACON_AMBIENT, jitter(0.9f, 0.1f), jitter(1.8f, 0.15f), 20, 8);
+    }
+
+    public static void playElectroCharged(LivingEntity e) {
+        ServerLevel l = level(e);
+        if (l == null) return;
+        Vec3 c = center(e);
+        SoundEvent[] crackles = { SoundEvents.BEEHIVE_WORK, SoundEvents.REDSTONE_TORCH_BURNOUT, SoundEvents.CONDUIT_AMBIENT_SHORT };
+        for (int i = 0; i < 2; i++) {
+            SoundEvent ev = crackles[rnd().nextInt(crackles.length)];
+            send(l, c.x, c.y, c.z, ev, jitter(1.3f, 0.2f), jitter(1.7f, 0.3f), 10, 4);
+        }
+    }
+
+    public static void playOverload(LivingEntity e) { playOverload(level(e), e.blockPosition()); if (level(e) != null) { Vec3 c = center(e); send(level(e), c.x, c.y, c.z, SoundEvents.RESPAWN_ANCHOR_CHARGE, jitter(1.4f, 0.15f), jitter(0.75f, 0.1f), 16, 8); } }
+
+    public static void playOverload(ServerLevel l, BlockPos pos) {
+        if (l == null) return;
+        send(l, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.GENERIC_EXPLODE, jitter(2.2f, 0.2f), jitter(0.75f, 0.08f), 40, 20);
+        send(l, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.RESPAWN_ANCHOR_CHARGE, jitter(1.6f, 0.15f), jitter(0.7f, 0.1f), 18, 8);
+    }
+
+    public static void playSuperconduct(LivingEntity e) { playSuperconduct(level(e), e.blockPosition()); }
+
+    public static void playSuperconduct(ServerLevel l, BlockPos pos) {
+        if (l == null) return;
+        send(l, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.GENERIC_EXPLODE, jitter(1.9f, 0.2f), jitter(1.35f, 0.1f), 28, 14);
+        send(l, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.GLASS_BREAK, jitter(1.1f, 0.15f), jitter(0.85f, 0.1f), 14, 6);
+        send(l, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.RESPAWN_ANCHOR_CHARGE, jitter(1.3f, 0.15f), jitter(1.6f, 0.2f), 16, 8);
+    }
+
+    public static void playFreeze(LivingEntity e) { play(e, SoundEvents.GLASS_PLACE, jitter(0.9f, 0.1f), jitter(1.1f, 0.1f), 14, 6); }
+
+    public static void playShatter(LivingEntity e) { play(e, SoundEvents.GLASS_BREAK, jitter(1.1f, 0.1f), jitter(0.9f, 0.1f), 16, 8); }
+
+    public static void playMelt(LivingEntity e) { playMelt(level(e), e.blockPosition()); }
+
+    public static void playMelt(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.FIRE_EXTINGUISH, jitter(0.75f, 0.08f), jitter(1.05f, 0.1f), 16, 8); }
+
+    public static void playVaporize(LivingEntity e) { playVaporize(level(e), e.blockPosition()); }
+
+    public static void playVaporize(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.FIRE_EXTINGUISH, jitter(0.72f, 0.08f), jitter(1.04f, 0.1f), 16, 8); play(l, pos, SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, jitter(0.6f, 0.08f), jitter(1.1f, 0.1f), 10, 5); }
+
+    public static void playSwirl(LivingEntity e) { playSwirl(e, com.dsp2.genshinerc.common.core.element.ElementType.ANEMO); }
+
+    public static void playSwirl(LivingEntity e, com.dsp2.genshinerc.common.core.element.ElementType element) {
+        ServerLevel l = level(e);
+        if (l == null) return;
+        Vec3 c = center(e);
+        send(l, c.x, c.y, c.z, SoundEvents.PHANTOM_FLAP, jitter(0.78f, 0.1f), jitter(1.25f, 0.15f), 20, 14);
         SoundEvent accent = switch (element) {
             case PYRO -> SoundEvents.CAMPFIRE_CRACKLE;
             case HYDRO -> SoundEvents.BUBBLE_COLUMN_BUBBLE_POP;
@@ -57,23 +111,39 @@ public final class ReactionSoundEvents {
             case GEO -> SoundEvents.CALCITE_HIT;
             default -> SoundEvents.PLAYER_ATTACK_SWEEP;
         };
-        play(e, accent, 0.40f, 1.18f);
+        send(l, c.x, c.y, c.z, accent, jitter(0.4f, 0.08f), jitter(1.18f, 0.12f), 12, 8);
     }
-    public static void playCrystallize(LivingEntity e) { play(e, CRYSTALLIZE_CREATE, 0.62f, 1.04f); play(e, SoundEvents.AMETHYST_BLOCK_CHIME, 0.30f, 1.46f); }
-    public static void playBloom(LivingEntity e) { play(e, BLOOM_CREATE, 0.66f, 0.86f); }
-    public static void playBloomBurst(LivingEntity e) { play(e, BLOOM_BURST, 0.80f, 0.76f); }
-    public static void playBloomBurst(ServerLevel l, BlockPos pos) { play(l, pos, BLOOM_BURST, 0.80f, 0.76f); }
-    public static void playBurgeonTrigger(LivingEntity e) { play(e, BURGEON_TRIGGER, 0.60f, 1.08f); }
-    public static void playBurgeonTrigger(ServerLevel l, BlockPos pos) { play(l, pos, BURGEON_TRIGGER, 0.60f, 1.08f); }
-    public static void playBurgeonBurst(LivingEntity e) { play(e, BURGEON_BURST, 0.78f, 1.02f); }
-    public static void playBurgeonBurst(ServerLevel l, BlockPos pos) { play(l, pos, BURGEON_BURST, 0.78f, 1.02f); }
-    public static void playHyperbloomTrigger(LivingEntity e) { play(e, HYPERBLOOM_TRIGGER, 0.58f, 1.32f); }
-    public static void playHyperbloomTrigger(ServerLevel l, BlockPos pos) { play(l, pos, HYPERBLOOM_TRIGGER, 0.58f, 1.32f); }
-    public static void playHyperbloomImpact(LivingEntity e) { play(e, HYPERBLOOM_IMPACT, 0.60f, 1.52f); }
-    public static void playHyperbloomImpact(ServerLevel l, BlockPos pos) { play(l, pos, HYPERBLOOM_IMPACT, 0.60f, 1.52f); }
-    public static void playCatalyze(LivingEntity e) { play(e, CATALYZE, 0.60f, 1.05f); }
-    public static void playAggravate(LivingEntity e) { play(e, AGGRAVATE, 0.58f, 1.38f); }
-    public static void playSpread(LivingEntity e) { play(e, SPREAD, 0.55f, 0.95f); }
-    public static void playBurning(LivingEntity e) { play(e, SoundEvents.FIRE_AMBIENT, 0.38f, 0.82f); play(e, SoundEvents.CANDLE_AMBIENT, 0.22f, 1.15f); }
-    public static void playShieldHit(LivingEntity e) { play(e, SHIELD_HIT, 0.78f, 1.42f); play(e, SoundEvents.AMETHYST_BLOCK_CHIME, 0.26f, 1.76f); }
+
+    public static void playCrystallize(LivingEntity e) { play(e, SoundEvents.AMETHYST_BLOCK_BREAK, jitter(0.62f, 0.08f), jitter(1.04f, 0.1f), 14, 6); play(e, SoundEvents.AMETHYST_BLOCK_CHIME, jitter(0.5f, 0.08f), jitter(1.2f, 0.12f), 12, 6); }
+
+    public static void playBloom(LivingEntity e) {
+        play(e, SoundEvents.BONE_MEAL_USE, jitter(0.66f, 0.08f), jitter(0.86f, 0.1f), 14, 6);
+    }
+    public static void playBloomBurst(LivingEntity e) { playBloomBurst(level(e), e.blockPosition()); }
+
+    public static void playBloomBurst(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.SWEET_BERRY_BUSH_PLACE, jitter(0.8f, 0.1f), jitter(0.76f, 0.1f), 16, 8); }
+
+    public static void playBurgeonTrigger(LivingEntity e) { playBurgeonTrigger(level(e), e.blockPosition()); }
+    public static void playBurgeonTrigger(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.AZALEA_LEAVES_PLACE, jitter(0.6f, 0.08f), jitter(1.08f, 0.1f), 12, 6); }
+
+    public static void playBurgeonBurst(LivingEntity e) { playBurgeonBurst(level(e), e.blockPosition()); }
+
+    public static void playBurgeonBurst(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.GENERIC_EXPLODE, jitter(0.78f, 0.1f), jitter(1.02f, 0.1f), 20, 10); play(l, pos, SoundEvents.AZALEA_LEAVES_BREAK, jitter(0.6f, 0.1f), jitter(0.95f, 0.1f), 14, 6); }
+
+    public static void playHyperbloomTrigger(LivingEntity e) { playHyperbloomTrigger(level(e), e.blockPosition()); }
+
+    public static void playHyperbloomTrigger(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.RESPAWN_ANCHOR_CHARGE, jitter(0.58f, 0.08f), jitter(1.32f, 0.12f), 12, 6); }
+
+    public static void playHyperbloomImpact(LivingEntity e) { play(e, SoundEvents.LIGHTNING_BOLT_IMPACT, jitter(0.6f, 0.1f), jitter(1.52f, 0.12f), 16, 8); }
+    public static void playHyperbloomImpact(ServerLevel l, BlockPos pos) { play(l, pos, SoundEvents.LIGHTNING_BOLT_IMPACT, jitter(0.6f, 0.1f), jitter(1.52f, 0.12f), 16, 8); }
+
+    public static void playCatalyze(LivingEntity e) { play(e, SoundEvents.SLIME_SQUISH, jitter(0.6f, 0.1f), jitter(1.2f, 0.12f), 12, 6); }
+
+    public static void playAggravate(LivingEntity e) { play(e, SoundEvents.SLIME_SQUISH, jitter(0.7f, 0.1f), jitter(0.9f, 0.1f), 12, 6); }
+
+    public static void playSpread(LivingEntity e) { play(e, SoundEvents.PHANTOM_FLAP, jitter(0.5f, 0.08f), jitter(1.1f, 0.12f), 12, 8); }
+
+    public static void playBurning(LivingEntity e) { play(e, SoundEvents.CAMPFIRE_CRACKLE, jitter(0.55f, 0.1f), jitter(1.0f, 0.1f), 14, 8); }
+
+    public static void playShieldHit(LivingEntity e) { play(e, SoundEvents.SHIELD_BLOCK, jitter(0.7f, 0.1f), jitter(1.0f, 0.1f), 10, 5); }
 }

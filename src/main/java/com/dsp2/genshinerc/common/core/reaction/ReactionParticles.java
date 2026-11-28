@@ -12,44 +12,76 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public final class ReactionParticles {
     private ReactionParticles() {}
 
     private static ServerLevel level(LivingEntity e) { return e.level() instanceof ServerLevel s ? s : null; }
 
-    static DustParticleOptions dust(ElementType element, float scale) {
-        int c = switch (element) {
+    private static int colorOf(ElementType element) {
+        return switch (element) {
             case PYRO -> 0xFF6936; case HYDRO -> 0x27C8FF; case ELECTRO -> 0xCC66FF;
             case CRYO, FROZEN -> 0xB4FFFE; case DENDRO, QUICKEN -> 0x66FF55;
             case ANEMO -> 0x66E0C8; case GEO -> 0xE8B84A; default -> 0xFFFFFF;
         };
+    }
+
+    static DustParticleOptions dust(ElementType element, float scale) {
+        int c = colorOf(element);
         return new DustParticleOptions(new Vector3f(((c >> 16) & 255) / 255f, ((c >> 8) & 255) / 255f, (c & 255) / 255f), scale);
+    }
+
+    private static DustParticleOptions gradientDust(ElementType a, ElementType b, float bWeight, float scale) {
+        int ca = colorOf(a);
+        int cb = colorOf(b);
+        float w = Math.max(0f, Math.min(1f, bWeight));
+        float r = (((ca >> 16) & 255) * (1f - w) + ((cb >> 16) & 255) * w) / 255f;
+        float g = (((ca >> 8) & 255) * (1f - w) + ((cb >> 8) & 255) * w) / 255f;
+        float bl = ((ca & 255) * (1f - w) + (cb & 255) * w) / 255f;
+        return new DustParticleOptions(new Vector3f(r, g, bl), scale);
+    }
+
+    private static ThreadLocalRandom rnd() { return ThreadLocalRandom.current(); }
+
+    private static int jitterCount(int base, float spreadFrac) {
+        float f = 1f + (rnd().nextFloat() * 2f - 1f) * spreadFrac;
+        return Math.max(1, Math.round(base * f));
+    }
+
+    private static double jitterD(double base, double spreadFrac) {
+        return base * (1.0 + (rnd().nextDouble() * 2.0 - 1.0) * spreadFrac);
     }
 
     static void burst(ServerLevel l, Vec3 at, ParticleOptions particle, int count, double radius, double speed) {
         RandomSource r = l.random;
-        for (int i = 0; i < count; i++) {
+        int actualCount = jitterCount(count, 0.22f);
+        double actualRadius = jitterD(radius, 0.18);
+        double actualSpeed = jitterD(speed, 0.25);
+        for (int i = 0; i < actualCount; i++) {
             double angle = r.nextDouble() * Math.PI * 2.0;
             double lift = (r.nextDouble() - 0.5) * Math.PI;
-            double dist = radius * (0.25 + r.nextDouble() * 0.75);
-            double spd = speed * (0.35 + r.nextDouble() * 1.30);
+            double dist = actualRadius * (0.25 + r.nextDouble() * 0.75);
+            double spd = actualSpeed * (0.35 + r.nextDouble() * 1.30);
             l.sendParticles(particle,
-                    at.x + (r.nextDouble() - 0.5) * radius * 0.35,
-                    at.y + (r.nextDouble() - 0.5) * radius * 0.35,
-                    at.z + (r.nextDouble() - 0.5) * radius * 0.35,
+                    at.x + (r.nextDouble() - 0.5) * actualRadius * 0.35,
+                    at.y + (r.nextDouble() - 0.5) * actualRadius * 0.35,
+                    at.z + (r.nextDouble() - 0.5) * actualRadius * 0.35,
                     1, Math.cos(angle) * Math.cos(lift) * dist, Math.sin(lift) * dist, Math.sin(angle) * Math.cos(lift) * dist, spd);
         }
     }
 
     static void ring(ServerLevel l, Vec3 at, ParticleOptions particle, int count, double radius, double rise) {
         RandomSource r = l.random;
+        int actualCount = jitterCount(count, 0.2f);
+        double actualRadius = jitterD(radius, 0.15);
         double offset = r.nextDouble() * Math.PI * 2.0;
-        for (int i = 0; i < count; i++) {
-            double angle = offset + i * Math.PI * 2.0 / count;
-            double wobble = (r.nextDouble() - 0.5) * radius * 0.30;
+        for (int i = 0; i < actualCount; i++) {
+            double angle = offset + i * Math.PI * 2.0 / actualCount;
+            double wobble = (r.nextDouble() - 0.5) * actualRadius * 0.30;
             double riseV = rise * (0.45 + r.nextDouble() * 1.10);
             l.sendParticles(particle,
-                    at.x + Math.cos(angle) * (radius + wobble), at.y + (r.nextDouble() - 0.5) * 0.55, at.z + Math.sin(angle) * (radius + wobble),
+                    at.x + Math.cos(angle) * (actualRadius + wobble), at.y + (r.nextDouble() - 0.5) * 0.55, at.z + Math.sin(angle) * (actualRadius + wobble),
                     1, (r.nextDouble() - 0.5) * 0.10, riseV, (r.nextDouble() - 0.5) * 0.10, 0.012);
         }
     }
@@ -66,10 +98,12 @@ public final class ReactionParticles {
 
     public static void spawnSuperconduct(LivingEntity e) { ServerLevel l = level(e); if (l != null) spawnSuperconduct(l, center(e)); }
     public static void spawnSuperconduct(ServerLevel l, Vec3 at) {
-        ring(l, at, ParticleTypes.SNOWFLAKE, 30, 0.62, 0.045);
-        burst(l, at, ParticleTypes.ELECTRIC_SPARK, 28, 0.42, 0.15);
-        burst(l, at, dust(ElementType.CRYO, 1.0f), 22, 0.38, 0.09);
-        burst(l, at, dust(ElementType.ELECTRO, 1.0f), 20, 0.34, 0.07);
+        DustParticleOptions gradient = gradientDust(ElementType.ELECTRO, ElementType.CRYO, 0.6f, 0.95f);
+        DustParticleOptions gradientSmall = gradientDust(ElementType.ELECTRO, ElementType.CRYO, 0.65f, 0.72f);
+        ring(l, at, gradient, 18, 0.34, 0.035);
+        burst(l, at, ParticleTypes.ELECTRIC_SPARK, 16, 0.26, 0.11);
+        burst(l, at, gradientSmall, 16, 0.24, 0.06);
+        burst(l, at, ParticleTypes.SNOWFLAKE, 10, 0.22, 0.03);
     }
 
     public static void spawnElectroCharged(LivingEntity e) {
@@ -100,6 +134,11 @@ public final class ReactionParticles {
         burst(l, at, ParticleTypes.END_ROD, 8, 0.30, 0.030);
     }
 
+    public static void spawnFreeze(ServerLevel l, Vec3 at) {
+        ring(l, at, ParticleTypes.SNOWFLAKE, 40, 0.75, 0.04);
+        burst(l, at, dust(ElementType.CRYO, 1.0f), 20, 0.4, 0.06);
+    }
+
     public static void spawnShatter(LivingEntity e) {
         ServerLevel l = level(e); if (l == null) return;
         Vec3 at = center(e);
@@ -124,20 +163,22 @@ public final class ReactionParticles {
     public static void spawnSwirl(LivingEntity e) { spawnSwirl(e, ElementType.ANEMO, 1.5); }
     public static void spawnSwirl(LivingEntity e, ElementType element, double radius) {
         ServerLevel l = level(e); if (l == null) return;
-        Vec3 at = center(e);
+        spawnSwirlAt(l, center(e), element, radius);
+    }
+
+    public static void spawnSwirlAt(ServerLevel l, Vec3 at, ElementType element, double radius) {
         double reach = Math.max(0.6, Math.min(2.4, radius * 0.55));
-        DustParticleOptions elementDust = dust(element, 1.15f);
-        DustParticleOptions windDust = dust(ElementType.ANEMO, 1.0f);
-        burst(l, at, elementDust, 75, reach, 0.20);
-        burst(l, at, windDust, 25, reach * 0.72, 0.14);
-        ring(l, at, elementDust, 20, reach * 0.82, 0.05);
+        DustParticleOptions gradientMain = gradientDust(ElementType.ANEMO, element, 0.75f, 1.15f);
+        DustParticleOptions gradientRing = gradientDust(ElementType.ANEMO, element, 0.75f, 0.95f);
+        burst(l, at, gradientMain, 70, reach, 0.20);
+        ring(l, at, gradientRing, 22, reach * 0.82, 0.05);
         ParticleOptions accent = switch (element) {
             case PYRO -> ParticleTypes.FLAME; case HYDRO -> ParticleTypes.SPLASH;
             case CRYO, FROZEN -> ParticleTypes.SNOWFLAKE; case ELECTRO -> ParticleTypes.ELECTRIC_SPARK;
             case DENDRO, QUICKEN -> ParticleTypes.HAPPY_VILLAGER; case GEO -> ParticleTypes.END_ROD;
             default -> ParticleTypes.CLOUD;
         };
-        burst(l, at, accent, 16, reach * 0.7, 0.2);
+        burst(l, at, accent, 14, reach * 0.7, 0.2);
     }
 
     public static void spawnCrystallize(LivingEntity e) { spawnCrystallize(e, ElementType.GEO); }

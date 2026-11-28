@@ -107,6 +107,23 @@ public final class ElementReactions {
             float units) {
         return run(target, attacker, trigger, units, false, false, true, false);
     }
+
+    public static ReactionResult triggerProbeFalloff(
+            LivingEntity target,
+            @Nullable Entity attacker,
+            ElementType trigger,
+            float units,
+            float falloff) {
+        ReactionResult result = run(target, attacker, trigger, units, false, false, true, true);
+        DamageKind kind = DamageKind.fromElement(trigger);
+        ElementalStats stats = ElementalStats.of(attacker);
+        boolean enemy = ReactionTargets.isEnemy(attacker, target);
+        if (enemy && target != attacker) {
+            ReactionDamage.dealProbeFalloff(target, attacker, kind, stats, falloff);
+        }
+        return result;
+    }
+
     public static void forceSendText(LivingEntity target, ReactionResult rr) {
         if (rr == null || rr.reactions().isEmpty()) return;
         for (Reaction r : rr.reactions()) {
@@ -364,6 +381,7 @@ public final class ElementReactions {
         if (level == null || at == null) return;
         ElementalStats stats = ElementalStats.of(attacker);
         double radius = 2.5;
+        boolean any = false;
         for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(at, at).inflate(radius),
                 entity -> entity.isAlive()
@@ -371,11 +389,16 @@ public final class ElementReactions {
                         && (attacker == null || ReactionTargets.isEnemy(attacker, entity)))) {
             superconduct(target, attacker, stats);
             ReactionText.send(target, Reaction.SUPERCONDUCT, ElementType.ELECTRO, ElementType.CRYO);
+            any = true;
         }
         ReactionSoundEvents.playSuperconduct(level, net.minecraft.core.BlockPos.containing(at));
         ReactionParticles.spawnSuperconduct(level, at);
         if (attacker != null && attacker.isAlive()) {
             ReactionText.send(attacker, Reaction.SUPERCONDUCT, ElementType.ELECTRO, ElementType.CRYO);
+            any = true;
+        }
+        if (!any) {
+            broadcastEnvironmentText(level, at, Reaction.SUPERCONDUCT, ElementType.ELECTRO, ElementType.CRYO);
         }
     }
 
@@ -386,6 +409,15 @@ public final class ElementReactions {
                 ElementalStats.of(attacker).level(), ElementalStats.of(attacker).mastery());
         int ticks = Math.round(ServerConfig.CRYSTALLIZE_SECONDS.get().floatValue() * 20f);
         CrystallizeShardDrop.spawnAt(level, at, aura, amount, ticks);
+    }
+
+    private static void broadcastEnvironmentText(ServerLevel level, Vec3 at, Reaction reaction,
+                                                  ElementType first, ElementType second) {
+        for (net.minecraft.server.level.ServerPlayer player : level.getPlayers(
+                p -> p.getBoundingBox().getCenter().distanceToSqr(at) <= 400.0)) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                    "genshinerc.reaction." + reaction.name().toLowerCase(java.util.Locale.ROOT)));
+        }
     }
 
     private static void superconduct(LivingEntity target, @Nullable Entity attacker, ElementalStats stats) {
@@ -431,7 +463,7 @@ public final class ElementReactions {
         ReactionSoundEvents.playSwirl(t, swirled);
         ReactionParticles.spawnSwirl(t, swirled, radius);
         WorldElementFields.applySwirlToWorld(t, atk, swirled, spread, radius);
-        ReactionDamage.dealSwirlScaled(t, atk, kind, s, 1f);
+        ReactionDamage.dealSwirlScaled(t, atk, kind, s, 1f, true);
         shred(t, kind);
 
         if (atk instanceof LivingEntity owner && owner != t && owner.isAlive()) {
@@ -447,7 +479,7 @@ public final class ElementReactions {
             if (!near.isAlive() || near == atk) continue;
             double distance = near.getBoundingBox().getCenter().distanceTo(origin);
             float falloff = (float) Math.max(0.5, 1.0 - 0.5 * Math.min(1.0, distance / radius));
-            ReactionDamage.dealSwirlScaled(near, atk, kind, s, falloff);
+            ReactionDamage.dealSwirlScaled(near, atk, kind, s, falloff, false);
             if (!near.isAlive()) continue;
             shred(near, kind);
             ReactionParticles.spawnSwirl(near, swirled, Math.min(1.0, radius * 0.3));
@@ -513,9 +545,18 @@ public final class ElementReactions {
         OverloadVFX.play(level, at);
         ReactionParticles.spawnOverload(level, at);
         ReactionSoundEvents.playOverload(level, net.minecraft.core.BlockPos.containing(at));
+        boolean any = false;
         for (LivingEntity target : targets) {
             ReactionText.send(target, Reaction.OVERLOAD, ElementType.ELECTRO, ElementType.PYRO);
             ReactionDamage.dealOverload(target, attacker, stats, at);
+            any = true;
+        }
+        if (attacker != null && attacker.isAlive()) {
+            ReactionText.send(attacker, Reaction.OVERLOAD, ElementType.ELECTRO, ElementType.PYRO);
+            any = true;
+        }
+        if (!any) {
+            broadcastEnvironmentText(level, at, Reaction.OVERLOAD, ElementType.ELECTRO, ElementType.PYRO);
         }
         OverloadImpulse.applyAt(level, at, attacker, stats, targets);
     }

@@ -8,6 +8,7 @@ import com.dsp2.genshinerc.common.core.element.ElementType;
 import com.dsp2.genshinerc.common.core.reaction.DendroCoreEntity;
 import com.dsp2.genshinerc.common.core.reaction.ElementReactions;
 import com.dsp2.genshinerc.common.core.reaction.Reaction;
+import com.dsp2.genshinerc.common.core.reaction.ReactionParticles;
 import com.dsp2.genshinerc.common.core.reaction.WorldElementFields;
 import com.dsp2.genshinerc.common.world.block.EleIceBlock;
 import net.minecraft.core.BlockPos;
@@ -58,6 +59,7 @@ public final class VolumeReactions {
         boolean geoPlayed;
         boolean swirled;
         boolean superconducted;
+        boolean freezePlayed;
     }
 
     private VolumeReactions() {}
@@ -98,6 +100,7 @@ public final class VolumeReactions {
             state.geoPlayed = false;
             state.swirled = false;
             state.superconducted = false;
+            state.freezePlayed = false;
         }
         state.elapsed = sample.elapsed();
         state.tick = now;
@@ -199,6 +202,13 @@ public final class VolumeReactions {
                         extinguish(level, pos, true);
                     } else if (state.is(Blocks.WATER) && ServerConfig.CRYO_FREEZE_BLOCKS.get()) {
                         EleIceBlock.freeze(level, pos, state.getFluidState().isSource(), imbue.units());
+                        if (!sweep.freezePlayed) {
+                            sweep.freezePlayed = true;
+                            Vec3 ice = Vec3.atCenterOf(pos);
+                            level.playSound(null, pos, SoundEvents.GLASS_PLACE, SoundSource.BLOCKS, 0.8f,
+                                    1.1f + level.random.nextFloat() * 0.2f);
+                            ReactionParticles.spawnFreeze(level, ice);
+                        }
                     }
                 }
                 case PYRO -> {

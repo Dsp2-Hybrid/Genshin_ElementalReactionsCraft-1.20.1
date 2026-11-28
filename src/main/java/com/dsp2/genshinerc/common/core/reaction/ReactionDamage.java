@@ -87,6 +87,11 @@ public final class ReactionDamage {
                 net.minecraft.util.Mth.clamp(scale, 0.5f, 1f));
     }
 
+    static void dealProbeFalloff(LivingEntity target, @Nullable Entity attacker, DamageKind kind,
+                                 ElementalStats stats, float falloff) {
+        dealSwirlScaled(target, attacker, kind, stats, falloff, false);
+    }
+
     private static void deal(LivingEntity target, @Nullable Entity attacker, DamageKind kind, Reaction reaction,
                              ElementalStats stats, float shieldCost, boolean naturalElectroCharged) {
         deal(target, attacker, kind, reaction, stats, shieldCost, naturalElectroCharged, 1f);

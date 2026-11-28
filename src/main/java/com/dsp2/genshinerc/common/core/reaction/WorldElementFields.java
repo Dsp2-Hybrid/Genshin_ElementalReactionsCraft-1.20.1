@@ -251,11 +251,13 @@ public final class WorldElementFields {
         double radius = Math.min(3.0, ServerConfig.SWIRL_RADIUS.get());
         float spread = Math.max(0.5f, Math.min(ServerConfig.SWIRL_SPREAD_UNITS.get().floatValue(), units));
         Vec3 at = Vec3.atCenterOf(pos);
-        int rgb = swirled == ElementType.PYRO ? 0xFF6936 : swirled == ElementType.HYDRO ? 0x27C8FF : 0xB4FFFE;
-        level.sendParticles(ParticleTypes.CLOUD, at.x, at.y, at.z, 18, 0.3, 0.2, 0.3, 0.14);
-        level.sendParticles(ParticleTypes.SWEEP_ATTACK, at.x, at.y, at.z, 2, 0.25, 0.1, 0.25, 0);
-        level.sendParticles(dust(rgb, 1.1f), at.x, at.y, at.z, 22, 0.35, 0.3, 0.35, 0.1);
-        snd(level, pos, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.BLOCKS, 0.55f, 1.15f);
+        ReactionParticles.spawnSwirlAt(level, at, swirled, radius);
+        LivingEntity livingAttacker = attacker instanceof LivingEntity la ? la : null;
+        if (livingAttacker != null) {
+            ReactionSoundEvents.playSwirl(livingAttacker, swirled);
+        } else {
+            snd(level, pos, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.BLOCKS, 0.5f, 1.3f);
+        }
 
         int reach = (int) Math.ceil(radius);
         for (BlockPos cursor : BlockPos.betweenClosed(
@@ -264,68 +266,40 @@ public final class WorldElementFields {
             if (p.equals(pos) || !level.isLoaded(p) || Vec3.atCenterOf(p).distanceToSqr(at) > radius * radius) continue;
             BlockState other = level.getBlockState(p);
             if (other.isAir()) continue;
-            applyToBlock(level, p, other, attacker, swirled, spread);
+            ElementBlockProbe.apply(level, p, other, attacker, swirled, spread);
         }
 
+        double radiusSq = radius * radius;
         for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(at, at).inflate(radius),
                 e -> e.isAlive() && !e.isSpectator()
-                        && e.getBoundingBox().getCenter().distanceToSqr(at) <= radius * radius
-                        && ReactionTargets.isEnemy(attacker, e))) {
-            ElementReactions.triggerProbe(target, attacker, swirled, spread);
+                        && e.getBoundingBox().getCenter().distanceToSqr(at) <= radiusSq)) {
+            boolean isAttacker = target == attacker;
+            if (!isAttacker && !ReactionTargets.isEnemy(attacker, target)) continue;
+            double distance = target.getBoundingBox().getCenter().distanceTo(at);
+            float falloff = (float) Math.max(0.5, 1.0 - 0.5 * Math.min(1.0, distance / Math.max(0.01, radius)));
+            float appliedUnits = spread * falloff;
+            if (isAttacker) {
+                com.dsp2.genshinerc.common.core.element.ElementAuraManager.applyUnits(target, swirled, appliedUnits * 0.5f);
+                ReactionParticles.spawnSwirl(target, swirled, Math.min(1.0, radius * 0.35));
+                continue;
+            }
+            ElementReactions.triggerProbeFalloff(target, attacker, swirled, appliedUnits, falloff);
         }
         return true;
     }
 
     private static void applyToBlock(ServerLevel level, BlockPos pos, BlockState state,
                                      @Nullable Entity attacker, ElementType element, float units) {
-        boolean fire = state.is(BlockTags.FIRE);
-        boolean loose = state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK);
-        LivingEntity living = attacker instanceof LivingEntity l ? l : null;
-        switch (element) {
-            case ELECTRO -> electro(level, pos, state, living, true);
-            case CRYO, FROZEN -> {
-                if (state.is(Blocks.WATER) && ServerConfig.CRYO_FREEZE_BLOCKS.get()) {
-                    EleIceBlock.freeze(level, pos, state.getFluidState().isSource(), Math.max(0.1f, units));
-                } else if (fire && level.removeBlock(pos, false)) {
-                    snd(level, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.55f, 1.25f);
-                    level.sendParticles(ParticleTypes.SNOWFLAKE, pos.getX() + 0.5, pos.getY() + 0.4,
-                            pos.getZ() + 0.5, 8, 0.22, 0.18, 0.22, 0.03);
-                }
+        if (element == ElementType.ANEMO) {
+            if (!swirlBlock(level, pos, state, attacker, units)) {
+                ElementType fallback = sourceElement(state);
+                if (fallback == null) ElementBlockProbe.apply(level, pos, state, attacker, element, units);
             }
-            case GEO -> {
-                if ((fire || loose) && level.removeBlock(pos, false)) {
-                    if (living != null) {
-                        ElementReactions.probeCrystallize(level, living, Vec3.atCenterOf(pos),
-                                fire ? ElementType.PYRO : ElementType.CRYO);
-                    }
-                    snd(level, pos, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS, 0.6f, 1.2f);
-                    level.sendParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 0.45,
-                            pos.getZ() + 0.5, 8, 0.25, 0.2, 0.25, 0.03);
-                }
-            }
-            case HYDRO -> {
-                if (fire && level.removeBlock(pos, false)) {
-                    snd(level, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.6f, 1.2f);
-                    level.sendParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.4,
-                            pos.getZ() + 0.5, 7, 0.2, 0.16, 0.2, 0.025);
-                }
-            }
-            case PYRO -> {
-                if (state.getBlock() instanceof CropBlock || state.is(BlockTags.FLOWERS)) {
-                    ignite(level, pos, state);
-                }
-            }
-            case ANEMO -> swirlBlock(level, pos, state, attacker, units);
-            case DENDRO -> {
-                if (state.getBlock() instanceof CropBlock crop) {
-                    crop.randomTick(state, level, pos, level.random);
-                    level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5,
-                            pos.getY() + 0.55, pos.getZ() + 0.5, 2, 0.15, 0.15, 0.15, 0.01);
-                }
-            }
-            default -> { }
+            return;
         }
+        ElementBlockProbe.apply(level, pos, state, attacker, element, units);
+        if (element == ElementType.ELECTRO) electro(level, pos, state, attacker instanceof LivingEntity l ? l : null, true);
     }
 
     private static void spreadFire(ServerLevel level, BlockPos source, float units) {
@@ -345,13 +319,6 @@ public final class WorldElementFields {
                 placed++;
             }
         }
-    }
-
-    private static void ignite(ServerLevel level, BlockPos pos, BlockState state) {
-        BlockPos target = state.canBeReplaced() ? pos : pos.above();
-        if (!level.isLoaded(target) || !level.getBlockState(target).isAir()) return;
-        BlockState fire = BaseFireBlock.getState(level, target);
-        if (fire.canSurvive(level, target)) level.setBlockAndUpdate(target, fire);
     }
 
     private static DustParticleOptions dust(int rgb, float scale) {
