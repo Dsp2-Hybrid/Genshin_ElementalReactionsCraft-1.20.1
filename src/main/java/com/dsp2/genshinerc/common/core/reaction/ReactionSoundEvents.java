@@ -54,26 +54,30 @@ public final class ReactionSoundEvents {
         ServerLevel l = level(e);
         if (l == null) return;
         Vec3 c = center(e);
-        send(l, c.x, c.y, c.z, SoundEvents.RESPAWN_ANCHOR_CHARGE, jitter(1.6f, 0.1f), jitter(1.5f, 0.1f), 14, 6);
-        send(l, c.x, c.y, c.z, SoundEvents.BEEHIVE_WORK, jitter(2.0f, 0.2f), jitter(1.9f, 0.15f), 20, 8);
+        send(l, c.x, c.y, c.z, SoundEvents.RESPAWN_ANCHOR_CHARGE, jitter(2.5f, 0.3f), jitter(1.8f, 0.2f), 14, 6);
+        send(l, c.x, c.y, c.z, SoundEvents.BEEHIVE_WORK, jitter(3.2f, 0.4f), jitter(2.3f, 0.3f), 20, 8);
     }
 
     public static void playElectroCharged(LivingEntity e) {
         ServerLevel l = level(e);
         if (l == null) return;
         Vec3 c = center(e);
-        SoundEvent[] crackles = { SoundEvents.BEEHIVE_WORK, SoundEvents.REDSTONE_TORCH_BURNOUT, SoundEvents.CONDUIT_AMBIENT_SHORT };
+        // 剔除了 REDSTONE_TORCH_BURNOUT，仅保留蜂巢和潮涌
+        SoundEvent[] crackles = { SoundEvents.BEEHIVE_WORK, SoundEvents.CONDUIT_AMBIENT_SHORT };
         for (int i = 0; i < 3; i++) {
             SoundEvent ev = crackles[rnd().nextInt(crackles.length)];
-            send(l, c.x, c.y, c.z, ev, jitter(2.2f, 0.3f), jitter(1.8f, 0.3f), 10, 4);
+            // 音量提高至 3.2 且随机范围拉大，音调提高至 2.4
+            send(l, c.x, c.y, c.z, ev, jitter(3.2f, 0.5f), jitter(2.4f, 0.4f), 10, 4);
         }
-        send(l, c.x, c.y, c.z, SoundEvents.LIGHTNING_BOLT_IMPACT, jitter(0.5f, 0.1f), jitter(1.9f, 0.15f), 10, 4);
+        send(l, c.x, c.y, c.z, SoundEvents.LIGHTNING_BOLT_IMPACT, jitter(1.2f, 0.3f), jitter(2.1f, 0.25f), 10, 4);
     }
 
     public static void playElectroAmbient(ServerLevel l, BlockPos pos) {
         if (l == null) return;
-        SoundEvent[] zaps = { SoundEvents.BEEHIVE_WORK, SoundEvents.REDSTONE_TORCH_BURNOUT, SoundEvents.CONDUIT_AMBIENT_SHORT };
-        play(l, pos, zaps[rnd().nextInt(zaps.length)], jitter(1.8f, 0.3f), jitter(1.8f, 0.3f), 8, 4);
+        // 剔除了 REDSTONE_TORCH_BURNOUT，仅保留蜂巢和潮涌
+        SoundEvent[] zaps = { SoundEvents.BEEHIVE_WORK, SoundEvents.CONDUIT_AMBIENT_SHORT };
+        // 音量提高至 2.8，音调提高至 2.3，增强随机化
+        play(l, pos, zaps[rnd().nextInt(zaps.length)], jitter(2.8f, 0.5f), jitter(2.3f, 0.4f), 8, 4);
     }
 
     public static void playOverload(LivingEntity e) {
